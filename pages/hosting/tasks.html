@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Spotlight</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f4f4f4;
+        text-align: center;
+      }
+      .task-container {
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        max-width: 650px;
+        width: 100%;
+        background: white;
+        padding: 20px;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      video {
+        width: 100%;
+        height: auto;
+        margin-top: 10px;
+        border-radius: 8px;
+      }
+      .button-container {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+      button {
+        flex: 1;
+        padding: 12px;
+        margin: 5px;
+        font-size: 1.1em;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      .next-button {
+        background-color: #28a745;
+        color: white;
+      }
+      .next-button:hover {
+        background-color: #218838;
+      }
+      .back-button {
+        background-color: #6c757d;
+        color: white;
+      }
+      .back-button:hover {
+        background-color: #5a6268;
+      }
+
+      .progress-container {
+        width: 100%;
+        background-color: #ddd;
+        border-radius: 8px;
+        margin: 15px 0;
+        height: 30px;
+        position: relative;
+      }
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background-color: #4caf50;
+        transition: width 0.4s ease-in-out;
+      }
+      #task-counter {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 14px;
+        font-weight: bold;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="task-container">
+      <h1 id="platform-name">Facebook</h1>
+      <h2 id="task-name">Task 1: Watch Coach Carter Movie Clip</h2>
+
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+        <span id="task-counter">Task 1 of 18</span>
+      </div>
+
+      <video controls id="video-frame">
+        <source
+          src="videos/Coach Carter (6_9) Movie CLIP - Our Deepest Fear (2005) HD.mp4"
+          type="video/mp4"
+        />
+      </video>
+
+      <div class="button-container">
+        <button
+          class="back-button"
+          id="back-task"
+          onclick="previousTask()"
+          style="display: none"
+        >
+          ← Back
+        </button>
+        <button class="next-button" id="next-task" onclick="nextTask()">
+          Next Task →
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Fake platform URLs
+      const FACEBOOK_FAKE_URL =
+        "https://fakeprofiledetection.github.io/kmlog/pages/fake_pages/Facebook-Clone/index.html";
+      const INSTAGRAM_FAKE_URL =
+        "https://fakeprofiledetection.github.io/kmlog/pages/fake_pages/instagram-clone/index.html";
+      const TWITTER_FAKE_URL =
+        "https://fakeprofiledetection.github.io/kmlog/pages/fake_pages/twitter-clone/index.html";
+
+      // Video sources
+      const CARTER_PATH =
+        "videos/Coach Carter (6_9) Movie CLIP - Our Deepest Fear (2005) HD.mp4";
+      const OSCARS_PATH =
+        "videos/Watch the uncensored moment Will Smith smacks Chris Rock on stage at the Oscars, drops F-bomb.mp4";
+      const TRUMP_PATH =
+        "videos/TrumpandVancecallZelenskyydisrespectfulinOvalOfficemeeting.mp4";
+
+      // Task definitions
+      const tasks = [
+        {
+          platform: "Facebook",
+          task: "Watch Coach Carter Movie Clip",
+          video: CARTER_PATH,
+          link: FACEBOOK_FAKE_URL,
+        },
+        {
+          platform: "Instagram",
+          task: "Watch Coach Carter Movie Clip",
+          video: CARTER_PATH,
+          link: INSTAGRAM_FAKE_URL,
+        },
+        {
+          platform: "Twitter",
+          task: "Watch Coach Carter Movie Clip",
+          video: CARTER_PATH,
+          link: TWITTER_FAKE_URL,
+        },
+        {
+          platform: "Facebook",
+          task: "Watch The Oscar Slap Clip",
+          video: OSCARS_PATH,
+          link: FACEBOOK_FAKE_URL,
+        },
+        {
+          platform: "Instagram",
+          task: "Watch The Oscar Slap Clip",
+          video: OSCARS_PATH,
+          link: INSTAGRAM_FAKE_URL,
+        },
+        {
+          platform: "Twitter",
+          task: "Watch The Oscar Slap Clip",
+          video: OSCARS_PATH,
+          link: TWITTER_FAKE_URL,
+        },
+        {
+          platform: "Facebook",
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
+          video: TRUMP_PATH,
+          link: FACEBOOK_FAKE_URL,
+        },
+        {
+          platform: "Instagram",
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
+          video: TRUMP_PATH,
+          link: INSTAGRAM_FAKE_URL,
+        },
+        {
+          platform: "Twitter",
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
+          video: TRUMP_PATH,
+          link: TWITTER_FAKE_URL,
+        },
+        // Repeat to make 18 tasks total
+        {
+          platform: "Facebook",
+          task: "Watch Coach Carter Movie Clip",
+          video: CARTER_PATH,
+          link: FACEBOOK_FAKE_URL,
+        },
+        {
+          platform: "Instagram",
+          task: "Watch Coach Carter Movie Clip",
+          video: CARTER_PATH,
+          link: INSTAGRAM_FAKE_URL,
+        },
+        {
+          platform: "Twitter",
+          task: "Watch Coach Carter Movie Clip",
+          video: CARTER_PATH,
+          link: TWITTER_FAKE_URL,
+        },
+        {
+          platform: "Facebook",
+          task: "Watch The Oscar Slap Clip",
+          video: OSCARS_PATH,
+          link: FACEBOOK_FAKE_URL,
+        },
+        {
+          platform: "Instagram",
+          task: "Watch The Oscar Slap Clip",
+          video: OSCARS_PATH,
+          link: INSTAGRAM_FAKE_URL,
+        },
+        {
+          platform: "Twitter",
+          task: "Watch The Oscar Slap Clip",
+          video: OSCARS_PATH,
+          link: TWITTER_FAKE_URL,
+        },
+        {
+          platform: "Facebook",
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
+          video: TRUMP_PATH,
+          link: FACEBOOK_FAKE_URL,
+        },
+        {
+          platform: "Instagram",
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
+          video: TRUMP_PATH,
+          link: INSTAGRAM_FAKE_URL,
+        },
+        {
+          platform: "Twitter",
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
+          video: TRUMP_PATH,
+          link: TWITTER_FAKE_URL,
+        },
+      ];
+
+      // Helper to read query params
+      function getQueryParam(name) {
+        return new URLSearchParams(window.location.search).get(name);
+      }
+
+      let currentTaskIndex = 0;
+
+      // Update progress bar & counter
+      function updateProgressBar() {
+        const percent = ((currentTaskIndex + 1) / tasks.length) * 100;
+        document.getElementById("progress-bar").style.width = percent + "%";
+        document.getElementById("task-counter").textContent = `Task ${
+          currentTaskIndex + 1
+        } of ${tasks.length}`;
+      }
+
+      // Load a given task, toggle Back button visibility
+      function loadTask(index) {
+        const task = tasks[index];
+        document.getElementById("platform-name").textContent = task.platform;
+        document.getElementById("task-name").textContent = task.task;
+        document.getElementById("video-frame").src = task.video;
+        document.getElementById("next-task").dataset.link = task.link;
+
+        // Back button hidden on first task
+        document.getElementById("back-task").style.display =
+          index === 0 ? "none" : "inline-block";
+
+        updateProgressBar();
+      }
+
+      // Next: open platform page in new tab & advance UI
+      async function nextTask() {
+        // This must be <= to make sure the twitter page gets opened before the
+        // completion page is loaded when next task is clicked again
+        if (currentTaskIndex <= tasks.length - 1) {
+          const task = tasks[currentTaskIndex];
+          const userId = getQueryParam("user_id");
+          if (!userId) alert("user_id not found in URL");
+
+          // determine platform_id param
+          let pid = 0;
+          if (task.link.includes("facebook")) pid = 0;
+          if (task.link.includes("instagram")) pid = 1;
+          if (task.link.includes("twitter")) pid = 2;
+
+          const url =
+            `${task.link}` +
+            `?user_id=${encodeURIComponent(userId)}` +
+            `&platform_id=${pid}` +
+            `&task_id=${currentTaskIndex}`;
+
+          window.open(url, "_blank");
+          currentTaskIndex++;
+          loadTask(currentTaskIndex);
+        } else {
+          window.location.href = "complete.html";
+        }
+      }
+
+      // Back: only update UI, don’t open new tab
+      function previousTask() {
+        if (currentTaskIndex > 0) {
+          currentTaskIndex--;
+          loadTask(currentTaskIndex);
+        }
+      }
+
+      // initial render
+      loadTask(currentTaskIndex);
+    </script>
+  </body>
+</html>

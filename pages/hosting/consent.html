@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consent Form</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f4f4f4;
+      }
+      .form-container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      p {
+        text-align: left;
+        font-size: 1em;
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+      label {
+        font-size: 1.1em;
+        margin-bottom: 10px;
+        font-weight: bold;
+        display: block;
+      }
+      input[type="checkbox"] {
+        margin-right: 10px;
+      }
+      #the-canvas {
+        border: 1px solid black;
+        direction: ltr;
+      }
+      .button-container {
+        margin-top: 20px;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1.1em;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-bottom: 10px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      /* Revert CSS style of target element and its children */
+      .reset-style,
+      .reset-style * {
+        all: revert;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-container">
+      <h1>Consent Form</h1>
+      <p>
+        Thank you for participating in our research study. Please carefully read
+        the information below before proceeding:
+      </p>
+      <p>
+        By agreeing to participate, you consent to the collection of data for
+        research purposes. Your responses will be kept confidential and used
+        solely for academic purposes. Participation is voluntary, and you may
+        withdraw at any time without penalty.
+      </p>
+      <p>Please download and review the consent form below:</p>
+      <h1>Download Consent Form</h1>
+      <a href="Informed Consent.pdf" download="Informed Consent.pdf"
+        >Click to download file</a
+      >
+
+      <p>By clicking the checkbox below, you confirm that you have:</p>
+      <ol>
+        <li>
+          You have signed a physical consent form or a consent form emailed to
+          you, which you have returned to the researcher.
+        </li>
+        <li>
+          By clicking the checkbox, you are electronically signing this consent
+          form. Your action constitutes a digital signature, which has the same
+          legal effect as a handwritten signature on a physical consent form.
+        </li>
+      </ol>
+      <form>
+        <label>
+          <input type="checkbox" id="consent" required />
+          I have read and understood the above information and consent to
+          participate.
+        </label>
+
+        <div class="button-container">
+          <button type="button" onclick="navigateToNext()">
+            Go to next page
+          </button>
+        </div>
+      </form>
+    </div>
+    <script>
+      window.onload = () => {
+        /* optional: don’t overwrite an existing user_id */
+        const hasId = document.cookie
+          .split("; ")
+          .some((c) => c.startsWith("user_id="));
+        if (!hasId) {
+          setUserIdCookie();
+        }
+      };
+
+      function setUserIdCookie() {
+        // Generate a secure random user_id using crypto API
+        let userId = crypto
+          .getRandomValues(new Uint8Array(16))
+          .toString("hex");
+        console.error("Generated user id:" + userId);
+        // Set the cookie with the name 'user_id' and the generated value
+        document.cookie = `user_id=${userId}; path=/; SameSite=None;Secure`;
+        console.error("Cookies:" + document.cookie);
+      }
+      // Function to retrieve a cookie by its name
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(";").shift();
+        return null;
+      }
+
+      async function navigateToNext() {
+        var isChecked = document.getElementById("consent").checked;
+        if (isChecked == false) {
+          alert(
+            "You must provide consent before downloading the consent file!"
+          );
+        } else {
+          const consent_obj = {
+            consented: "Yes",
+          };
+          const jsonBlob = new Blob([JSON.stringify(consent_obj, null, 2)], {
+            type: "application/json",
+          });
+          let userId = getCookie("user_id");
+          console.error("The retrieved cookie value was:" + userId);
+          if (!userId) {
+            // If the cookie is not set, call setUserIdCookie
+            setUserIdCookie();
+            userId = getCookie("user_id");
+          } else {
+            console.error("Existing user_id cookie:", userId);
+          }
+
+          /* 3 — wrap in multipart/form-data (same format your function expects) */
+          const fd = new FormData();
+          fd.append("file", jsonBlob, `${userId}_consent.json`); // filename= is vital for saver’s regex
+
+          /* 4 — POST to the Netlify Function */
+          try {
+            const res = await fetch(
+              "https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver",
+              {
+                method: "POST",
+                body: fd,
+              }
+            );
+            const result = await res.json();
+
+            if (!res.ok) throw new Error(JSON.stringify(result));
+
+            alert(`✅ Consent uploaded! Go to the next page!`);
+          } catch (err) {
+            console.error("❌ Upload failed:", err);
+            alert("❌ Upload failed - check console");
+          }
+          userId = getCookie("user_id");
+          console.error("The retrieved cookie value was:" + userId);
+          if (!userId) {
+            // If the cookie is not set, call setUserIdCookie
+            setUserIdCookie();
+            userId = getCookie("user_id");
+          } else {
+            console.error("Existing user_id cookie:", userId);
+          }
+
+          window.location.href = `demographics.html?user_id=${encodeURIComponent(
+            userId
+          )}`;
+        }
+      }
+    </script>
+  </body>
+</html>
