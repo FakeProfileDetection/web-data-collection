@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import Busboy from "busboy";
 
 /* ------------------------------------------------------------------ */
 /* 1. Supabase client                                                 */
@@ -14,10 +15,10 @@ const supabase = createClient(
 const ALLOW_ORIGIN = "https://fakeprofiledetection.github.io"; // change / add as needed
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": ALLOW_ORIGIN, // echo the GitHub‑Pages origin
+  "Access-Control-Allow-Origin": ALLOW_ORIGIN,
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Max-Age": "86400", // cache preflight 24 h
+  "Access-Control-Max-Age": "86400", // cache preflight 24 h
 };
 
 /* ------------------------------------------------------------------ */
@@ -40,47 +41,106 @@ export const handler = async (event) => {
     };
   }
 
-  try {
-    /* ---- 3.3  extract file from multipart/form‑data -------------- */
+  return new Promise((resolve, reject) => {
     const contentType =
       event.headers["content-type"] || event.headers["Content-Type"] || "";
-    const boundary = contentType.split("boundary=")[1];
-    if (!boundary) throw new Error("Missing multipart boundary");
 
-    const body = Buffer.from(event.body, "base64");
-    const parts = body.toString().split(`--${boundary}`);
-    const filePart = parts.find(
-      (p) => p.includes("Content-Disposition") && p.includes("filename=")
-    );
-    if (!filePart) throw new Error("No file part found");
+    let busboy;
+    try {
+      busboy = Busboy({ headers: { "content-type": contentType } });
+    } catch (err) {
+      console.error("Busboy instantiation error:", err);
+      resolve({
+        statusCode: 400, // Bad Request
+        headers: corsHeaders,
+        body: JSON.stringify({ error: "Invalid Content-Type header or Busboy instantiation failed." }),
+      });
+      return;
+    }
 
-    const [, fileName = `upload-${Date.now()}`] =
-      filePart.match(/filename="(.+?)"/) || [];
+    let fileData = null;
+    let fileName = `upload-${Date.now()}`; // Default filename
+    let fileBuffer = Buffer.alloc(0);
 
-    const fileData = filePart.split("\r\n\r\n")[1].split("\r\n")[0];
-    const fileBuffer = Buffer.from(fileData, "binary");
+    busboy.on("file", (fieldname, file, info) => {
+      const { filename: clientProvidedName, encoding, mimeType } = info;
+      // Use clientProvidedName only if it's a non-empty string
+      if (clientProvidedName && clientProvidedName.trim() !== "") {
+        fileName = clientProvidedName;
+      }
+      // Note: fileName already has a default value like `upload-${Date.now()}`
 
-    /* ---- 3.4  upload to Supabase Storage ------------------------- */
-    const { error } = await supabase.storage
-      .from("data-collection-files")
-      .upload(`uploads/${fileName}`, fileBuffer, { upsert: true });
+      file.on("data", (data) => {
+        fileBuffer = Buffer.concat([fileBuffer, data]);
+      });
 
-    if (error) throw error;
+      file.on("end", () => {
+        console.log(`File [${fileName}] Finished`);
+      });
+    });
 
-    /* ---- 3.5  public URL to return ------------------------------- */
-    const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/data-collection-files/uploads/${fileName}`;
+    busboy.on("field", (fieldname, val) => {
+      console.log(`Field [${fieldname}]: value: ${val}`);
+    });
 
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify({ url }),
-    };
-  } catch (err) {
-    console.error("Saver error:", err);
-    return {
-      statusCode: 500,
-      headers: corsHeaders, // ← still include CORS so client can read it
-      body: JSON.stringify({ error: err.message || err }),
-    };
-  }
+    busboy.on("finish", async () => {
+      console.log("Busboy finished parsing form!");
+      if (!fileBuffer || fileBuffer.length === 0) {
+        console.error("No file data received");
+        resolve({
+          statusCode: 400, // Bad Request
+          headers: corsHeaders,
+          body: JSON.stringify({ error: "No file data received or file is empty." }),
+        });
+        return;
+      }
+
+      try {
+        /* ---- 3.4  upload to Supabase Storage ------------------------- */
+        const { error } = await supabase.storage
+          .from("data-collection-files")
+          .upload(`uploads/${fileName}`, fileBuffer, { upsert: true });
+
+        if (error) throw error;
+
+        /* ---- 3.5  public URL to return ------------------------------- */
+        const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/data-collection-files/uploads/${fileName}`;
+
+        resolve({
+          statusCode: 200,
+          headers: corsHeaders,
+          body: JSON.stringify({ url }),
+        });
+      } catch (err) {
+        console.error("Supabase upload or other error after parsing:", err);
+        resolve({
+          statusCode: 500,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: err.message || "Internal server error during file upload." }),
+        });
+      }
+    });
+
+    busboy.on("error", err => {
+        console.error('Busboy error:', err);
+        resolve({
+            statusCode: 500,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: 'Error parsing form data.' }),
+        });
+    });
+
+    // Pipe the base64 decoded body to busboy
+    try {
+        const bodyBuffer = Buffer.from(event.body, "base64");
+        busboy.end(bodyBuffer);
+    } catch (err) {
+        console.error("Error processing event body for Busboy:", err);
+        resolve({
+            statusCode: 400,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: "Invalid request body." }),
+        });
+    }
+  });
 };

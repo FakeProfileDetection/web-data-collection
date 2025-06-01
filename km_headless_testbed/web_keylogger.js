@@ -1,22 +1,24 @@
-function startKeyLogger(user_id_str, platform_initial) {
+export function startKeyLogger(user_id_str, platform_initial, doc = document) { // Added doc parameter for testability
   const keyEvents = [];
 
-  document.addEventListener("keydown", function (event) {
+  doc.addEventListener("keydown", function (event) {
     keyEvents.push(["P", event.key, Date.now()]);
-    console.log(`Pressed: ${event.key}`);
+    // console.log(`Pressed: ${event.key}`); // Commented out for tests
   });
 
-  document.addEventListener("keyup", function (event) {
+  doc.addEventListener("keyup", function (event) {
     keyEvents.push(["R", event.key, Date.now()]);
-    console.log(`Released: ${event.key}`);
+    // console.log(`Released: ${event.key}`); // Commented out for tests
   });
-  const button = document.createElement("button");
+
+  const button = doc.createElement("button");
   button.textContent = "Download Keylog";
   button.style.position = "fixed";
   button.style.bottom = "10px";
   button.style.right = "10px";
   button.style.background = "black";
   button.style.color = "white";
+
   button.onclick = () => {
     let platform_letter = null;
     if (platform_initial == "0") {
@@ -29,26 +31,25 @@ function startKeyLogger(user_id_str, platform_initial) {
     const filename = `${platform_letter}_${user_id_str}.csv`;
     const heading = [["Press or Release", "Key", "Time"]];
     const final_events = heading.concat(keyEvents);
-    console.error(final_events);
+    // console.error(final_events); // Commented out for tests
     const csvString = final_events.map((row) => row.join(",")).join("\n");
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
 
-    if (navigator.msSaveBlob) {
-      // IE 10+
-      navigator.msSaveBlob(blob, filename);
+    if (doc.defaultView.navigator.msSaveBlob) { // Use doc.defaultView.navigator
+      doc.defaultView.navigator.msSaveBlob(blob, filename);
     } else {
-      const link = document.createElement("a");
+      const link = doc.createElement("a");
       if (link.download !== undefined) {
-        // Browsers that support HTML5 download attribute
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
         link.setAttribute("download", filename);
         link.style.visibility = "hidden";
-        document.body.appendChild(link);
+        doc.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        doc.body.removeChild(link);
       }
     }
   };
-  document.body.appendChild(button);
+  doc.body.appendChild(button);
+  return button; // Return the button
 }
