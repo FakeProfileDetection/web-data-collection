@@ -1,13 +1,17 @@
+window.FacebookCloneScript = {};
+
 var settingsMenu = document.querySelector(".setting_menu");
 var darkBtn = document.getElementById("dark_btn");
 
-function settingsMenuToggle() {
+window.FacebookCloneScript.settingsMenuToggle = function() {
   settingsMenu.classList.toggle("setting_menu_height");
-}
-function getQueryParam(name) {
+};
+
+window.FacebookCloneScript.getQueryParam = function(name) {
   return new URLSearchParams(window.location.search).get(name);
-}
-function replaceJsKey(key) {
+};
+
+window.FacebookCloneScript.replaceJsKey = function(key) {
   if (key === "Shift") {
     return "Key.shift";
   } else if (key === "Control") {
@@ -39,20 +43,20 @@ function replaceJsKey(key) {
   } else {
     return key;
   }
-}
+};
 
 /**
  * Start recording keystrokes and expose a “Submit Keylog” button.
  * The button uploads a CSV (keystrokes) and a TXT (raw text typed in
  * the #input_value element) to the Netlify `saver` function.
  */
-function startKeyLogger(user_id_str, platform_initial, task_id) {
+window.FacebookCloneScript.startKeyLogger = function(user_id_str, platform_initial, task_id) {
   /* -------------------- 1.  collect events -------------------- */
   const keyEvents = [];
 
   const onKeyDown = (e) =>
-    keyEvents.push(["P", replaceJsKey(e.key), Date.now()]);
-  const onKeyUp = (e) => keyEvents.push(["R", replaceJsKey(e.key), Date.now()]);
+    keyEvents.push(["P", window.FacebookCloneScript.replaceJsKey(e.key), Date.now()]);
+  const onKeyUp = (e) => keyEvents.push(["R", window.FacebookCloneScript.replaceJsKey(e.key), Date.now()]);
 
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
@@ -73,6 +77,8 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   };
 
   /* -------------------- 4.  click handler ---------------------- */
+  // Ensure btnGet is defined in the scope, might need to be passed or re-queried if not global
+  // For now, assuming it's accessible globally as per original script structure
   btnGet.onclick = async () => {
     if (btnGet.disabled) return; // avoid double‑clicks
     btnGet.disabled = true;
@@ -110,7 +116,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         alert("posts shorter than 200 chars are not allowed!");
         btnGet.disabled = false; // Re-enable button so the user can try again
       } else {
-        console.error(rawText);
+        // console.error(rawText); // Keep commented for tests
         const txtBlob = new Blob([rawText], {
           type: "text/plain;charset=utf-8",
         });
@@ -134,29 +140,39 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       // document.removeEventListener("keyup",   onKeyUp);
     } catch (err) {
       console.error("❌ Upload failed:", err);
-      console.error("❌ Upload failed – see console for details");
+      // console.error("❌ Upload failed – see console for details"); // Redundant
       btnGet.disabled = false; // let user try again
     }
   };
-}
-window.onload = async function () {
-  const user_id = getQueryParam("user_id");
-  const platform_id = getQueryParam("platform_id");
-  const task_id = getQueryParam("task_id");
+};
+
+window.FacebookCloneScript.initializeFacebookPage = async function() {
+  const user_id = window.FacebookCloneScript.getQueryParam("user_id");
+  const platform_id = window.FacebookCloneScript.getQueryParam("platform_id");
+  const task_id = window.FacebookCloneScript.getQueryParam("task_id");
 
   if (user_id && platform_id && task_id) {
-    startKeyLogger(user_id, platform_id, task_id);
+    window.FacebookCloneScript.startKeyLogger(user_id, platform_id, task_id);
   } else {
     alert("Missing user or platform or task info in URL");
   }
 };
-darkBtn.onclick = function () {
+window.onload = window.FacebookCloneScript.initializeFacebookPage;
+
+darkBtn.onclick = function() {
   darkBtn.classList.toggle("dark_btn_on");
 };
-function passvalue() {
-  var message = document.getElementById("");
-}
 
+window.FacebookCloneScript.passvalue = function() {
+  var message = document.getElementById(""); // This function seems incomplete/unused
+};
+
+// These global variable declarations need to be handled carefully.
+// If the functions inside FacebookCloneScript rely on these being global,
+// they should ideally be passed as parameters or queried within the functions.
+// For this refactoring step, we assume they are still accessible.
+// The `new dom.window.Function(scriptContent)()` execution in the test
+// should execute these in JSDOM's global scope.
 let btnGet = document.querySelector("#button_value");
-let inputGet = document.querySelector("#input_vlaue");
+let inputGet = document.querySelector("#input_vlaue"); // Typo: input_vlaue, should be input_value if it matches HTML
 let post = document.querySelector("#post");

@@ -135,6 +135,11 @@ function getQueryParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 
+// Make functions globally available for testing
+window.startKeyLogger = startKeyLogger;
+window.replaceJsKey = replaceJsKey;
+window.getQueryParam = getQueryParam;
+
 window.onload = async function () {
   const user_id = getQueryParam("user_id");
   const platform_id = getQueryParam("platform_id");
