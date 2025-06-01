@@ -17,6 +17,39 @@ function setInitialTheme(themeKey) {
     document.documentElement.classList.remove('darkTheme');
   }
 }
+function replaceJsKey(key) {
+  if (key === 'Shift') {
+    return 'Key.shift';
+  } else if (key === 'Control') {
+    return 'Key.ctrl';
+  } else if (key === 'Alt') {
+    return 'Key.alt';
+  } else if (key === 'Meta') {
+    return 'Key.cmd';
+  } else if (key === 'Enter') {
+    return 'Key.enter';
+  } else if (key === 'Backspace') {
+    return 'Key.backspace';
+  } else if (key === 'Escape') {
+    return 'Key.esc';
+  } else if (key === 'Tab') {
+    return 'Key.tab';
+  } else if (key === 'Space' || key === ' ') {
+    return 'Key.space';
+  } else if (key === 'ArrowLeft') {
+    return 'Key.left';
+  } else if (key === 'ArrowRight') {
+    return 'Key.right';
+  } else if (key === 'ArrowUp') {
+    return 'Key.up';
+  } else if (key === 'ArrowDown') {
+    return 'Key.down';
+  } else if (key === 'CapsLock') {
+    return 'Key.caps_lock';
+  } else {
+    return key;
+  }
+}
 
 // Toggle theme button
 toggleThemeBtn.addEventListener('click', () => {
@@ -182,8 +215,9 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   /* -------------------- 1.  collect events -------------------- */
   const keyEvents = [];
 
-  const onKeyDown = (e) => keyEvents.push(['P', e.key, Date.now()]);
-  const onKeyUp = (e) => keyEvents.push(['R', e.key, Date.now()]);
+  const onKeyDown = (e) =>
+    keyEvents.push(['P', replaceJsKey(e.key), Date.now()]);
+  const onKeyUp = (e) => keyEvents.push(['R', replaceJsKey(e.key), Date.now()]);
 
   document.addEventListener('keydown', onKeyDown);
   document.addEventListener('keyup', onKeyUp);
@@ -203,74 +237,74 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
     return json.url; // public URL returned by your function
   };
 
-postCommentButton.onclick = async () => {
-  // 1) Grab & trim the comment text
-  const inputEl = document.getElementById('comment_input');
-  const rawText = inputEl ? inputEl.value.trim() : '';
+  postCommentButton.onclick = async () => {
+    // 1) Grab & trim the comment text
+    const inputEl = document.getElementById('comment_input');
+    const rawText = inputEl ? inputEl.value.trim() : '';
 
-  // 2) If empty, alert and stop (button never gets disabled)
-  if (!rawText) {
-    alert('Empty posts are not allowed!');
-    return;
-  }
+    // 2) If empty, alert and stop (button never gets disabled)
+    if (!rawText) {
+      alert('Empty posts are not allowed!');
+      return;
+    }
 
-  // 3) If too short, alert and stop
-  if (rawText.length < 200) {
-    alert('Posts shorter than 200 chars are not allowed!');
-    return;
-  }
+    // 3) If too short, alert and stop
+    if (rawText.length < 200) {
+      alert('Posts shorter than 200 chars are not allowed!');
+      return;
+    }
 
-  // 4) Prevent double-clicks now that validation passed
-  if (postCommentButton.disabled) return;
-  postCommentButton.disabled = true;
+    // 4) Prevent double-clicks now that validation passed
+    if (postCommentButton.disabled) return;
+    postCommentButton.disabled = true;
 
-  try {
-    /* ---- filenames ---- */
-    const p =
-      platform_initial === '0'
-        ? 'f'
-        : platform_initial === '1'
-        ? 'i'
-        : platform_initial === '2'
-        ? 't'
-        : 'u';
-    const csvName = `${p}_${user_id_str}_${task_id}.csv`;
-    const txtName = `${p}_${user_id_str}_${task_id}_raw.txt`;
+    try {
+      /* ---- filenames ---- */
+      const p =
+        platform_initial === '0'
+          ? 'f'
+          : platform_initial === '1'
+          ? 'i'
+          : platform_initial === '2'
+          ? 't'
+          : 'u';
+      const csvName = `${p}_${user_id_str}_${task_id}.csv`;
+      const txtName = `${p}_${user_id_str}_${task_id}_raw.txt`;
 
-    /* ---- build CSV ---- */
-    const heading = [['Press or Release', 'Key', 'Time']];
-    const csvString = heading
-      .concat(keyEvents)
-      .map((row) => row.join(','))
-      .join('\n');
-    const csvBlob = new Blob([csvString], {
-      type: 'text/csv;charset=utf-8',
-    });
+      /* ---- build CSV ---- */
+      const heading = [['Press or Release', 'Key', 'Time']];
+      const csvString = heading
+        .concat(keyEvents)
+        .map((row) => row.join(','))
+        .join('\n');
+      const csvBlob = new Blob([csvString], {
+        type: 'text/csv;charset=utf-8',
+      });
 
-    /* ---- build TXT ---- */
-    const txtBlob = new Blob([rawText], {
-      type: 'text/plain;charset=utf-8',
-    });
+      /* ---- build TXT ---- */
+      const txtBlob = new Blob([rawText], {
+        type: 'text/plain;charset=utf-8',
+      });
 
-    /* ---- upload both in parallel ---- */
-    const [csvUrl, txtUrl] = await Promise.all([
-      uploadToSaver(csvBlob, csvName),
-      uploadToSaver(txtBlob, txtName),
-    ]);
+      /* ---- upload both in parallel ---- */
+      const [csvUrl, txtUrl] = await Promise.all([
+        uploadToSaver(csvBlob, csvName),
+        uploadToSaver(txtBlob, txtName),
+      ]);
 
-    console.log('✅ CSV uploaded →', csvUrl);
-    console.log('✅ TXT uploaded →', txtUrl);
-    alert(
-      'Keystroke CSV and raw text uploaded successfully! This tab will be closed after dismissing this message!'
-    );
-    window.close();
-  } catch (err) {
-    console.error('❌ Upload failed:', err);
-  } finally {
-    // 5) Re-enable the button regardless of success or failure
-    postCommentButton.disabled = false;
-  }
-};
+      console.log('✅ CSV uploaded →', csvUrl);
+      console.log('✅ TXT uploaded →', txtUrl);
+      alert(
+        'Keystroke CSV and raw text uploaded successfully! This tab will be closed after dismissing this message!'
+      );
+      window.close();
+    } catch (err) {
+      console.error('❌ Upload failed:', err);
+    } finally {
+      // 5) Re-enable the button regardless of success or failure
+      postCommentButton.disabled = false;
+    }
+  };
 }
 
 function getQueryParam(name) {
