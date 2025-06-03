@@ -10,7 +10,16 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
 
   const onKeyDown = (e) =>
     keyEvents.push(["P", replaceJsKey(e.key), Date.now()]);
-  const onKeyUp = (e) => keyEvents.push(["R", replaceJsKey(e.key), Date.now()]);
+  const onKeyUp = (e) => {
+    console.log(
+      ">>> DEBUG: e.key =",
+      JSON.stringify(e.key),
+      ", codePoint =",
+      e.key.length > 0 ? e.key.charCodeAt(0) : null
+    );
+
+    keyEvents.push(["R", replaceJsKey(e.key), Date.now()]);
+  };
 
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
@@ -114,7 +123,7 @@ function replaceJsKey(key) {
     return "Key.esc";
   } else if (key === "Tab") {
     return "Key.tab";
-  } else if (key === " ") {
+  } else if (key.charCodeAt(0) === 160 || key === " ") {
     return "Key.space";
   } else if (key === "ArrowLeft") {
     return "Key.left";
