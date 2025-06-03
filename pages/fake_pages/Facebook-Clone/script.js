@@ -24,7 +24,7 @@ function replaceJsKey(key) {
     return "Key.esc";
   } else if (key === "Tab") {
     return "Key.tab";
-  } else if (key === " ") {
+  } else if (key === " " || (key.length > 0 && key.charCodeAt(0) === 160)) {
     return "Key.space";
   } else if (key === "ArrowLeft") {
     return "Key.left";
