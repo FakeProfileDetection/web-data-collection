@@ -114,7 +114,7 @@ function replaceJsKey(key) {
     return "Key.esc";
   } else if (key === "Tab") {
     return "Key.tab";
-  } else if (key === "Space" || key === " ") {
+  } else if (key === " ") {
     return "Key.space";
   } else if (key === "ArrowLeft") {
     return "Key.left";
