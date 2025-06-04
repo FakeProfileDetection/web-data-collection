@@ -8,6 +8,7 @@ function getQueryParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 function replaceJsKey(e) {
+  alert("Event key: " + e.key + ", code: " + e.code);
   if (e.key === "Shift") {
     return "Key.shift";
   } else if (e.key === "Control") {
