@@ -9,7 +9,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   const keyEvents = [];
 
   const onKeyDown = (e) =>
-    keyEvents.push(["P", replaceJsKey(e.key), Date.now()]);
+    keyEvents.push(["P", replaceJsKey(e), Date.now()]);
   const onKeyUp = (e) => {
     console.log(
       ">>> DEBUG: e.key =",
@@ -18,7 +18,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       e.key.length > 0 ? e.key.charCodeAt(0) : null
     );
 
-    keyEvents.push(["R", replaceJsKey(e.key), Date.now()]);
+    keyEvents.push(["R", replaceJsKey(e), Date.now()]);
   };
 
   document.addEventListener("keydown", onKeyDown);
@@ -106,37 +106,37 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
     }
   };
 }
-function replaceJsKey(key) {
-  if (key === "Shift") {
+function replaceJsKey(e) {
+  if (e.key === "Shift") {
     return "Key.shift";
-  } else if (key === "Control") {
+  } else if (e.key === "Control") {
     return "Key.ctrl";
-  } else if (key === "Alt") {
+  } else if (e.key === "Alt") {
     return "Key.alt";
-  } else if (key === "Meta") {
+  } else if (e.key === "Meta") {
     return "Key.cmd";
-  } else if (key === "Enter") {
+  } else if (e.key === "Enter") {
     return "Key.enter";
-  } else if (key === "Backspace") {
+  } else if (e.key === "Backspace") {
     return "Key.backspace";
-  } else if (key === "Escape") {
+  } else if (e.key === "Escape") {
     return "Key.esc";
-  } else if (key === "Tab") {
+  } else if (e.key === "Tab") {
     return "Key.tab";
-  } else if (key.charCodeAt(0) === 160 || key === " ") {
+  } else if (e.code === "Space") {
     return "Key.space";
-  } else if (key === "ArrowLeft") {
+  } else if (e.key === "ArrowLeft") {
     return "Key.left";
-  } else if (key === "ArrowRight") {
+  } else if (e.key === "ArrowRight") {
     return "Key.right";
-  } else if (key === "ArrowUp") {
+  } else if (e.key === "ArrowUp") {
     return "Key.up";
-  } else if (key === "ArrowDown") {
+  } else if (e.key === "ArrowDown") {
     return "Key.down";
-  } else if (key === "CapsLock") {
+  } else if (e.key === "CapsLock") {
     return "Key.caps_lock";
   } else {
-    return key;
+    return e.key;
   }
 }
 
