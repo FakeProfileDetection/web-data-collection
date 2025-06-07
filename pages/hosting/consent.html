@@ -130,9 +130,7 @@
 
       function setUserIdCookie() {
         // Generate a secure random user_id using crypto API
-        let userId = crypto
-          .getRandomValues(new Uint8Array(16))
-          .toString("hex");
+        let userId = crypto.getRandomValues(new Uint8Array(16)).toString("hex");
         console.error("Generated user id:" + userId);
         // Set the cookie with the name 'user_id' and the generated value
         document.cookie = `user_id=${userId}; path=/; SameSite=None;Secure`;
@@ -155,6 +153,7 @@
         } else {
           const consent_obj = {
             consented: "Yes",
+            start_timestamp: new Date().toISOString(), // Adds the current time in ISO format
           };
           const jsonBlob = new Blob([JSON.stringify(consent_obj, null, 2)], {
             type: "application/json",
