@@ -328,6 +328,7 @@ function getQueryParam(name) {
 }
 
 window.onload = async function () {
+  startTime = Date.now();
   const user_id = getQueryParam('user_id');
   const platform_id = getQueryParam('platform_id');
   const task_id = getQueryParam('task_id');
