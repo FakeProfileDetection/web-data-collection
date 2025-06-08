@@ -56,6 +56,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
           : "u";
       const csvName = `${p}_${user_id_str}_${task_id}.csv`;
       const txtName = `${p}_${user_id_str}_${task_id}_raw.txt`;
+      const metadataName = `${p}_${user_id_str}_${task_id}_metadata.json`;
 
       /* ---- build CSV ---- */
       const heading = [["Press or Release", "Key", "Time"]];
@@ -99,7 +100,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
           uploadToSaver(csvBlob, csvName),
           uploadToSaver(txtBlob, txtName),
-          uploadToSaver(metadataBlob, metadataUrl),
+          uploadToSaver(metadataBlob, metadataName),
         ]);
 
         console.log("✅ CSV uploaded →", csvUrl);
