@@ -1,4 +1,5 @@
 let tweet_button = document.querySelector(".tweetBox__tweetButton");
+let startTime;
 /**
  * Start recording keystrokes and expose a “Submit Keylog” button.
  * The button uploads a CSV (keystrokes) and a TXT (raw text typed in
@@ -8,8 +9,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   /* -------------------- 1.  collect events -------------------- */
   const keyEvents = [];
 
-  const onKeyDown = (e) =>
-    keyEvents.push(["P", replaceJsKey(e), Date.now()]);
+  const onKeyDown = (e) => keyEvents.push(["P", replaceJsKey(e), Date.now()]);
   const onKeyUp = (e) => {
     console.log(
       ">>> DEBUG: e.key =",
@@ -81,18 +81,33 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         const txtBlob = new Blob([rawText], {
           type: "text/plain;charset=utf-8",
         });
+        /* ---- build metadata JSON ---- */
+        const endTime = Date.now(); // Record end time just before uploading
+        const metadata = {
+          user_id: user_id_str,
+          platform_initial: platform_initial,
+          task_id: task_id,
+          start_time: startTime,
+          end_time: endTime,
+          duration_ms: endTime - startTime,
+        };
+        const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
+          type: "application/json",
+        });
 
         /* ---- upload both in parallel ---- */
-        const [csvUrl, txtUrl] = await Promise.all([
+        const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
           uploadToSaver(csvBlob, csvName),
           uploadToSaver(txtBlob, txtName),
+          uploadToSaver(metadataBlob, metadataName),
         ]);
 
         console.log("✅ CSV uploaded →", csvUrl);
         console.log("✅ TXT uploaded →", txtUrl);
+        console.log("✅ Metadata uploaded →", metadataUrl);
         console.log("✅ Keylog submitted!");
         alert(
-          "Keystroke CSV and raw text uploaded successfully! This tab will be closed after dismissing this message!"
+        'Keystroke CSV, raw text, and metadata uploaded successfully! This tab will be closed after dismissing this message!'
         );
         window.close();
       }
@@ -145,6 +160,7 @@ function getQueryParam(name) {
 }
 
 window.onload = async function () {
+  startTime = Date.now();
   const user_id = getQueryParam("user_id");
   const platform_id = getQueryParam("platform_id");
   const task_id = getQueryParam("task_id");

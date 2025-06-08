@@ -1,6 +1,6 @@
 var settingsMenu = document.querySelector(".setting_menu");
 var darkBtn = document.getElementById("dark_btn");
-
+let startTime;
 function settingsMenuToggle() {
   settingsMenu.classList.toggle("setting_menu_height");
 }
@@ -50,8 +50,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   /* -------------------- 1.  collect events -------------------- */
   const keyEvents = [];
 
-  const onKeyDown = (e) =>
-    keyEvents.push(["P", replaceJsKey(e), Date.now()]);
+  const onKeyDown = (e) => keyEvents.push(["P", replaceJsKey(e), Date.now()]);
   const onKeyUp = (e) => keyEvents.push(["R", replaceJsKey(e), Date.now()]);
 
   document.addEventListener("keydown", onKeyDown);
@@ -89,6 +88,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
           : "u";
       const csvName = `${p}_${user_id_str}_${task_id}.csv`;
       const txtName = `${p}_${user_id_str}_${task_id}_raw.txt`;
+      const metadataName = `${p}_${user_id_str}_${task_id}_metadata.json`;
 
       /* ---- build CSV ---- */
       const heading = [["Press or Release", "Key", "Time"]];
@@ -103,6 +103,16 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       /* ---- build TXT ---- */
       const inputEl = document.getElementById("input_value");
       const rawText = inputEl ? inputEl.value : ""; // safe if element missing
+      /* ---- build metadata JSON ---- */
+      const endTime = Date.now(); // Record end time just before uploading
+      const metadata = {
+        user_id: user_id_str,
+        platform_initial: platform_initial,
+        task_id: task_id,
+        start_time: startTime,
+        end_time: endTime,
+        duration_ms: endTime - startTime,
+      };
       if (!rawText || rawText.length === 0 || keyEvents.length === 0) {
         alert("Empty posts are not allowed!");
         btnGet.disabled = false; // Re-enable button so the user can try again
@@ -114,18 +124,23 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         const txtBlob = new Blob([rawText], {
           type: "text/plain;charset=utf-8",
         });
+        const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
+          type: "application/json",
+        });
 
         /* ---- upload both in parallel ---- */
-        const [csvUrl, txtUrl] = await Promise.all([
+        const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
           uploadToSaver(csvBlob, csvName),
           uploadToSaver(txtBlob, txtName),
+          uploadToSaver(metadataBlob, metadataName),
         ]);
 
         console.log("✅ CSV uploaded →", csvUrl);
         console.log("✅ TXT uploaded →", txtUrl);
+        console.log("✅ Metadata uploaded →", metadataUrl);
         console.log("✅ Keylog submitted!");
         alert(
-          "Keystroke CSV and raw text uploaded successfully! This tab will be closed after dismissing this message!"
+          "Keystroke CSV, raw text, and metadata uploaded successfully! This tab will be closed after dismissing this message!"
         );
         window.close();
       }
@@ -140,6 +155,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   };
 }
 window.onload = async function () {
+  startTime = Date.now();
   const user_id = getQueryParam("user_id");
   const platform_id = getQueryParam("platform_id");
   const task_id = getQueryParam("task_id");

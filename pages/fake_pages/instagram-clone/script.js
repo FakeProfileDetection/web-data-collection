@@ -5,6 +5,7 @@ const storiesLeftButton = document.querySelector('.stories__left-button');
 const storiesRightButton = document.querySelector('.stories__right-button');
 const posts = document.querySelectorAll('.post');
 const postsContent = document.querySelectorAll('.post__content');
+let startTime;
 
 // ===================================
 // DARK/LIGHT THEME
@@ -18,34 +19,34 @@ function setInitialTheme(themeKey) {
   }
 }
 function replaceJsKey(e) {
-  if (e.key === "Shift") {
-    return "Key.shift";
-  } else if (e.key === "Control") {
-    return "Key.ctrl";
-  } else if (e.key === "Alt") {
-    return "Key.alt";
-  } else if (e.key === "Meta") {
-    return "Key.cmd";
-  } else if (e.key === "Enter") {
-    return "Key.enter";
-  } else if (e.key === "Backspace") {
-    return "Key.backspace";
-  } else if (e.key === "Escape") {
-    return "Key.esc";
-  } else if (e.key === "Tab") {
-    return "Key.tab";
-  } else if (e.code === "Space") {
-    return "Key.space";
-  } else if (e.key === "ArrowLeft") {
-    return "Key.left";
-  } else if (e.key === "ArrowRight") {
-    return "Key.right";
-  } else if (e.key === "ArrowUp") {
-    return "Key.up";
-  } else if (e.key === "ArrowDown") {
-    return "Key.down";
-  } else if (e.key === "CapsLock") {
-    return "Key.caps_lock";
+  if (e.key === 'Shift') {
+    return 'Key.shift';
+  } else if (e.key === 'Control') {
+    return 'Key.ctrl';
+  } else if (e.key === 'Alt') {
+    return 'Key.alt';
+  } else if (e.key === 'Meta') {
+    return 'Key.cmd';
+  } else if (e.key === 'Enter') {
+    return 'Key.enter';
+  } else if (e.key === 'Backspace') {
+    return 'Key.backspace';
+  } else if (e.key === 'Escape') {
+    return 'Key.esc';
+  } else if (e.key === 'Tab') {
+    return 'Key.tab';
+  } else if (e.code === 'Space') {
+    return 'Key.space';
+  } else if (e.key === 'ArrowLeft') {
+    return 'Key.left';
+  } else if (e.key === 'ArrowRight') {
+    return 'Key.right';
+  } else if (e.key === 'ArrowUp') {
+    return 'Key.up';
+  } else if (e.key === 'ArrowDown') {
+    return 'Key.down';
+  } else if (e.key === 'CapsLock') {
+    return 'Key.caps_lock';
   } else {
     return e.key;
   }
@@ -215,8 +216,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   /* -------------------- 1.  collect events -------------------- */
   const keyEvents = [];
 
-  const onKeyDown = (e) =>
-    keyEvents.push(['P', replaceJsKey(e), Date.now()]);
+  const onKeyDown = (e) => keyEvents.push(['P', replaceJsKey(e), Date.now()]);
   const onKeyUp = (e) => keyEvents.push(['R', replaceJsKey(e), Date.now()]);
 
   document.addEventListener('keydown', onKeyDown);
@@ -270,6 +270,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
           : 'u';
       const csvName = `${p}_${user_id_str}_${task_id}.csv`;
       const txtName = `${p}_${user_id_str}_${task_id}_raw.txt`;
+      const metadataName = `${p}_${user_id_str}_${task_id}_metadata.json`;
 
       /* ---- build CSV ---- */
       const heading = [['Press or Release', 'Key', 'Time']];
@@ -285,17 +286,32 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       const txtBlob = new Blob([rawText], {
         type: 'text/plain;charset=utf-8',
       });
+      /* ---- build metadata JSON ---- */
+      const endTime = Date.now(); // Record end time just before uploading
+      const metadata = {
+        user_id: user_id_str,
+        platform_initial: platform_initial,
+        task_id: task_id,
+        start_time: startTime,
+        end_time: endTime,
+        duration_ms: endTime - startTime,
+      };
+      const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
+        type: 'application/json',
+      });
 
       /* ---- upload both in parallel ---- */
-      const [csvUrl, txtUrl] = await Promise.all([
+      const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
         uploadToSaver(csvBlob, csvName),
         uploadToSaver(txtBlob, txtName),
+        uploadToSaver(metadataBlob, metadataName),
       ]);
 
       console.log('✅ CSV uploaded →', csvUrl);
       console.log('✅ TXT uploaded →', txtUrl);
+      console.log('✅ Metadata uploaded →', metadataUrl);
       alert(
-        'Keystroke CSV and raw text uploaded successfully! This tab will be closed after dismissing this message!'
+        'Keystroke CSV, raw text, and metadata uploaded successfully! This tab will be closed after dismissing this message!'
       );
       window.close();
     } catch (err) {
