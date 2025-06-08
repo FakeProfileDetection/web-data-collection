@@ -148,7 +148,7 @@
         var isChecked = document.getElementById("consent").checked;
         if (isChecked == false) {
           alert(
-            "You must provide consent before downloading the consent file!"
+            "You must provide consent before proceeding to the next page!"
           );
         } else {
           const consent_obj = {
@@ -184,7 +184,7 @@
 
             if (!res.ok) throw new Error(JSON.stringify(result));
 
-            alert(`✅ Consent uploaded! Go to the next page!`);
+            alert(`✅ Consent uploaded!`);
           } catch (err) {
             console.error("❌ Upload failed:", err);
             alert("❌ Upload failed - check console");
@@ -234,7 +234,7 @@
 
             if (!res.ok) throw new Error(JSON.stringify(result));
 
-            alert(`✅ Consent uploaded! Go to the next page!`);
+            alert(`✅ Start time metadata uploaded! Go to the next page!`);
           } catch (err) {
             console.error("❌ Upload failed:", err);
             alert("❌ Upload failed - check console");
