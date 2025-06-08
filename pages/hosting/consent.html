@@ -153,7 +153,6 @@
         } else {
           const consent_obj = {
             consented: "Yes",
-            start_timestamp: new Date().toISOString(), // Adds the current time in ISO format
           };
           const jsonBlob = new Blob([JSON.stringify(consent_obj, null, 2)], {
             type: "application/json",
@@ -179,6 +178,56 @@
               {
                 method: "POST",
                 body: fd,
+              }
+            );
+            const result = await res.json();
+
+            if (!res.ok) throw new Error(JSON.stringify(result));
+
+            alert(`✅ Consent uploaded! Go to the next page!`);
+          } catch (err) {
+            console.error("❌ Upload failed:", err);
+            alert("❌ Upload failed - check console");
+          }
+          userId = getCookie("user_id");
+          console.error("The retrieved cookie value was:" + userId);
+          if (!userId) {
+            // If the cookie is not set, call setUserIdCookie
+            setUserIdCookie();
+            userId = getCookie("user_id");
+          } else {
+            console.error("Existing user_id cookie:", userId);
+          }
+          const start_time_obj = {
+            start_timestamp: new Date().toISOString(), // Adds the current time in ISO format
+          };
+          const startTimeBlob = new Blob(
+            [JSON.stringify(start_time_obj, null, 2)],
+            {
+              type: "application/json",
+            }
+          );
+          userId = getCookie("user_id");
+          console.error("The retrieved cookie value was:" + userId);
+          if (!userId) {
+            // If the cookie is not set, call setUserIdCookie
+            setUserIdCookie();
+            userId = getCookie("user_id");
+          } else {
+            console.error("Existing user_id cookie:", userId);
+          }
+
+          /* 3 — wrap in multipart/form-data (same format your function expects) */
+          const other_fd = new FormData();
+          other_fd.append("file", startTimeBlob, `${userId}_start_time.json`);
+
+          /* 4 — POST to the Netlify Function */
+          try {
+            const res = await fetch(
+              "https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver",
+              {
+                method: "POST",
+                body: other_fd,
               }
             );
             const result = await res.json();
