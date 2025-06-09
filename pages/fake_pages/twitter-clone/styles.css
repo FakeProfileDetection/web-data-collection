@@ -74,7 +74,7 @@ body {
 
 /* feed */
 .feed {
-  flex: 0.5;
+  flex: 0.8;
   border-right: 1px solid var(--twitter-background);
   min-width: fit-content;
   overflow-y: scroll;
@@ -110,7 +110,7 @@ body {
 }
 
 .tweetBox {
-  padding: 20px;
+  padding: 10px;
   border-bottom: 8px solid var(--twitter-background);
   border-top: 1px solid var(--twitter-background);
 }
