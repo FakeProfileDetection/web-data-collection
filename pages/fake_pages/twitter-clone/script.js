@@ -1,4 +1,4 @@
-// Complete Twitter Clone script.js - REPLACE ENTIRE FILE
+// Twitter Clone script.js - Complete replacement
 let tweet_button = document.querySelector(".tweetBox__tweetButton");
 let startTime;
 
@@ -16,6 +16,16 @@ function getMinPostLength() {
   return 100; // Conservative fallback
 }
 
+/**
+ * Get query parameter from URL
+ */
+function getQueryParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+/**
+ * Map JavaScript key events to standardized format
+ */
 function replaceJsKey(e) {
   if (e.key === "Shift") return "Key.shift";
   else if (e.key === "Control") return "Key.ctrl";
@@ -35,7 +45,7 @@ function replaceJsKey(e) {
 }
 
 /**
- * Auto-grow textarea like Instagram
+ * Auto-grow textarea like Twitter
  */
 function initializeAutoGrowTextarea() {
   const textarea = document.getElementById('input_value');
@@ -82,7 +92,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   const onKeyDown = (e) => {
     keyEvents.push(["P", replaceJsKey(e), Date.now()]);
     
-    // ⭐ FIXED: Handle Enter key properly in tweet input
+    // Handle Enter key properly in tweet input
     if (e.key === "Enter" && e.target.id === "input_value") {
       if (!e.shiftKey) {
         // Prevent form submission on Enter without Shift
@@ -135,7 +145,9 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
     tweet_button.textContent = 'Posting...';
 
     try {
-      const p = platform_initial === "0" ? "f" : platform_initial === "1" ? "i" : platform_initial === "2" ? "t" : "u";
+      const p = platform_initial === "0" ? "f" : 
+                platform_initial === "1" ? "i" : 
+                platform_initial === "2" ? "t" : "u";
       const csvName = `${p}_${user_id_str}_${task_id}.csv`;
       const txtName = `${p}_${user_id_str}_${task_id}_raw.txt`;
       const metadataName = `${p}_${user_id_str}_${task_id}_metadata.json`;
@@ -154,43 +166,65 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         alert("Empty posts are not allowed!");
         tweet_button.disabled = false;
         tweet_button.textContent = 'Tweet';
+        return;
       } else if (rawText.length < minLength) {
         alert(`Posts shorter than ${minLength} characters are not allowed! Current length: ${rawText.length}`);
         tweet_button.disabled = false;
         tweet_button.textContent = 'Tweet';
+        return;
       } else if (keyEvents.length === 0) {
         alert("No keystrokes recorded! Please type something before submitting.");
         tweet_button.disabled = false;
         tweet_button.textContent = 'Tweet';
-      } else {
-        console.log("Submitting tweet with length:", rawText.length);
-        
-        const txtBlob = new Blob([rawText], { type: "text/plain;charset=utf-8" });
-        
-        const endTime = Date.now();
-        const metadata = {
-          user_id: user_id_str,
-          platform_initial: platform_initial,
-          task_id: task_id,
-          start_time: startTime,
-          end_time: endTime,
-          duration_ms: endTime - startTime,
-          platform: platform_initial === "0" ? "facebook" : platform_initial === "1" ? "instagram" : "twitter"
-        };
-        const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: "application/json" });
-
-        const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
-          uploadToSaver(csvBlob, csvName),
-          uploadToSaver(txtBlob, txtName),
-          uploadToSaver(metadataBlob, metadataName),
-        ]);
-
-        console.log("✅ CSV uploaded →", csvUrl);
-        console.log("✅ TXT uploaded →", txtUrl);
-        console.log("✅ Metadata uploaded →", metadataUrl);
-        alert('Keystroke CSV, raw text, and metadata uploaded successfully! This tab will be closed after dismissing this message!');
-        window.close();
+        return;
       }
+
+      console.log("Submitting tweet with length:", rawText.length);
+      
+      const txtBlob = new Blob([rawText], { type: "text/plain;charset=utf-8" });
+      
+      const endTime = Date.now();
+      const metadata = {
+        user_id: user_id_str,
+        platform_initial: platform_initial,
+        task_id: task_id,
+        start_time: startTime,
+        end_time: endTime,
+        duration_ms: endTime - startTime,
+        platform: platform_initial === "0" ? "facebook" : 
+                  platform_initial === "1" ? "instagram" : "twitter"
+      };
+      const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: "application/json" });
+
+      const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
+        uploadToSaver(csvBlob, csvName),
+        uploadToSaver(txtBlob, txtName),
+        uploadToSaver(metadataBlob, metadataName),
+      ]);
+
+      console.log("✅ CSV uploaded →", csvUrl);
+      console.log("✅ TXT uploaded →", txtUrl);
+      console.log("✅ Metadata uploaded →", metadataUrl);
+      
+      alert("Post submitted successfully! Returning to tasks...");
+      
+      // Redirect back to tasks page instead of closing window
+      const returnUrl = getQueryParam("return_url");
+      if (returnUrl) {
+        // Redirect back to the tasks page
+        console.log("Redirecting to:", decodeURIComponent(returnUrl));
+        window.location.href = decodeURIComponent(returnUrl);
+      } else {
+        // Fallback if no return URL provided
+        console.error("No return URL found in query parameters");
+        alert("No return URL found. Please navigate back to the tasks page manually.");
+        
+        // Try to go back in history as a last resort
+        if (window.history.length > 1) {
+          window.history.back();
+        }
+      }
+      
     } catch (err) {
       console.error("❌ Upload failed:", err);
       alert("❌ Upload failed – see console for details. Please try again.");
@@ -200,11 +234,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   };
 }
 
-function getQueryParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
-
-// ⭐ FIXED: Prevent multiple initializations
+// Prevent multiple initializations
 let isInitialized = false;
 
 window.addEventListener('load', async function () {
@@ -219,8 +249,9 @@ window.addEventListener('load', async function () {
   const user_id = getQueryParam("user_id");
   const platform_id = getQueryParam("platform_id");
   const task_id = getQueryParam("task_id");
+  const return_url = getQueryParam("return_url");
 
-  console.log("Initializing Twitter with:", { user_id, platform_id, task_id });
+  console.log("Initializing Twitter with:", { user_id, platform_id, task_id, return_url });
 
   if (user_id && platform_id && task_id) {
     startKeyLogger(user_id, platform_id, task_id);
@@ -231,7 +262,7 @@ window.addEventListener('load', async function () {
   }
 });
 
-// ⭐ Initialize auto-grow when DOM is ready
+// Initialize auto-grow when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
   initializeAutoGrowTextarea();
   
