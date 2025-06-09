@@ -449,3 +449,335 @@ if (typeof module !== 'undefined' && module.exports) {
     CONFIG
   };
 }
+
+// ============================================
+// PLATFORM SUBMISSION HANDLER
+// Claude says add this to common.js
+// ============================================
+
+const PlatformSubmissionHandler = {
+  // State
+  keyEvents: [],
+  startTime: null,
+  isInitialized: false,
+
+  /**
+   * Initialize the platform handler
+   * @param {Object} config - Configuration object
+   * @param {string} config.platform - Platform name (facebook, instagram, twitter)
+   * @param {string} config.textInputId - ID of the text input element
+   * @param {string} config.submitButtonId - ID of the submit button element
+   * @param {function} config.onBeforeSubmit - Optional callback before submission
+   * @param {function} config.onAfterSubmit - Optional callback after successful submission
+   */
+  init(config) {
+    if (this.isInitialized) {
+      console.log("Platform handler already initialized, skipping...");
+      return;
+    }
+
+    this.isInitialized = true;
+    this.startTime = Date.now();
+    this.config = config;
+
+    // Get URL parameters
+    const urlParams = this.getUrlParameters();
+    
+    console.log(`=== ${config.platform.toUpperCase()} PAGE LOADED ===`);
+    console.log("Current URL:", window.location.href);
+    console.log("Parsed parameters:", urlParams);
+
+    // Validate required parameters
+    if (!urlParams.user_id || !urlParams.platform_id || !urlParams.task_id) {
+      console.error("Missing required parameters:", urlParams);
+      alert('Missing user or platform or task info in URL');
+      return;
+    }
+
+    // Start keylogger
+    this.startKeyLogger(urlParams);
+
+    // Set up submit button
+    this.setupSubmitButton(urlParams);
+
+    console.log(`✅ ${config.platform} handler initialized successfully`);
+  },
+
+  /**
+   * Get URL parameters
+   */
+  getUrlParameters() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      user_id: params.get('user_id'),
+      platform_id: params.get('platform_id'),
+      task_id: params.get('task_id'),
+      return_url: params.get('return_url')
+    };
+  },
+
+  /**
+   * Start keystroke logging
+   */
+  startKeyLogger(urlParams) {
+    const onKeyDown = (e) => {
+      this.keyEvents.push(['P', this.replaceJsKey(e), Date.now()]);
+      
+      // Handle Enter key for multi-line support
+      if (e.key === "Enter" && e.target.id === this.config.textInputId) {
+        if (!e.shiftKey) {
+          e.preventDefault();
+          const textarea = e.target;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+          
+          // Trigger any auto-resize if needed
+          textarea.dispatchEvent(new Event('input'));
+        }
+      }
+    };
+
+    const onKeyUp = (e) => {
+      this.keyEvents.push(['R', this.replaceJsKey(e), Date.now()]);
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+  },
+
+  /**
+   * Setup submit button handler
+   */
+  setupSubmitButton(urlParams) {
+    const submitButton = document.getElementById(this.config.submitButtonId);
+    
+    if (!submitButton) {
+      console.error(`Submit button #${this.config.submitButtonId} not found!`);
+      return;
+    }
+
+    submitButton.onclick = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Call before submit callback if provided
+      if (this.config.onBeforeSubmit) {
+        const shouldContinue = this.config.onBeforeSubmit(e);
+        if (!shouldContinue) return;
+      }
+
+      await this.handleSubmission(urlParams, submitButton);
+    };
+  },
+
+  /**
+   * Handle form submission
+   */
+  async handleSubmission(urlParams, submitButton) {
+    if (submitButton.disabled) return;
+    
+    const originalButtonText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Posting...';
+
+    try {
+      // Get and validate text
+      const inputEl = document.getElementById(this.config.textInputId);
+      const rawText = inputEl ? inputEl.value.trim() : '';
+
+      // Validate post content
+      const validation = this.validatePost(rawText);
+      if (!validation.isValid) {
+        alert(validation.message);
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+        return;
+      }
+
+      // Prepare file names
+      const filePrefix = this.getPlatformPrefix(urlParams.platform_id);
+      const csvName = `${filePrefix}_${urlParams.user_id}_${urlParams.task_id}.csv`;
+      const txtName = `${filePrefix}_${urlParams.user_id}_${urlParams.task_id}_raw.txt`;
+      const metadataName = `${filePrefix}_${urlParams.user_id}_${urlParams.task_id}_metadata.json`;
+
+      // Build files
+      const csvBlob = this.buildCsvBlob();
+      const txtBlob = new Blob([rawText], { type: 'text/plain;charset=utf-8' });
+      const metadataBlob = this.buildMetadataBlob(urlParams);
+
+      // Upload files
+      const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
+        this.uploadToSaver(csvBlob, csvName),
+        this.uploadToSaver(txtBlob, txtName),
+        this.uploadToSaver(metadataBlob, metadataName),
+      ]);
+
+      console.log('✅ CSV uploaded →', csvUrl);
+      console.log('✅ TXT uploaded →', txtUrl);
+      console.log('✅ Metadata uploaded →', metadataUrl);
+
+      // Call after submit callback if provided
+      if (this.config.onAfterSubmit) {
+        this.config.onAfterSubmit();
+      }
+
+      // Handle navigation back to tasks
+      this.navigateBackToTasks(urlParams);
+
+    } catch (err) {
+      console.error('❌ Upload failed:', err);
+      alert('❌ Upload failed – see console for details. Please try again.');
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
+    }
+  },
+
+  /**
+   * Validate post content
+   */
+  validatePost(text) {
+    if (!text || text.length === 0) {
+      return { isValid: false, message: 'Empty posts are not allowed!' };
+    }
+
+    const minLength = this.getMinPostLength();
+    if (text.length < minLength) {
+      return { 
+        isValid: false, 
+        message: `Posts shorter than ${minLength} characters are not allowed! Current length: ${text.length}` 
+      };
+    }
+
+    if (this.keyEvents.length === 0) {
+      return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
+    }
+
+    return { isValid: true };
+  },
+
+  /**
+   * Navigate back to tasks page
+   */
+  navigateBackToTasks(urlParams) {
+    alert('Post submitted successfully! Click OK to return to tasks...');
+
+    const returnUrl = urlParams.return_url;
+    
+    if (returnUrl) {
+      const decodedUrl = decodeURIComponent(returnUrl);
+      console.log("Redirecting to:", decodedUrl);
+      window.location.replace(decodedUrl);
+    } else {
+      // Fallback: construct URL if return_url is missing
+      console.error("No return URL found, using fallback");
+      
+      if (urlParams.user_id && urlParams.task_id) {
+        const fallbackUrl = `/web-data-collection/pages/hosting/tasks.html?user_id=${urlParams.user_id}&completed_task=${urlParams.task_id}`;
+        console.log("Using fallback URL:", fallbackUrl);
+        window.location.replace(fallbackUrl);
+      } else {
+        alert("Cannot return to tasks page. Please navigate back manually.");
+        if (window.history.length > 1) {
+          window.history.back();
+        }
+      }
+    }
+  },
+
+  // ============================================
+  // HELPER FUNCTIONS
+  // ============================================
+
+  /**
+   * Get minimum post length from CONFIG
+   */
+  getMinPostLength() {
+    if (typeof CONFIG !== 'undefined' && CONFIG.POST_VALIDATION) {
+      console.log(`Using CONFIG minimum length: ${CONFIG.POST_VALIDATION.currentMinLength}`);
+      return CONFIG.POST_VALIDATION.currentMinLength;
+    }
+    
+    console.error('CONFIG not loaded! Using fallback minimum length.');
+    return 100;
+  },
+
+  /**
+   * Get platform prefix for file naming
+   */
+  getPlatformPrefix(platformId) {
+    const prefixes = { '0': 'f', '1': 'i', '2': 't' };
+    return prefixes[platformId] || 'u';
+  },
+
+  /**
+   * Map keyboard keys to standard format
+   */
+  replaceJsKey(e) {
+    const keyMap = {
+      'Shift': 'Key.shift',
+      'Control': 'Key.ctrl',
+      'Alt': 'Key.alt',
+      'Meta': 'Key.cmd',
+      'Enter': 'Key.enter',
+      'Backspace': 'Key.backspace',
+      'Escape': 'Key.esc',
+      'Tab': 'Key.tab',
+      'ArrowLeft': 'Key.left',
+      'ArrowRight': 'Key.right',
+      'ArrowUp': 'Key.up',
+      'ArrowDown': 'Key.down',
+      'CapsLock': 'Key.caps_lock'
+    };
+    
+    if (e.code === 'Space') return 'Key.space';
+    return keyMap[e.key] || e.key;
+  },
+
+  /**
+   * Build CSV blob from keystroke events
+   */
+  buildCsvBlob() {
+    const heading = [['Press or Release', 'Key', 'Time']];
+    const csvString = heading
+      .concat(this.keyEvents)
+      .map(row => row.join(','))
+      .join('\n');
+    return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+  },
+
+  /**
+   * Build metadata blob
+   */
+  buildMetadataBlob(urlParams) {
+    const endTime = Date.now();
+    const metadata = {
+      user_id: urlParams.user_id,
+      platform_id: urlParams.platform_id,
+      task_id: urlParams.task_id,
+      start_time: this.startTime,
+      end_time: endTime,
+      duration_ms: endTime - this.startTime,
+      platform: this.config.platform
+    };
+    return new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
+  },
+
+  /**
+   * Upload file to Netlify saver function
+   */
+  async uploadToSaver(fileBlob, filename) {
+    const fd = new FormData();
+    fd.append('file', fileBlob, filename);
+
+    const res = await fetch(
+      'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver',
+      { method: 'POST', body: fd }
+    );
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error || res.statusText);
+    return json.url;
+  }
+};
