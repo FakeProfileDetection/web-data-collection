@@ -110,19 +110,41 @@ body {
 }
 
 .tweetBox {
-  padding-bottom: 10px;
-  border-bottom: 8px solid var(--twitter-background);
-  padding-right: 10px;
-}
-
-.tweetBox form {
-  display: flex;
-  flex-direction: column;
-}
-
-.tweetbox__input {
-  display: flex;
   padding: 20px;
+  border-bottom: 8px solid var(--twitter-background);
+  border-top: 1px solid var(--twitter-background);
+}
+
+/* ⭐ FIXED: Placeholder styling */
+.tweetbox__input textarea::placeholder {
+  color: #657786;
+  font-size: 20px;
+}
+
+/* ⭐ FIXED: Tweet button positioning */
+.tweetBox__tweetButton {
+  background-color: var(--twitter-color);
+  border: none;
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  min-width: 80px;
+  height: 36px;
+  margin-left: 60px; /* Align with textarea (48px img + 12px gap) */
+  transition: background-color 0.2s ease;
+}
+
+.tweetBox__tweetButton:hover:not(:disabled) {
+  background-color: #1a8cd8;
+}
+
+.tweetBox__tweetButton:disabled {
+  background-color: #aab8c2;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .tweetbox__input textarea {
@@ -137,19 +159,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.4;
   overflow-y: auto;
-}
-
-.tweetBox__tweetButton {
-  background-color: var(--twitter-color);
-  border: none;
-  color: white;
-  font-weight: 900;
-  cursor: pointer;
-  border-radius: 30px;
-  width: 80px;
-  height: 40px;
-  margin-top: 20px;
-  margin-left: auto;
 }
 
 .tweetBox__tweetButton:hover {
