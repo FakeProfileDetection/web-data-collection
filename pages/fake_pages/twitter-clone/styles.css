@@ -125,12 +125,18 @@ body {
   padding: 20px;
 }
 
-.tweetbox__input input {
+.tweetbox__input textarea {
   flex: 1;
   margin-left: 20px;
   font-size: 20px;
   border: none;
   outline: none;
+  resize: vertical;
+  min-height: 60px;
+  max-height: 120px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+  overflow-y: auto;
 }
 
 .tweetBox__tweetButton {
@@ -144,6 +150,28 @@ body {
   height: 40px;
   margin-top: 20px;
   margin-left: auto;
+}
+
+.tweetBox__tweetButton:hover {
+  background-color: #1a8cd8;
+  transition: background-color 0.2s ease;
+}
+
+.tweetBox__tweetButton:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+/* ⭐ ACCESSIBILITY: Focus states */
+.tweetbox__input textarea:focus {
+  box-shadow: 0 0 0 2px var(--twitter-color);
+  border-radius: 4px;
+}
+
+/* ⭐ PLACEHOLDER: Better placeholder styling */
+.tweetbox__input textarea::placeholder {
+  color: #536471;
+  font-style: normal;
 }
 
 /* post */
@@ -220,6 +248,9 @@ body {
 .widgets__input input {
   border: none;
   background-color: var(--twitter-background);
+  outline: none;
+  flex: 1;
+  margin-left: 10px;
 }
 
 .widgets__searchIcon {

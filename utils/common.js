@@ -9,14 +9,14 @@ class SecureCookieManager {
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
     
-    // Convert bytes to hex string
+    // Convert bytes to hex string - more explicit method
     let hexString = '';
     for (let i = 0; i < array.length; i++) {
       const hex = array[i].toString(16).padStart(2, '0');
       hexString += hex;
     }
     
-    console.log('Generated hex string:', hexString); // Debug log
+    console.log('Generated secure user ID:', hexString);
     return hexString;
   }
 

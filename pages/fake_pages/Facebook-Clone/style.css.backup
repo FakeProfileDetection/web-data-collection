@@ -9,6 +9,11 @@ body {
     background-color: #efefef;
 }
 
+#post {
+    margin-top: 60px;
+    margin-left: -540px;
+}
+
 nav {
     display: flex;
     align-items: center;
@@ -330,11 +335,19 @@ nav {
     padding-top: 20px;
 }
 
-/* ⭐ REMOVED: The problematic input styling that caused horizontal scrolling */
+.post_input_container input {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+    background-color: transparent;
+    outline: none;
+    margin-bottom: -330000000px;
+    resize: none;
+}
 
 .add_post_link {
     display: flex;
-    margin-top: 15px; /* ⭐ FIXED: Changed from -20px to 15px */
+    margin-top: -20px;
 }
 
 .add_post_link a {
@@ -784,18 +797,6 @@ footer {
     .post_input_container {
         padding-left: 0;
     }
-    
-    /* ⭐ NEW: Mobile responsive styles for textarea */
-    .post_input_container textarea {
-        font-size: 13px;
-        min-height: 50px;
-        padding: 10px;
-    }
-    
-    #button_value {
-        padding: 8px 20px;
-        font-size: 13px;
-    }
 }
 
 /* todo:  🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥 Its Media  Query TIme 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥  */
@@ -831,61 +832,22 @@ footer {
     }
 }
 
-/* ⭐ NEW: Fixed button styling - removed problematic margins */
 #button_value {
     padding: 10px 30px;
+    margin-bottom: -440px;
+    margin-left: 430px;
     cursor: pointer;
     background-color: #1877f2;
     color: white;
-    border: none;
-    border-radius: 4px;
-    margin-top: 10px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
 }
 
-#button_value:hover {
-    background-color: #166fe5;
-}
-
-#button_value:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-/* ⭐ NEW: Multi-line textarea styling */
-.post_input_container textarea {
-    width: 100%;
-    min-height: 40px;        /* ← FIX: Smaller minimum height */
-    padding: 8px 12px;       /* ← FIX: Better padding */
-    border: 1px solid #ccc;  /* ← FIX: Full border like Instagram */
-    border-radius: 20px;     /* ← FIX: Rounded corners like Instagram */
-    background-color: #f0f2f5; /* ← FIX: Light background like Instagram */
-    outline: none;
-    resize: none;            /* ← FIX: Disable manual resize */
-    font-family: 'Poppins', sans-serif;
-    font-size: 16px;         /* ← FIX: Larger font size */
-    line-height: 1.5;        /* ← FIX: Better line height for multi-line */
-    overflow-y: hidden;      /* ← FIX: Let it grow naturally */
-    overflow-wrap: break-word; /* ← FIX: Break long words */
-    white-space: pre-wrap;   /* ← FIX: Preserve line breaks */
-}
-
-.post_input_container textarea:focus {
-    border-color: #1876f2;
-    background-color: #fff;
-    box-shadow: 0 0 0 2px rgba(24, 118, 242, 0.1);
-}
-
-/* ⭐ Auto-grow the textarea as user types */
-.post_input_container textarea:not(:placeholder-shown) {
-    min-height: 36px;
-    height: auto;
-}
-
-/* ⭐ Make placeholder text lighter */
-.post_input_container textarea::placeholder {
-    color: #65676b;
-    font-style: normal;
+#post {
+    background-color: #1876f2;
+    color: #fff;
+    margin-left: 1px;
+    width: 400px;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: -7px;
 }

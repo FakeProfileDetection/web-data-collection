@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; text-align: center; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 GitHub Pages Debug Test</h1>
+        <p>This page will help debug why user ID generation works locally but fails on GitHub Pages.</p>
+        
+        <div class="test-section">
+            <h3>Environment Detection</h3>
+            <div id="environmentInfo"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Script Loading Test</h3>
+            <button onclick="testScriptLoading()">Test Script Paths</button>
+            <div id="scriptResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Direct User ID Generation (No External Scripts)</h3>
+            <button onclick="testDirectGeneration()">Test Direct Generation</button>
+            <div id="directResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>External Script Test</h3>
+            <div id="externalScriptResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Console Log Capture</h3>
+            <div id="consoleCapture"></div>
+        </div>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        let capturedLogs = [];
+
+        console.log = function(...args) {
+            capturedLogs.push({type: 'log', args: args, timestamp: new Date().toISOString()});
+            originalConsoleLog.apply(console, args);
+            updateConsoleCapture();
+        };
+
+        console.error = function(...args) {
+            capturedLogs.push({type: 'error', args: args, timestamp: new Date().toISOString()});
+            originalConsoleError.apply(console, args);
+            updateConsoleCapture();
+        };
+
+        function updateConsoleCapture() {
+            const captureDiv = document.getElementById('consoleCapture');
+            const recentLogs = capturedLogs.slice(-10); // Show last 10 logs
+            
+            captureDiv.innerHTML = recentLogs.map(log => 
+                `<div class="code-block">
+                    [${log.type.toUpperCase()}] ${log.timestamp}<br>
+                    ${log.args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ')}
+                </div>`
+            ).join('');
+        }
+
+        // Environment detection
+        function showEnvironmentInfo() {
+            const envDiv = document.getElementById('environmentInfo');
+            
+            const isGitHubPages = window.location.hostname.includes('github.io');
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            envDiv.innerHTML = `
+                <div class="result ${isGitHubPages ? 'warning' : 'success'}">
+                    <strong>Environment Detection:</strong><br>
+                    Current URL: ${window.location.href}<br>
+                    Hostname: ${window.location.hostname}<br>
+                    Protocol: ${window.location.protocol}<br>
+                    Is GitHub Pages: ${isGitHubPages ? 'YES' : 'NO'}<br>
+                    Is Localhost: ${isLocalhost ? 'YES' : 'NO'}<br>
+                    User Agent: ${navigator.userAgent}<br>
+                    Cookies Enabled: ${navigator.cookieEnabled}
+                </div>
+            `;
+        }
+
+        // Test script loading
+        function testScriptLoading() {
+            const resultDiv = document.getElementById('scriptResult');
+            
+            // Test if our external script loaded
+            const hasSecureCookieManager = typeof SecureCookieManager !== 'undefined';
+            const hasFormValidator = typeof FormValidator !== 'undefined';
+            const hasAPIClient = typeof APIClient !== 'undefined';
+            const hasCONFIG = typeof CONFIG !== 'undefined';
+            
+            resultDiv.innerHTML = `
+                <div class="result ${hasSecureCookieManager ? 'success' : 'error'}">
+                    <strong>External Script Loading Test:</strong><br>
+                    SecureCookieManager available: ${hasSecureCookieManager ? '✅ YES' : '❌ NO'}<br>
+                    FormValidator available: ${hasFormValidator ? '✅ YES' : '❌ NO'}<br>
+                    APIClient available: ${hasAPIClient ? '✅ YES' : '❌ NO'}<br>
+                    CONFIG available: ${hasCONFIG ? '✅ YES' : '❌ NO'}<br>
+                    <br>
+                    <strong>Available globals:</strong><br>
+                    ${Object.keys(window).filter(key => 
+                        key.includes('Secure') || 
+                        key.includes('Form') || 
+                        key.includes('API') || 
+                        key.includes('CONFIG')
+                    ).join(', ') || 'None found'}
+                </div>
+            `;
+        }
+
+        // Test direct generation (no external dependencies)
+        function testDirectGeneration() {
+            const resultDiv = document.getElementById('directResult');
+            
+            try {
+                // Method 1: Your current approach
+                const array1 = new Uint8Array(16);
+                crypto.getRandomValues(array1);
+                
+                let hexString1 = '';
+                for (let i = 0; i < array1.length; i++) {
+                    const hex = array1[i].toString(16).padStart(2, '0');
+                    hexString1 += hex;
+                }
+                
+                // Method 2: Array.from approach
+                const array2 = new Uint8Array(16);
+                crypto.getRandomValues(array2);
+                
+                const hexString2 = Array.from(array2, byte => 
+                    byte.toString(16).padStart(2, '0')
+                ).join('');
+                
+                // Method 3: Check what happens with direct toString
+                const array3 = new Uint8Array(16);
+                crypto.getRandomValues(array3);
+                const directToString = array3.toString(); // This will show comma-separated!
+                
+                console.log('Direct generation test completed');
+                console.log('Method 1 result:', hexString1);
+                console.log('Method 2 result:', hexString2);
+                console.log('Array toString():', directToString);
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ Direct Generation Test Results:</strong><br>
+                        <br><strong>Method 1 (for loop):</strong><br>
+                        Result: ${hexString1}<br>
+                        Length: ${hexString1.length}<br>
+                        Valid: ${/^[0-9a-f]{32}$/i.test(hexString1) ? 'YES' : 'NO'}<br>
+                        <br><strong>Method 2 (Array.from):</strong><br>
+                        Result: ${hexString2}<br>
+                        Length: ${hexString2.length}<br>
+                        Valid: ${/^[0-9a-f]{32}$/i.test(hexString2) ? 'YES' : 'NO'}<br>
+                        <br><strong>Method 3 (Direct toString - THE PROBLEM!):</strong><br>
+                        Result: ${directToString}<br>
+                        This is what you're seeing! ☝️<br>
+                        <br><strong>Comparison:</strong><br>
+                        Method 1 === Method 2: ${hexString1 === hexString2 ? 'NO (expected)' : 'NO (expected)'}<br>
+                        Contains commas: ${directToString.includes(',') ? 'YES (problem!)' : 'NO'}
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Direct generation failed:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Direct Generation Failed:</strong><br>
+                        Error: ${error.message}<br>
+                        Stack: ${error.stack}
+                    </div>
+                `;
+            }
+        }
+
+        // Test external script by trying to load it
+        function testExternalScript() {
+            const resultDiv = document.getElementById('externalScriptResult');
+            
+            // Try to call the external function if available
+            if (typeof SecureCookieManager !== 'undefined') {
+                try {
+                    const userId = SecureCookieManager.generateSecureUserId();
+                    console.log('External script user ID:', userId);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <strong>✅ External Script Working:</strong><br>
+                            Generated ID: ${userId}<br>
+                            Length: ${userId.length}<br>
+                            Valid: ${/^[0-9a-f]{32}$/i.test(userId) ? 'YES' : 'NO'}<br>
+                            Type: ${typeof userId}
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('External script error:', error);
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <strong>❌ External Script Error:</strong><br>
+                            Error: ${error.message}
+                        </div>
+                    `;
+                }
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ External Script Not Loaded:</strong><br>
+                        SecureCookieManager is not available.<br>
+                        Check if ../../utils/common.js is loading correctly.
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize page
+        window.onload = () => {
+            showEnvironmentInfo();
+            
+            setTimeout(() => {
+                testScriptLoading();
+                testExternalScript();
+            }, 100);
+        };
+
+        console.log('Debug page loaded successfully');
+    </script>
+
+    <!-- Try to load the common.js file (same path as consent.html uses) -->
+    <script src="../../utils/common.js"></script>
+    
+    <script>
+        // This runs after common.js should have loaded
+        setTimeout(() => {
+            const scriptDiv = document.getElementById('externalScriptResult');
+            if (scriptDiv) {
+                testExternalScript();
+            }
+        }, 500);
+    </script>
+</body>
+</html>
+

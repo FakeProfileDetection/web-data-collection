@@ -1,23 +1,6 @@
-// Elements
-const toggleThemeBtn = document.querySelector('.header__theme-button');
-const storiesContent = document.querySelector('.stories__content');
-const storiesLeftButton = document.querySelector('.stories__left-button');
-const storiesRightButton = document.querySelector('.stories__right-button');
-const posts = document.querySelectorAll('.post');
-const postsContent = document.querySelectorAll('.post__content');
-let startTime;
+// Fixed Instagram Clone script.js - Key parts only (add these fixes to your existing file)
 
-// ===================================
-// DARK/LIGHT THEME
-// Set initial theme from LocalStorage
-document.onload = setInitialTheme(localStorage.getItem('theme'));
-function setInitialTheme(themeKey) {
-  if (themeKey === 'dark') {
-    document.documentElement.classList.add('darkTheme');
-  } else {
-    document.documentElement.classList.remove('darkTheme');
-  }
-}
+// ⭐ FIXED: Add this to prevent Enter key issues in Instagram
 function replaceJsKey(e) {
   if (e.key === 'Shift') {
     return 'Key.shift';
@@ -52,171 +35,47 @@ function replaceJsKey(e) {
   }
 }
 
-// Toggle theme button
-toggleThemeBtn.addEventListener('click', () => {
-  // Toggle root class
-  document.documentElement.classList.toggle('darkTheme');
-
-  // Saving current theme on LocalStorage
-  if (document.documentElement.classList.contains('darkTheme')) {
-    localStorage.setItem('theme', 'dark');
-  } else {
-    localStorage.setItem('theme', 'light');
+/**
+ * Get the minimum post length from CONFIG
+ */
+function getMinPostLength() {
+  // Check if CONFIG is available from common.js
+  if (typeof CONFIG !== 'undefined' && CONFIG.POST_VALIDATION) {
+    console.log(`Using CONFIG minimum length: ${CONFIG.POST_VALIDATION.currentMinLength}`);
+    return CONFIG.POST_VALIDATION.currentMinLength;
   }
-});
-
-// ===================================
-// STORIES SCROLL BUTTONS
-// Scrolling stories content
-storiesLeftButton.addEventListener('click', () => {
-  storiesContent.scrollLeft -= 320;
-});
-storiesRightButton.addEventListener('click', () => {
-  storiesContent.scrollLeft += 320;
-});
-
-// Checking if screen has minimun size of 1024px
-if (window.matchMedia('(min-width: 1024px)').matches) {
-  // Observer to hide buttons when necessary
-  const storiesObserver = new IntersectionObserver(
-    function (entries) {
-      entries.forEach((entry) => {
-        if (entry.target === document.querySelector('.story:first-child')) {
-          storiesLeftButton.style.display = entry.isIntersecting
-            ? 'none'
-            : 'unset';
-        } else if (
-          entry.target === document.querySelector('.story:last-child')
-        ) {
-          storiesRightButton.style.display = entry.isIntersecting
-            ? 'none'
-            : 'unset';
-        }
-      });
-    },
-    { root: storiesContent, threshold: 1 }
-  );
-
-  // Calling the observer with the first and last stories
-  storiesObserver.observe(document.querySelector('.story:first-child'));
-  storiesObserver.observe(document.querySelector('.story:last-child'));
+  
+  // If CONFIG is not available, show error and use emergency fallback
+  console.error('CONFIG not loaded! Make sure common.js is included before this script.');
+  alert('Configuration error: Please refresh the page. If this persists, contact the research team.');
+  
+  // Emergency fallback (should never be used if common.js is loaded properly)
+  return 100; // Conservative fallback
 }
 
-// ===================================
-// POST MULTIPLE MEDIAS
-// Creating scroll buttons and indicators when post has more than one media
-posts.forEach((post) => {
-  if (post.querySelectorAll('.post__media').length > 1) {
-    const leftButtonElement = document.createElement('button');
-    leftButtonElement.classList.add('post__left-button');
-    leftButtonElement.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-        <path fill="#fff" d="M256 504C119 504 8 393 8 256S119 8 256 8s248 111 248 248-111 248-248 248zM142.1 273l135.5 135.5c9.4 9.4 24.6 9.4 33.9 0l17-17c9.4-9.4 9.4-24.6 0-33.9L226.9 256l101.6-101.6c9.4-9.4 9.4-24.6 0-33.9l-17-17c-9.4-9.4-24.6-9.4-33.9 0L142.1 239c-9.4 9.4-9.4 24.6 0 34z"></path>
-      </svg>
-    `;
-
-    const rightButtonElement = document.createElement('button');
-    rightButtonElement.classList.add('post__right-button');
-    rightButtonElement.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-        <path fill="#fff" d="M256 8c137 0 248 111 248 248S393 504 256 504 8 393 8 256 119 8 256 8zm113.9 231L234.4 103.5c-9.4-9.4-24.6-9.4-33.9 0l-17 17c-9.4 9.4-9.4 24.6 0 33.9L285.1 256 183.5 357.6c-9.4 9.4-9.4 24.6 0 33.9l17 17c9.4 9.4 24.6 9.4 33.9 0L369.9 273c9.4-9.4 9.4-24.6 0-34z"></path>
-      </svg>
-    `;
-
-    post.querySelector('.post__content').appendChild(leftButtonElement);
-    post.querySelector('.post__content').appendChild(rightButtonElement);
-
-    post.querySelectorAll('.post__media').forEach(function () {
-      const postMediaIndicatorElement = document.createElement('div');
-      postMediaIndicatorElement.classList.add('post__indicator');
-
-      post
-        .querySelector('.post__indicators')
-        .appendChild(postMediaIndicatorElement);
-    });
-
-    // Observer to change the actual media indicator
-    const postMediasContainer = post.querySelector('.post__medias');
-    const postMediaIndicators = post.querySelectorAll('.post__indicator');
-    const postIndicatorObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // Removing all the indicators
-            postMediaIndicators.forEach((indicator) =>
-              indicator.classList.remove('post__indicator--active')
-            );
-            // Adding the indicator that matches the current post media
-            postMediaIndicators[
-              Array.from(postMedias).indexOf(entry.target)
-            ].classList.add('post__indicator--active');
-          }
-        });
-      },
-      { root: postMediasContainer, threshold: 0.5 }
-    );
-
-    // Calling the observer for every post media
-    const postMedias = post.querySelectorAll('.post__media');
-    postMedias.forEach((media) => {
-      postIndicatorObserver.observe(media);
-    });
-  }
-});
-
-// Adding buttons features on every post with multiple medias
-postsContent.forEach((post) => {
-  if (post.querySelectorAll('.post__media').length > 1) {
-    const leftButton = post.querySelector('.post__left-button');
-    const rightButton = post.querySelector('.post__right-button');
-    const postMediasContainer = post.querySelector('.post__medias');
-
-    // Functions for left and right buttons
-    leftButton.addEventListener('click', () => {
-      postMediasContainer.scrollLeft -= 400;
-    });
-    rightButton.addEventListener('click', () => {
-      postMediasContainer.scrollLeft += 400;
-    });
-
-    // Observer to hide button if necessary
-    const postButtonObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach((entry) => {
-          if (entry.target === post.querySelector('.post__media:first-child')) {
-            leftButton.style.display = entry.isIntersecting ? 'none' : 'unset';
-          } else if (
-            entry.target === post.querySelector('.post__media:last-child')
-          ) {
-            rightButton.style.display = entry.isIntersecting ? 'none' : 'unset';
-          }
-        });
-      },
-      { root: postMediasContainer, threshold: 0.5 }
-    );
-
-    if (window.matchMedia('(min-width: 1024px)').matches) {
-      postButtonObserver.observe(
-        post.querySelector('.post__media:first-child')
-      );
-      postButtonObserver.observe(post.querySelector('.post__media:last-child'));
-    }
-  }
-});
-const commentButton = document.getElementById('comment_button');
-const commentBox = document.getElementById('comment_box');
-const postCommentButton = document.getElementById('post_comment');
-
 /**
- * Start recording keystrokes and expose a “Submit Keylog” button.
- * The button uploads a CSV (keystrokes) and a TXT (raw text typed in
- * the #input_value element) to the Netlify `saver` function.
+ * Start recording keystrokes and expose a "Submit Keylog" button.
  */
 function startKeyLogger(user_id_str, platform_initial, task_id) {
   /* -------------------- 1.  collect events -------------------- */
   const keyEvents = [];
 
-  const onKeyDown = (e) => keyEvents.push(['P', replaceJsKey(e), Date.now()]);
+  const onKeyDown = (e) => {
+    keyEvents.push(['P', replaceJsKey(e), Date.now()]);
+    
+    // ⭐ FIXED: Handle Enter key properly in comment input
+    if (e.key === 'Enter' && e.target.id === 'comment_input') {
+      // Check if it's Shift+Enter (allow new line) or just Enter (prevent form submission)
+      if (!e.shiftKey) {
+        // Prevent form submission on Enter without Shift
+        e.preventDefault();
+        // Optionally auto-submit on Enter (uncomment next line if desired)
+        // document.getElementById('post_comment').click();
+      }
+      // If Shift+Enter, allow the default behavior (new line)
+    }
+  };
+  
   const onKeyUp = (e) => keyEvents.push(['R', replaceJsKey(e), Date.now()]);
 
   document.addEventListener('keydown', onKeyDown);
@@ -234,10 +93,20 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
 
     const json = await res.json();
     if (!res.ok) throw new Error(json?.error || res.statusText);
-    return json.url; // public URL returned by your function
+    return json.url;
   };
 
-  postCommentButton.onclick = async () => {
+  const postCommentButton = document.getElementById('post_comment');
+  if (!postCommentButton) {
+    console.error("Post comment button (#post_comment) not found!");
+    return;
+  }
+
+  postCommentButton.onclick = async (e) => {
+    // ⭐ FIXED: Prevent any default form behavior
+    e.preventDefault();
+    e.stopPropagation();
+    
     // 1) Grab & trim the comment text
     const inputEl = document.getElementById('comment_input');
     const rawText = inputEl ? inputEl.value.trim() : '';
@@ -248,25 +117,6 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       return;
     }
 
-    /**
- * Get the minimum post length from CONFIG
- */
-  function getMinPostLength() {
-    // Check if CONFIG is available from common.js
-    if (typeof CONFIG !== 'undefined' && CONFIG.POST_VALIDATION) {
-      console.log(`Using CONFIG minimum length: ${CONFIG.POST_VALIDATION.currentMinLength}`);
-      return CONFIG.POST_VALIDATION.currentMinLength;
-    }
-    
-    // If CONFIG is not available, show error and use emergency fallback
-    console.error('CONFIG not loaded! Make sure common.js is included before this script.');
-    alert('Configuration error: Please refresh the page. If this persists, contact the research team.');
-    
-    // Emergency fallback (should never be used if common.js is loaded properly)
-    return 100; // Conservative fallback
-  }
-
-    // 3) If too short, alert and stop
     // 3) Use centralized configuration for minimum length
     const minLength = getMinPostLength();
     console.log(`Using minimum post length: ${minLength} characters`);
@@ -308,8 +158,9 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       const txtBlob = new Blob([rawText], {
         type: 'text/plain;charset=utf-8',
       });
+      
       /* ---- build metadata JSON ---- */
-      const endTime = Date.now(); // Record end time just before uploading
+      const endTime = Date.now();
       const metadata = {
         user_id: user_id_str,
         platform_initial: platform_initial,
@@ -317,12 +168,13 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         start_time: startTime,
         end_time: endTime,
         duration_ms: endTime - startTime,
+        platform: platform_initial === '0' ? 'facebook' : platform_initial === '1' ? 'instagram' : 'twitter'
       };
       const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
         type: 'application/json',
       });
 
-      /* ---- upload both in parallel ---- */
+      /* ---- upload all files in parallel ---- */
       const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
         uploadToSaver(csvBlob, csvName),
         uploadToSaver(txtBlob, txtName),
@@ -338,6 +190,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       window.close();
     } catch (err) {
       console.error('❌ Upload failed:', err);
+      alert('❌ Upload failed – see console for details. Please try again.');
     } finally {
       // 5) Re-enable the button regardless of success or failure
       postCommentButton.disabled = false;
@@ -349,15 +202,41 @@ function getQueryParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 
-window.onload = async function () {
+// ⭐ FIXED: Prevent multiple initializations and form submission issues
+let isInitialized = false;
+
+window.addEventListener('load', async function () {
+  // Prevent multiple initializations
+  if (isInitialized) {
+    console.log("Already initialized, skipping...");
+    return;
+  }
+  
+  isInitialized = true;
   startTime = Date.now();
+  
   const user_id = getQueryParam('user_id');
   const platform_id = getQueryParam('platform_id');
   const task_id = getQueryParam('task_id');
 
+  console.log("Initializing Instagram with:", { user_id, platform_id, task_id });
+
   if (user_id && platform_id && task_id) {
     startKeyLogger(user_id, platform_id, task_id);
+    console.log("✅ Instagram keylogger initialized successfully");
   } else {
+    console.error("Missing parameters:", { user_id, platform_id, task_id });
     alert('Missing user or platform or task info in URL');
   }
-};
+});
+
+// ⭐ FIXED: Prevent any form submissions from causing page reloads
+document.addEventListener('DOMContentLoaded', function() {
+  const forms = document.querySelectorAll('form');
+  forms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      console.log("Form submission prevented in Instagram");
+    });
+  });
+});

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User ID Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; text-align: center; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 User ID Generation Debug</h1>
+        <p>This page will help debug the user ID generation issue by testing different approaches.</p>
+        
+        <div class="test-section">
+            <h3>Test 1: Direct Crypto API Test</h3>
+            <button onclick="testDirectCrypto()">Test Direct Crypto</button>
+            <div id="directCryptoResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Your Current Implementation</h3>
+            <button onclick="testCurrentImplementation()">Test Current Method</button>
+            <div id="currentResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Alternative Implementation</h3>
+            <button onclick="testAlternativeImplementation()">Test Alternative</button>
+            <div id="alternativeResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: Cookie Test</h3>
+            <button onclick="testCookieStorage()">Test Cookie Storage</button>
+            <div id="cookieResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Debug Information</h3>
+            <div id="debugInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Direct crypto API test
+        function testDirectCrypto() {
+            const resultDiv = document.getElementById('directCryptoResult');
+            
+            try {
+                const array = new Uint8Array(16);
+                crypto.getRandomValues(array);
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ Crypto API Working</strong><br>
+                        Raw array: [${Array.from(array).join(', ')}]<br>
+                        Array length: ${array.length}<br>
+                        Array type: ${array.constructor.name}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Crypto API Failed</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Test 2: Your current implementation (replicated)
+        function testCurrentImplementation() {
+            const resultDiv = document.getElementById('currentResult');
+            
+            try {
+                // Replicate your exact code
+                const array = new Uint8Array(16);
+                crypto.getRandomValues(array);
+                
+                let hexString = '';
+                for (let i = 0; i < array.length; i++) {
+                    const hex = array[i].toString(16).padStart(2, '0');
+                    hexString += hex;
+                }
+                
+                console.log('Current implementation result:', hexString);
+                
+                resultDiv.innerHTML = `
+                    <div class="result ${hexString.length === 32 ? 'success' : 'error'}">
+                        <strong>${hexString.length === 32 ? '✅' : '❌'} Current Implementation</strong><br>
+                        Result: ${hexString}<br>
+                        Length: ${hexString.length} (expected: 32)<br>
+                        Type: ${typeof hexString}<br>
+                        Valid hex: ${/^[0-9a-f]{32}$/i.test(hexString) ? 'Yes' : 'No'}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Current Implementation Failed</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Test 3: Alternative implementation using Array.from and map
+        function testAlternativeImplementation() {
+            const resultDiv = document.getElementById('alternativeResult');
+            
+            try {
+                const array = new Uint8Array(16);
+                crypto.getRandomValues(array);
+                
+                // Alternative approach
+                const hexString = Array.from(array)
+                    .map(byte => byte.toString(16).padStart(2, '0'))
+                    .join('');
+                
+                console.log('Alternative implementation result:', hexString);
+                
+                resultDiv.innerHTML = `
+                    <div class="result ${hexString.length === 32 ? 'success' : 'error'}">
+                        <strong>${hexString.length === 32 ? '✅' : '❌'} Alternative Implementation</strong><br>
+                        Result: ${hexString}<br>
+                        Length: ${hexString.length} (expected: 32)<br>
+                        Type: ${typeof hexString}<br>
+                        Valid hex: ${/^[0-9a-f]{32}$/i.test(hexString) ? 'Yes' : 'No'}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Alternative Implementation Failed</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Test 4: Cookie storage test
+        function testCookieStorage() {
+            const resultDiv = document.getElementById('cookieResult');
+            
+            try {
+                // Generate a test ID
+                const array = new Uint8Array(16);
+                crypto.getRandomValues(array);
+                const testId = Array.from(array)
+                    .map(byte => byte.toString(16).padStart(2, '0'))
+                    .join('');
+                
+                // Set cookie
+                document.cookie = `test_user_id=${testId}; path=/; max-age=3600; secure; samesite=strict`;
+                
+                // Read cookie back
+                const cookieValue = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('test_user_id='))
+                    ?.split('=')[1];
+                
+                const matches = testId === cookieValue;
+                
+                resultDiv.innerHTML = `
+                    <div class="result ${matches ? 'success' : 'error'}">
+                        <strong>${matches ? '✅' : '❌'} Cookie Storage Test</strong><br>
+                        Original: ${testId}<br>
+                        Retrieved: ${cookieValue || 'undefined'}<br>
+                        Match: ${matches ? 'Yes' : 'No'}<br>
+                        All cookies: ${document.cookie}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ Cookie Test Failed</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Show debug information
+        function showDebugInfo() {
+            const debugDiv = document.getElementById('debugInfo');
+            
+            debugDiv.innerHTML = `
+                <div class="code-block">
+Browser: ${navigator.userAgent}
+Crypto API available: ${typeof crypto !== 'undefined' ? 'Yes' : 'No'}
+Crypto.getRandomValues available: ${typeof crypto?.getRandomValues === 'function' ? 'Yes' : 'No'}
+Location: ${window.location.href}
+Cookies enabled: ${navigator.cookieEnabled ? 'Yes' : 'No'}
+Current cookies: ${document.cookie || 'None'}
+                </div>
+            `;
+        }
+
+        // Run debug info on load
+        window.onload = () => {
+            showDebugInfo();
+            
+            // Auto-run a basic test
+            setTimeout(() => {
+                testCurrentImplementation();
+                testAlternativeImplementation();
+            }, 500);
+        };
+
+        // Console helper for manual testing
+        window.debugUserID = function() {
+            console.group('User ID Debug');
+            
+            // Test the exact issue you described
+            const array = new Uint8Array(16);
+            crypto.getRandomValues(array);
+            
+            console.log('Raw Uint8Array:', array);
+            console.log('Array toString():', array.toString()); // This might be the issue!
+            console.log('Array toString("hex"):', array.toString("hex")); // This won't work
+            
+            // Correct conversion
+            const correctHex = Array.from(array)
+                .map(byte => byte.toString(16).padStart(2, '0'))
+                .join('');
+            console.log('Correct hex conversion:', correctHex);
+            
+            console.groupEnd();
+            
+            return {
+                rawArray: array,
+                arrayToString: array.toString(),
+                correctHex: correctHex
+            };
+        };
+
+        console.log('Debug page loaded. Run debugUserID() in console for manual testing.');
+    </script>
+</body>
+</html>
+

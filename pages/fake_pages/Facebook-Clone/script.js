@@ -1,4 +1,4 @@
-// File: pages/fake_pages/Facebook-Clone/script.js
+// Fixed Facebook Clone script.js
 var settingsMenu = document.querySelector(".setting_menu");
 var darkBtn = document.getElementById("dark_btn");
 let startTime;
@@ -72,7 +72,27 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
   /* -------------------- 1.  collect events -------------------- */
   const keyEvents = [];
 
-  const onKeyDown = (e) => keyEvents.push(["P", replaceJsKey(e), Date.now()]);
+  const onKeyDown = (e) => {
+    keyEvents.push(["P", replaceJsKey(e), Date.now()]);
+    
+    // ⭐ FIXED: Prevent Enter key from submitting forms or reloading page
+    // Only allow Enter to create new lines in the text area
+    if (e.key === "Enter" && e.target.id === "input_value") {
+      // Don't prevent default - allow new line in textarea
+      // But prevent any form submission
+      const form = e.target.closest('form');
+      if (form) {
+        e.preventDefault();
+        // Manually insert new line (in case textarea doesn't handle it)
+        const textarea = e.target;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
+      }
+    }
+  };
+  
   const onKeyUp = (e) => keyEvents.push(["R", replaceJsKey(e), Date.now()]);
 
   document.addEventListener("keydown", onKeyDown);
@@ -93,8 +113,19 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
     return json.url; // public URL returned by your function
   };
 
+  /* -------------------- 3.  Get the submit button -------------------- */
+  const btnGet = document.querySelector("#button_value");
+  if (!btnGet) {
+    console.error("Submit button (#button_value) not found!");
+    return;
+  }
+
   /* -------------------- 4.  click handler ---------------------- */
-  btnGet.onclick = async () => {
+  btnGet.onclick = async (e) => {
+    // ⭐ FIXED: Prevent any default form submission behavior
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (btnGet.disabled) return; // avoid double‑clicks
     btnGet.disabled = true;
 
@@ -124,7 +155,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
 
       /* ---- build TXT ---- */
       const inputEl = document.getElementById("input_value");
-      const rawText = inputEl ? inputEl.value : ""; // safe if element missing
+      const rawText = inputEl ? inputEl.value.trim() : ""; // ⭐ ADDED: trim whitespace
       
       /* ---- build metadata JSON ---- */
       const endTime = Date.now(); // Record end time just before uploading
@@ -135,21 +166,27 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         start_time: startTime,
         end_time: endTime,
         duration_ms: endTime - startTime,
+        platform: platform_initial === "0" ? "facebook" : platform_initial === "1" ? "instagram" : "twitter"
       };
 
       // ⭐ UPDATED: Use centralized configuration
       const minLength = getMinPostLength();
       console.log(`Using minimum post length: ${minLength} characters`);
 
-      if (!rawText || rawText.length === 0 || keyEvents.length === 0) {
+      if (!rawText || rawText.length === 0) {
         alert("Empty posts are not allowed!");
         btnGet.disabled = false; // Re-enable button so the user can try again
       } else if (rawText.length < minLength) {
         // ⭐ UPDATED: Use dynamic minimum length
         alert(`Posts shorter than ${minLength} characters are not allowed! Current length: ${rawText.length}`);
         btnGet.disabled = false; // Re-enable button so the user can try again
+      } else if (keyEvents.length === 0) {
+        alert("No keystrokes recorded! Please type something before submitting.");
+        btnGet.disabled = false;
       } else {
-        console.error(rawText);
+        console.log("Submitting post with length:", rawText.length);
+        console.log("Post content:", rawText);
+        
         const txtBlob = new Blob([rawText], {
           type: "text/plain;charset=utf-8",
         });
@@ -173,38 +210,74 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         );
         window.close();
       }
-      /* ---- optional: stop recording after successful upload ---- */
-      // document.removeEventListener("keydown", onKeyDown);
-      // document.removeEventListener("keyup",   onKeyUp);
+      
     } catch (err) {
       console.error("❌ Upload failed:", err);
-      console.error("❌ Upload failed – see console for details");
+      alert("❌ Upload failed – see console for details. Please try again.");
       btnGet.disabled = false; // let user try again
     }
   };
 }
 
-window.onload = async function () {
+// ⭐ FIXED: Only run initialization once, when page fully loads
+let isInitialized = false;
+
+window.addEventListener('load', async function () {
+  // ⭐ FIXED: Prevent multiple initializations
+  if (isInitialized) {
+    console.log("Already initialized, skipping...");
+    return;
+  }
+  
+  isInitialized = true;
   startTime = Date.now();
+  
   const user_id = getQueryParam("user_id");
   const platform_id = getQueryParam("platform_id");
   const task_id = getQueryParam("task_id");
 
+  console.log("Initializing with:", { user_id, platform_id, task_id });
+
   if (user_id && platform_id && task_id) {
     startKeyLogger(user_id, platform_id, task_id);
+    console.log("✅ Keylogger initialized successfully");
   } else {
+    console.error("Missing parameters:", { user_id, platform_id, task_id });
     alert("Missing user or platform or task info in URL");
   }
-};
+});
 
-darkBtn.onclick = function () {
-  darkBtn.classList.toggle("dark_btn_on");
-};
+// ⭐ FIXED: Prevent form submissions from reloading the page
+document.addEventListener('DOMContentLoaded', function() {
+  // Find any forms and prevent their default submission
+  const forms = document.querySelectorAll('form');
+  forms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      console.log("Form submission prevented");
+    });
+  });
+  
+  // ⭐ FIXED: Ensure the text input is a textarea for multi-line support
+  const inputEl = document.getElementById("input_value");
+  if (inputEl && inputEl.tagName.toLowerCase() !== 'textarea') {
+    console.warn("Warning: input_value should be a textarea for multi-line support");
+  }
+});
 
+// Dark mode functionality
+if (darkBtn) {
+  darkBtn.onclick = function () {
+    darkBtn.classList.toggle("dark_btn_on");
+  };
+}
+
+// Other existing functions
 function passvalue() {
   var message = document.getElementById("");
 }
 
+// Get elements (keeping existing code structure)
 let btnGet = document.querySelector("#button_value");
-let inputGet = document.querySelector("#input_vlaue");
+let inputGet = document.querySelector("#input_vlaue"); // Note: this has a typo in original
 let post = document.querySelector("#post");
