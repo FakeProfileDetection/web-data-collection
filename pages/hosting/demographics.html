@@ -4,178 +4,209 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Demographics Form</title>
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="../../styles/global.css">
+    
+    <!-- Page-specific Styles -->
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #f4f4f4;
-      }
-      h1 {
-        font-size: 1.8em;
-        margin-bottom: 20px;
-        color: #333;
-      }
-      .form-container {
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        max-width: 400px;
-        width: 100%;
-      }
-      label {
-        display: block;
-        font-size: 1.1em;
-        margin-bottom: 10px;
-        font-weight: bold;
-      }
-      select,
-      input {
-        width: 100%;
-        padding: 12px;
-        margin-bottom: 20px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 1em;
-        box-sizing: border-box;
-      }
-      .button-container {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        margin-top: 20px;
-      }
-
-      button {
-        flex: 1;
-        padding: 12px;
-        font-size: 1.1em;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        margin-bottom: 20px;
-        transition: background-color 0.3s ease;
-      }
-      button:hover:not(:disabled) {
-        transform: translateY(-1px);
-      }
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-      }
-      .previous-button {
-        background-color: #6c757d;
-        color: white;
-      }
-      .previous-button:hover:not(:disabled) {
-        background-color: #5a6268;
-      }
-      .next-button {
-        background-color: #007bff;
-        color: white;
-      }
-      .next-button:hover:not(:disabled) {
-        background-color: #0056b3;
+      /* Enhanced form styling */
+      .form-header {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
       }
       
-      /* Email consent styling */
-      .email-consent {
-        display: flex;
-        align-items: flex-start;
-        margin-bottom: 20px;
+      .form-header h1 {
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .form-group {
+        margin-bottom: var(--spacing-lg);
         text-align: left;
       }
-      .email-consent input[type="checkbox"] {
-        width: auto;
-        margin-right: 10px;
-        margin-top: 4px;
-        flex-shrink: 0;
+      
+      .form-group label {
+        color: var(--gray-700);
+        font-size: 1.1em;
+        margin-bottom: var(--spacing-sm);
       }
+      
+      /* Email section styling */
+      .email-section {
+        background: var(--light-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
+      }
+      
+      .email-consent {
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--gray-300);
+      }
+      
       .email-consent label {
+        display: flex;
+        align-items: flex-start;
         font-weight: normal;
         font-size: 0.95em;
-        margin-bottom: 0;
-        line-height: 1.4;
+        cursor: pointer;
       }
-
-      /* Loading state */
-      .loading {
-        opacity: 0.6;
-        pointer-events: none;
+      
+      .email-consent input[type="checkbox"] {
+        margin-right: var(--spacing-sm);
+        margin-top: 2px;
+        cursor: pointer;
       }
-
-      /* Error message styling */
-      .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 10px;
-        border-radius: 4px;
-        margin: 10px 0;
-        border: 1px solid #f5c6cb;
+      
+      /* Optional badge */
+      .optional-badge {
+        display: inline-block;
+        background: #17a2b8;
+        color: var(--white);
+        font-size: 0.75em;
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+        margin-left: var(--spacing-sm);
+        font-weight: normal;
+      }
+      
+      /* Progress indicator */
+      .progress-dots {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-2xl);
+      }
+      
+      .progress-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gray-300);
+        transition: all var(--transition-base);
+      }
+      
+      .progress-dot.active {
+        background: var(--primary-color);
+        transform: scale(1.2);
+      }
+      
+      .progress-dot.completed {
+        background: var(--success-color);
+      }
+      
+      /* Select styling enhancement */
+      select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+        background-size: 1em;
+        padding-right: 2.5rem;
       }
     </style>
   </head>
   <body>
-    <div class="form-container">
-      <h1>Demographics Form</h1>
-      <form id="demographics-form">
-        <label for="email">Email (Optional):</label>
-        <input type="email" id="email" name="email" placeholder="your.email@example.com" />
-        
-        <div class="email-consent">
-          <input type="checkbox" id="consent_for_email_reachout_in_future" />
-          <label for="consent_for_email_reachout_in_future">
-            I consent to the researchers storing my email address for potential
-            future research study participation
-          </label>
+    <div class="page-container">
+      <div class="form-container">
+        <!-- Progress indicator -->
+        <div class="progress-dots">
+          <div class="progress-dot completed"></div>
+          <div class="progress-dot active"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
         </div>
 
-        <label for="gender">Gender:</label>
-        <select id="gender" name="gender" required>
-          <option value="">Select</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-          <option value="prefer_not_to_say">Prefer not to say</option>
-        </select>
-
-        <label for="handedness">Handedness:</label>
-        <select id="handedness" name="handedness" required>
-          <option value="">Select</option>
-          <option value="right">Right-handed</option>
-          <option value="left">Left-handed</option>
-          <option value="ambidextrous">Ambidextrous</option>
-        </select>
-
-        <label for="education">Education Level:</label>
-        <select id="education" name="education" required>
-          <option value="">Select</option>
-          <option value="before_college">Before College</option>
-          <option value="bachelor">Bachelor's Degree</option>
-          <option value="masters">Master's Degree</option>
-          <option value="phd">PhD</option>
-          <option value="other">Other</option>
-        </select>
-        
-        <div class="button-container">
-          <button type="button" class="previous-button" onclick="navigateToPrevious()">
-            Previous
-          </button>
-          <button type="button" class="next-button" id="next-button" onclick="handleFormSubmission()">
-            Next
-          </button>
+        <!-- Header -->
+        <div class="form-header">
+          <h1>Demographics Information</h1>
+          <p class="text-muted">Help us understand our participants better</p>
         </div>
-      </form>
+
+        <form id="demographics-form">
+          <!-- Email Section -->
+          <div class="email-section">
+            <div class="form-group">
+              <label for="email">
+                Email Address
+                <span class="optional-badge">Optional</span>
+              </label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="your.email@example.com"
+              />
+            </div>
+            
+            <div class="email-consent">
+              <label>
+                <input type="checkbox" id="consent_for_email_reachout_in_future" />
+                I consent to being contacted about future research opportunities
+              </label>
+            </div>
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" required>
+              <option value="">Please select...</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="non-binary">Non-binary</option>
+              <option value="other">Other</option>
+              <option value="prefer_not_to_say">Prefer not to say</option>
+            </select>
+          </div>
+
+          <!-- Handedness -->
+          <div class="form-group">
+            <label for="handedness">Handedness</label>
+            <select id="handedness" name="handedness" required>
+              <option value="">Please select...</option>
+              <option value="right">Right-handed</option>
+              <option value="left">Left-handed</option>
+              <option value="ambidextrous">Ambidextrous</option>
+            </select>
+          </div>
+
+          <!-- Education -->
+          <div class="form-group">
+            <label for="education">Education Level</label>
+            <select id="education" name="education" required>
+              <option value="">Please select...</option>
+              <option value="high_school">High School or Less</option>
+              <option value="some_college">Some College</option>
+              <option value="bachelor">Bachelor's Degree</option>
+              <option value="masters">Master's Degree</option>
+              <option value="doctorate">Doctorate</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <!-- Buttons -->
+          <div class="button-container">
+            <button type="button" class="btn-secondary" onclick="navigateToPrevious()">
+              Previous
+            </button>
+            <button type="button" class="btn-primary" id="next-button" onclick="handleFormSubmission()">
+              Next
+            </button>
+          </div>
+        </form>
+
+        <!-- Message Container -->
+        <div id="message-container"></div>
+      </div>
     </div>
 
-    <!-- Import our shared utilities -->
+    <!-- Import shared utilities -->
     <script src="../../utils/common.js"></script>
     
+    <!-- Page-specific Scripts -->
     <script>
       // Initialize when page loads
       window.addEventListener('load', function() {
@@ -188,29 +219,31 @@
           // Verify we have a user ID from the previous page
           const userId = NavigationManager.getQueryParam('user_id');
           if (!userId) {
-            FormValidator.showError('Session not found. Please start from the beginning.');
+            showMessage('Session not found. Redirecting...', 'error');
             setTimeout(() => {
               window.location.href = 'consent.html';
-            }, 3000);
+            }, 2000);
             return;
           }
 
-          console.log('User ID from URL:', userId);
+          console.log('User ID verified:', userId);
           
           // Store in cookie for consistency
           SecureCookieManager.setCookie('user_id', userId);
           
         } catch (error) {
           console.error('Failed to initialize demographics page:', error);
-          FormValidator.showError('Failed to initialize page. Please try again.');
+          showMessage('Failed to initialize page. Please try again.', 'error');
         }
       }
 
       async function handleFormSubmission() {
-        const form = document.getElementById('demographics-form');
         const nextButton = document.getElementById('next-button');
 
         try {
+          // Clear any existing messages
+          clearMessages();
+
           // Validate form
           const formData = validateAndGetFormData();
           if (!formData) {
@@ -219,8 +252,8 @@
 
           // Show loading state
           nextButton.disabled = true;
-          nextButton.textContent = 'Processing...';
-          form.classList.add('loading');
+          nextButton.innerHTML = '<span class="spinner"></span> Processing...';
+          document.getElementById('demographics-form').classList.add('loading');
 
           // Get user ID
           const userId = NavigationManager.getQueryParam('user_id') || 
@@ -233,19 +266,22 @@
           // Upload demographics data
           await uploadDemographicsData(formData, userId);
 
-          console.log('✅ Demographics data uploaded successfully');
+          // Show success briefly
+          showMessage('Information saved successfully!', 'success');
           
           // Navigate to next page
-          NavigationManager.navigateWithUserId('instructions.html', userId);
+          setTimeout(() => {
+            NavigationManager.navigateWithUserId('instructions.html', userId);
+          }, 500);
 
         } catch (error) {
-          console.error('❌ Form submission failed:', error);
-          FormValidator.showError('Failed to submit form. Please try again.');
+          console.error('Form submission failed:', error);
+          showMessage('Failed to submit form. Please try again.', 'error');
           
           // Reset button state
           nextButton.disabled = false;
-          nextButton.textContent = 'Next';
-          form.classList.remove('loading');
+          nextButton.innerHTML = 'Next';
+          document.getElementById('demographics-form').classList.remove('loading');
         }
       }
 
@@ -261,35 +297,36 @@
         if (email) {
           const emailValidation = FormValidator.validateEmail(email);
           if (!emailValidation.valid) {
-            FormValidator.showError(emailValidation.message);
+            showMessage(emailValidation.message, 'error');
+            document.getElementById('email').focus();
             return null;
           }
         }
 
         // Validate required fields
-        const genderValidation = FormValidator.validateSelect(gender, 'Gender');
-        if (!genderValidation.valid) {
-          FormValidator.showError(genderValidation.message);
+        if (!gender) {
+          showMessage('Please select your gender', 'error');
+          document.getElementById('gender').focus();
           return null;
         }
 
-        const handednessValidation = FormValidator.validateSelect(handedness, 'Handedness');
-        if (!handednessValidation.valid) {
-          FormValidator.showError(handednessValidation.message);
+        if (!handedness) {
+          showMessage('Please select your handedness', 'error');
+          document.getElementById('handedness').focus();
           return null;
         }
 
-        const educationValidation = FormValidator.validateSelect(education, 'Education');
-        if (!educationValidation.valid) {
-          FormValidator.showError(educationValidation.message);
+        if (!education) {
+          showMessage('Please select your education level', 'error');
+          document.getElementById('education').focus();
           return null;
         }
 
         // Handle email consent validation
         if (email && !emailConsent) {
           const confirmed = confirm(
-            "You provided an email but didn't consent to us storing it for future research. " +
-            "Your email will not be saved. Do you want to continue?"
+            "You provided an email but didn't consent to future contact. " +
+            "Your email will not be saved. Continue anyway?"
           );
           if (!confirmed) {
             return null;
@@ -315,30 +352,36 @@
 
         const fileName = `${userId}_demographics.json`;
         
-        try {
-          const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
-          console.log('✅ Demographics data uploaded:', result.fileName);
-          return result;
-        } catch (error) {
-          console.error('❌ Demographics upload failed:', error);
-          throw new Error('Failed to upload demographics data');
-        }
+        const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
+        console.log('✅ Demographics data uploaded:', result.fileName);
+        return result;
       }
 
       function navigateToPrevious() {
-        // Go back to consent page
-        window.location.href = 'consent.html';
+        if (confirm('Are you sure you want to go back? Your current progress will be lost.')) {
+          window.location.href = 'consent.html';
+        }
       }
 
-      // Error handling for unhandled errors
+      function showMessage(message, type) {
+        const container = document.getElementById('message-container');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `${type}-message mt-2`;
+        messageDiv.textContent = message;
+        container.appendChild(messageDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => messageDiv.remove(), 5000);
+      }
+
+      function clearMessages() {
+        document.getElementById('message-container').innerHTML = '';
+      }
+
+      // Error handling
       window.addEventListener('unhandledrejection', function(event) {
         console.error('Unhandled promise rejection:', event.reason);
-        FormValidator.showError('An unexpected error occurred. Please try again.');
-      });
-
-      window.addEventListener('error', function(event) {
-        console.error('JavaScript error:', event.error);
-        FormValidator.showError('An unexpected error occurred. Please try again.');
+        showMessage('An unexpected error occurred. Please try again.', 'error');
       });
     </script>
   </body>

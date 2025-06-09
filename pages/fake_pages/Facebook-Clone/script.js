@@ -205,10 +205,26 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         console.log("✅ TXT uploaded →", txtUrl);
         console.log("✅ Metadata uploaded →", metadataUrl);
         console.log("✅ Keylog submitted!");
-        alert(
-          "Keystroke CSV, raw text, and metadata uploaded successfully! This tab will be closed after dismissing this message!"
-        );
-        window.close();
+        
+        // ⭐ UPDATED: Redirect back to tasks page instead of closing window
+        alert("Post submitted successfully! Returning to tasks...");
+        
+        // Get the return URL from query parameters
+        const returnUrl = getQueryParam("return_url");
+        if (returnUrl) {
+          // Redirect back to the tasks page
+          console.log("Redirecting to:", decodeURIComponent(returnUrl));
+          window.location.href = decodeURIComponent(returnUrl);
+        } else {
+          // Fallback if no return URL provided
+          console.error("No return URL found in query parameters");
+          alert("No return URL found. Please navigate back to the tasks page manually.");
+          
+          // Try to go back in history as a last resort
+          if (window.history.length > 1) {
+            window.history.back();
+          }
+        }
       }
       
     } catch (err) {
@@ -235,8 +251,9 @@ window.addEventListener('load', async function () {
   const user_id = getQueryParam("user_id");
   const platform_id = getQueryParam("platform_id");
   const task_id = getQueryParam("task_id");
+  const return_url = getQueryParam("return_url");
 
-  console.log("Initializing with:", { user_id, platform_id, task_id });
+  console.log("Initializing with:", { user_id, platform_id, task_id, return_url });
 
   if (user_id && platform_id && task_id) {
     startKeyLogger(user_id, platform_id, task_id);

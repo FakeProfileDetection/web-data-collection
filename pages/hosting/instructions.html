@@ -3,127 +3,224 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Instructions</title>
+    <title>Study Instructions</title>
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="../../styles/global.css">
+    
+    <!-- Page-specific Styles -->
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
+      /* Enhanced instruction styling */
+      .instructions-header {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
+      }
+      
+      .instructions-header h1 {
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      /* Progress indicator */
+      .progress-dots {
         display: flex;
         justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-2xl);
       }
-      .instructions-container {
-        background: white;
-        padding: 40px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        max-width: 800px;
-        width: 90%;
-        text-align: center;
+      
+      .progress-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gray-300);
+        transition: all var(--transition-base);
       }
-      h1 {
-        font-size: 2em;
-        color: #333;
-        margin-bottom: 20px;
+      
+      .progress-dot.active {
+        background: var(--primary-color);
+        transform: scale(1.2);
       }
+      
+      .progress-dot.completed {
+        background: var(--success-color);
+      }
+      
+      /* Instruction steps */
+      .instruction-steps {
+        background: var(--light-gray);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-xl);
+      }
+      
       .step {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
+        margin-bottom: var(--spacing-xl);
         text-align: left;
-        font-size: 1.3em;
-        margin: 30px 0;
       }
-      .step img {
+      
+      .step:last-child {
+        margin-bottom: 0;
+      }
+      
+      .step-number {
+        background: var(--primary-color);
+        color: var(--white);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2em;
+        flex-shrink: 0;
+        margin-right: var(--spacing-lg);
+      }
+      
+      .step-content {
+        flex: 1;
+      }
+      
+      .step-content h3 {
+        margin-top: 0;
+        margin-bottom: var(--spacing-sm);
+        color: var(--gray-800);
+      }
+      
+      .step-content p {
+        margin: 0;
+        color: var(--gray-700);
+        line-height: 1.6;
+      }
+      
+      /* Important notes */
+      .important-note {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-sm);
+        margin-bottom: var(--spacing-xl);
+      }
+      
+      .important-note h4 {
+        margin-top: 0;
+        margin-bottom: var(--spacing-sm);
+        color: #856404;
+      }
+      
+      .important-note p {
+        margin: 0;
+        color: #856404;
+      }
+      
+      /* Ready section */
+      .ready-section {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+      }
+      
+      .ready-section p {
+        font-size: 1.2em;
+        font-weight: 500;
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-lg);
+      }
+      
+      /* Icon styling */
+      .icon {
         width: 60px;
         height: 60px;
-        margin-right: 20px;
-      }
-      p {
-        font-size: 1.2em;
-        color: #555;
-      }
-      .cta {
-        font-size: 1.5em;
-        font-weight: bold;
-        margin-top: 30px;
-        color: #007bff;
-      }
-      .button-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-      }
-      button {
-        padding: 15px 25px;
-        font-size: 1.3em;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        background-color: #007bff;
-        color: white;
-      }
-      button:hover:not(:disabled) {
-        background-color: #0056b3;
-        transform: translateY(-1px);
-      }
-      button:disabled {
-        background-color: #6c757d;
-        cursor: not-allowed;
-        transform: none;
-      }
-      /* Error message styling */
-      .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 10px;
-        border-radius: 4px;
-        margin: 10px 0;
-        border: 1px solid #f5c6cb;
+        margin: 0 auto var(--spacing-md);
       }
     </style>
   </head>
   <body>
-    <div class="instructions-container">
-      <h1>How the Tasks Page Works</h1>
-      <div class="step">
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png"
-          alt="Step 1"
-        />
-        <p>
-          On the following tasks page, you will see a series of videos. Once
-          you've finished watching a video, click the 'Next Task' button to post
-          your thoughts on the social media platform. Make sure once you're done
-          you press the "Post" button. Now navigate back to the tasks page, and
-          repeat the process.
-        </p>
-      </div>
-      <div class="step">
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/1828/1828817.png"
-          alt="Step 2"
-        />
-        <p>
-          You will have to make a total of 18 posts (3 videos on 3 platforms,
-          with 2 complete cycles = 18). Since the videos repeat, you don't have
-          to re-watch them unless you choose to do so.
-        </p>
-      </div>
-      <p class="cta">Are you ready? Begin!</p>
+    <div class="page-container">
+      <div class="content-container wide">
+        <!-- Progress indicator -->
+        <div class="progress-dots">
+          <div class="progress-dot completed"></div>
+          <div class="progress-dot completed"></div>
+          <div class="progress-dot active"></div>
+          <div class="progress-dot"></div>
+        </div>
 
-      <div class="button-container">
-        <button id="start-button" onclick="goToTasks()">
-          Go to Tasks
-        </button>
+        <!-- Header -->
+        <div class="instructions-header">
+          <h1>How This Study Works</h1>
+          <p class="text-muted">Please read these instructions carefully before beginning</p>
+        </div>
+
+        <!-- Instruction Steps -->
+        <div class="instruction-steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Watch Video Clips</h3>
+              <p>
+                You'll be presented with short video clips on various topics. 
+                Watch each video carefully as you'll be asked to share your 
+                thoughts about them.
+              </p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Post Your Thoughts</h3>
+              <p>
+                After watching a video, click "Next Task" to open a social media 
+                platform where you'll write and post your thoughts about what 
+                you just watched. Make sure to click the "Post" button when done.
+              </p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Complete All Tasks</h3>
+              <p>
+                You'll complete 18 posting tasks total: 3 different videos across 
+                3 platforms (Facebook, Instagram, Twitter), repeated twice. 
+                The videos will repeat, so you don't need to rewatch them unless 
+                you want to.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Important Note -->
+        <div class="important-note">
+          <h4>⚠️ Important:</h4>
+          <p>
+            • Each platform will open in a new tab - don't close the main task page<br>
+            • Your browser will automatically return you to the main task page after clicking "Post"<br>
+            • Make sure to complete each task
+          </p>
+        </div>
+
+        <!-- Ready Section -->
+        <div class="ready-section">
+          <p>Ready to begin? Click the button below to start the tasks!</p>
+          <button class="btn-primary btn-block" id="start-button" onclick="goToTasks()">
+            Start Tasks
+          </button>
+        </div>
+
+        <!-- Message Container -->
+        <div id="message-container"></div>
       </div>
     </div>
 
-    <!-- Import our shared utilities -->
+    <!-- Import shared utilities -->
     <script src="../../utils/common.js"></script>
     
+    <!-- Page-specific Scripts -->
     <script>
       // Initialize when page loads
       window.addEventListener('load', function() {
@@ -136,10 +233,10 @@
           // Verify we have a user ID from the previous page
           const userId = NavigationManager.getQueryParam('user_id');
           if (!userId) {
-            FormValidator.showError('Session not found. Please start from the beginning.');
+            showMessage('Session not found. Redirecting...', 'error');
             setTimeout(() => {
               window.location.href = 'consent.html';
-            }, 3000);
+            }, 2000);
             return;
           }
 
@@ -150,7 +247,7 @@
           
         } catch (error) {
           console.error('Failed to initialize instructions page:', error);
-          FormValidator.showError('Failed to initialize page. Please try again.');
+          showMessage('Failed to initialize page. Please try again.', 'error');
         }
       }
 
@@ -163,13 +260,13 @@
                          SecureCookieManager.getCookie('user_id');
           
           if (!userId) {
-            FormValidator.showError('User ID not found. Please start from the beginning.');
+            showMessage('User ID not found. Please start from the beginning.', 'error');
             return;
           }
 
           // Show loading state
           startButton.disabled = true;
-          startButton.textContent = 'Loading...';
+          startButton.innerHTML = '<span class="spinner"></span> Loading...';
 
           console.log('Navigating to tasks with user ID:', userId);
           
@@ -178,23 +275,29 @@
 
         } catch (error) {
           console.error('Failed to navigate to tasks:', error);
-          FormValidator.showError('Failed to start tasks. Please try again.');
+          showMessage('Failed to start tasks. Please try again.', 'error');
           
           // Reset button
           startButton.disabled = false;
-          startButton.textContent = 'Go to Tasks';
+          startButton.innerHTML = 'Start Tasks';
         }
+      }
+
+      function showMessage(message, type) {
+        const container = document.getElementById('message-container');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `${type}-message mt-2`;
+        messageDiv.textContent = message;
+        container.appendChild(messageDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => messageDiv.remove(), 5000);
       }
 
       // Error handling
       window.addEventListener('unhandledrejection', function(event) {
         console.error('Unhandled promise rejection:', event.reason);
-        FormValidator.showError('An unexpected error occurred. Please try again.');
-      });
-
-      window.addEventListener('error', function(event) {
-        console.error('JavaScript error:', event.error);
-        FormValidator.showError('An unexpected error occurred. Please try again.');
+        showMessage('An unexpected error occurred. Please try again.', 'error');
       });
     </script>
   </body>

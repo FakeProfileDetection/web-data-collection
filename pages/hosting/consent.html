@@ -3,136 +3,187 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Consent Form</title>
+    <title>Research Study Consent</title>
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="../../styles/global.css">
+    
+    <!-- Page-specific Styles -->
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #f4f4f4;
+      /* Enhanced styling for consent page */
+      .consent-header {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
       }
-      .form-container {
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        max-width: 600px;
-        width: 100%;
+      
+      .consent-header h1 {
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .consent-content {
+        background: var(--light-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
+        text-align: left;
+      }
+      
+      .consent-points {
+        margin: var(--spacing-lg) 0;
+      }
+      
+      .consent-points li {
+        margin-bottom: var(--spacing-sm);
+        color: var(--gray-700);
+      }
+      
+      .download-section {
+        background: #e3f2fd;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
         text-align: center;
       }
-      h1 {
-        font-size: 1.8em;
-        margin-bottom: 20px;
-        color: #333;
-      }
-      p {
-        text-align: left;
-        font-size: 1em;
-        margin-bottom: 20px;
-        line-height: 1.6;
-      }
-      label {
-        font-size: 1.1em;
-        margin-bottom: 10px;
+      
+      .download-link {
+        color: var(--primary-color);
+        text-decoration: none;
         font-weight: bold;
-        display: block;
+        display: inline-block;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border: 2px solid var(--primary-color);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-base);
       }
-      input[type="checkbox"] {
-        margin-right: 10px;
+      
+      .download-link:hover {
+        background: var(--primary-color);
+        color: var(--white);
       }
-      .button-container {
-        margin-top: 20px;
+      
+      .consent-checkbox {
+        background: var(--light-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
       }
-      button {
-        width: 100%;
-        padding: 12px;
-        font-size: 1.1em;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 8px;
+      
+      .consent-checkbox label {
+        display: flex;
+        align-items: flex-start;
+        font-weight: normal;
         cursor: pointer;
-        transition: background-color 0.3s ease;
-        margin-bottom: 10px;
       }
-      button:hover {
-        background-color: #0056b3;
+      
+      .consent-checkbox input[type="checkbox"] {
+        margin-right: var(--spacing-sm);
+        margin-top: 4px;
+        cursor: pointer;
       }
-      button:disabled {
-        background-color: #6c757d;
-        cursor: not-allowed;
+      
+      /* Progress indicator */
+      .progress-dots {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-2xl);
       }
-      /* Error message styling */
-      .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 10px;
-        border-radius: 4px;
-        margin: 10px 0;
-        border: 1px solid #f5c6cb;
+      
+      .progress-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gray-300);
+        transition: all var(--transition-base);
       }
-      /* Loading state */
-      .loading {
-        opacity: 0.6;
-        pointer-events: none;
+      
+      .progress-dot.active {
+        background: var(--primary-color);
+        transform: scale(1.2);
       }
     </style>
   </head>
   <body>
-    <div class="form-container">
-      <h1>Consent Form</h1>
-      <p>
-        Thank you for participating in our research study. Please carefully read
-        the information below before proceeding:
-      </p>
-      <p>
-        By agreeing to participate, you consent to the collection of data for
-        research purposes. Your responses will be kept confidential and used
-        solely for academic purposes. Participation is voluntary, and you may
-        withdraw at any time without penalty.
-      </p>
-      <p>Please download and review the consent form below:</p>
-      <h1>Download Consent Form</h1>
-      <a href="Informed Consent.pdf" download="Informed Consent.pdf"
-        >Click to download file</a
-      >
-
-      <p>By clicking the checkbox below, you confirm that you have:</p>
-      <ol>
-        <li>
-          You have signed a physical consent form or a consent form emailed to
-          you, which you have returned to the researcher.
-        </li>
-        <li>
-          By clicking the checkbox, you are electronically signing this consent
-          form. Your action constitutes a digital signature, which has the same
-          legal effect as a handwritten signature on a physical consent form.
-        </li>
-      </ol>
-      
-      <form id="consent-form">
-        <label>
-          <input type="checkbox" id="consent" required />
-          I have read and understood the above information and consent to
-          participate.
-        </label>
-
-        <div class="button-container">
-          <button type="button" id="next-button" onclick="handleConsentSubmission()">
-            Go to next page
-          </button>
+    <div class="page-container">
+      <div class="form-container">
+        <!-- Progress indicator -->
+        <div class="progress-dots">
+          <div class="progress-dot active"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
         </div>
-      </form>
+
+        <!-- Header -->
+        <div class="consent-header">
+          <h1>Research Study Consent</h1>
+          <p class="text-muted">Fake Profile Detection Study</p>
+        </div>
+
+        <!-- Consent Information -->
+        <div class="consent-content">
+          <h3>Study Overview</h3>
+          <p>
+            Thank you for your interest in participating in our research study. 
+            This study aims to collect typing dynamics data to improve methods 
+            for detecting fake profiles on social media platforms.
+          </p>
+          
+          <h4>What to Expect:</h4>
+          <ul class="consent-points">
+            <li>Complete a brief demographics questionnaire</li>
+            <li>Watch short video clips and share your thoughts</li>
+            <li>Make posts on simulated social media platforms</li>
+            <li>Total time: approximately 20-30 minutes</li>
+          </ul>
+          
+          <h4>Your Privacy:</h4>
+          <ul class="consent-points">
+            <li>All data collected will be kept confidential and anonymous</li>
+            <li>Data will be used solely for academic research</li>
+            <li>You may withdraw at any time without penalty</li>
+          </ul>
+        </div>
+
+        <!-- Download Section -->
+        <div class="download-section">
+          <h3>📄 Detailed Consent Form</h3>
+          <p>Please download and review the full consent document:</p>
+          <a href="Informed Consent.pdf" download="Informed Consent.pdf" class="download-link">
+            Download PDF
+          </a>
+        </div>
+
+        <!-- Consent Checkbox -->
+        <div class="consent-checkbox">
+          <h4>Electronic Consent</h4>
+          <p class="text-muted mb-2">
+            By checking this box, you confirm that you have read and understood 
+            the consent form and agree to participate in this study.
+          </p>
+          <label>
+            <input type="checkbox" id="consent" required />
+            I consent to participate in this research study
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="button" class="btn-primary btn-block" id="next-button" onclick="handleConsentSubmission()">
+          Continue to Demographics
+        </button>
+        
+        <!-- Message Container -->
+        <div id="message-container"></div>
+      </div>
     </div>
 
-    <!-- Import our shared utilities -->
+    <!-- Import shared utilities -->
     <script src="../../utils/common.js"></script>
     
+    <!-- Page-specific Scripts -->
     <script>
-      // Initialize when page loads (like Python's if __name__ == "__main__")
+      // Initialize when page loads
       window.addEventListener('load', function() {
         console.log('Consent page loaded');
         initializePage();
@@ -140,32 +191,32 @@
 
       function initializePage() {
         try {
-          // Create or get user ID using our secure utility
+          // Create or get user ID using secure utility
           const userId = SecureCookieManager.getOrCreateUserId();
           console.log('User ID initialized:', userId);
         } catch (error) {
           console.error('Failed to initialize user ID:', error);
-          FormValidator.showError('Failed to initialize session. Please refresh the page.');
+          showMessage('Failed to initialize session. Please refresh the page.', 'error');
         }
       }
 
       async function handleConsentSubmission() {
-        // Get form elements
         const consentCheckbox = document.getElementById('consent');
         const nextButton = document.getElementById('next-button');
-        const form = document.getElementById('consent-form');
+
+        // Clear any existing messages
+        clearMessages();
 
         // Validate consent checkbox
         if (!consentCheckbox.checked) {
-          FormValidator.showError('You must provide consent before proceeding to the next page!');
+          showMessage('Please check the consent box to continue', 'error');
           return;
         }
 
         try {
-          // Disable button and show loading state (prevent double-clicks)
+          // Show loading state
           nextButton.disabled = true;
-          nextButton.textContent = 'Processing...';
-          form.classList.add('loading');
+          nextButton.innerHTML = '<span class="spinner"></span> Processing...';
 
           // Get user ID
           const userId = SecureCookieManager.getOrCreateUserId();
@@ -179,20 +230,21 @@
           // Upload start time metadata
           await uploadStartTime(userId);
 
-          // Show success message
-          console.log('✅ All data uploaded successfully');
+          // Show success message briefly
+          showMessage('Consent recorded successfully!', 'success');
           
-          // Navigate to next page
-          NavigationManager.navigateWithUserId('demographics.html', userId);
+          // Navigate to next page after short delay
+          setTimeout(() => {
+            NavigationManager.navigateWithUserId('demographics.html', userId);
+          }, 500);
 
         } catch (error) {
-          console.error('❌ Consent submission failed:', error);
-          FormValidator.showError('Failed to submit consent. Please try again.');
+          console.error('Consent submission failed:', error);
+          showMessage('Failed to submit consent. Please try again.', 'error');
           
           // Re-enable button
           nextButton.disabled = false;
-          nextButton.textContent = 'Go to next page';
-          form.classList.remove('loading');
+          nextButton.innerHTML = 'Continue to Demographics';
         }
       }
 
@@ -212,14 +264,9 @@
 
         const fileName = `${userId}_consent.json`;
         
-        try {
-          const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
-          console.log('✅ Consent data uploaded:', result.fileName);
-          return result;
-        } catch (error) {
-          console.error('❌ Consent upload failed:', error);
-          throw new Error('Failed to upload consent data');
-        }
+        const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
+        console.log('✅ Consent data uploaded:', result.fileName);
+        return result;
       }
 
       async function uploadStartTime(userId) {
@@ -237,26 +284,30 @@
 
         const fileName = `${userId}_start_time.json`;
         
-        try {
-          const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
-          console.log('✅ Start time uploaded:', result.fileName);
-          return result;
-        } catch (error) {
-          console.error('❌ Start time upload failed:', error);
-          throw new Error('Failed to upload start time');
-        }
+        const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
+        console.log('✅ Start time uploaded:', result.fileName);
+        return result;
       }
 
-      // Error handling for unhandled promise rejections (like Python's uncaught exceptions)
+      function showMessage(message, type) {
+        const container = document.getElementById('message-container');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `${type}-message mt-2`;
+        messageDiv.textContent = message;
+        container.appendChild(messageDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => messageDiv.remove(), 5000);
+      }
+
+      function clearMessages() {
+        document.getElementById('message-container').innerHTML = '';
+      }
+
+      // Error handling
       window.addEventListener('unhandledrejection', function(event) {
         console.error('Unhandled promise rejection:', event.reason);
-        FormValidator.showError('An unexpected error occurred. Please refresh the page and try again.');
-      });
-
-      // Error handling for JavaScript errors
-      window.addEventListener('error', function(event) {
-        console.error('JavaScript error:', event.error);
-        FormValidator.showError('An unexpected error occurred. Please refresh the page and try again.');
+        showMessage('An unexpected error occurred. Please try again.', 'error');
       });
     </script>
   </body>
