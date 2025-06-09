@@ -1,12 +1,16 @@
+// File: pages/fake_pages/Facebook-Clone/script.js
 var settingsMenu = document.querySelector(".setting_menu");
 var darkBtn = document.getElementById("dark_btn");
 let startTime;
+
 function settingsMenuToggle() {
   settingsMenu.classList.toggle("setting_menu_height");
 }
+
 function getQueryParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
+
 function replaceJsKey(e) {
   if (e.key === "Shift") {
     return "Key.shift";
@@ -42,7 +46,25 @@ function replaceJsKey(e) {
 }
 
 /**
- * Start recording keystrokes and expose a “Submit Keylog” button.
+ * Get the minimum post length from CONFIG
+ */
+function getMinPostLength() {
+  // Check if CONFIG is available from common.js
+  if (typeof CONFIG !== 'undefined' && CONFIG.POST_VALIDATION) {
+    console.log(`Using CONFIG minimum length: ${CONFIG.POST_VALIDATION.currentMinLength}`);
+    return CONFIG.POST_VALIDATION.currentMinLength;
+  }
+  
+  // If CONFIG is not available, show error and use emergency fallback
+  console.error('CONFIG not loaded! Make sure common.js is included before this script.');
+  alert('Configuration error: Please refresh the page. If this persists, contact the research team.');
+  
+  // Emergency fallback (should never be used if common.js is loaded properly)
+  return 100; // Conservative fallback
+}
+
+/**
+ * Start recording keystrokes and expose a "Submit Keylog" button.
  * The button uploads a CSV (keystrokes) and a TXT (raw text typed in
  * the #input_value element) to the Netlify `saver` function.
  */
@@ -103,6 +125,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       /* ---- build TXT ---- */
       const inputEl = document.getElementById("input_value");
       const rawText = inputEl ? inputEl.value : ""; // safe if element missing
+      
       /* ---- build metadata JSON ---- */
       const endTime = Date.now(); // Record end time just before uploading
       const metadata = {
@@ -113,11 +136,17 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         end_time: endTime,
         duration_ms: endTime - startTime,
       };
+
+      // ⭐ UPDATED: Use centralized configuration
+      const minLength = getMinPostLength();
+      console.log(`Using minimum post length: ${minLength} characters`);
+
       if (!rawText || rawText.length === 0 || keyEvents.length === 0) {
         alert("Empty posts are not allowed!");
         btnGet.disabled = false; // Re-enable button so the user can try again
-      } else if (rawText.length < 200) {
-        alert("posts shorter than 200 chars are not allowed!");
+      } else if (rawText.length < minLength) {
+        // ⭐ UPDATED: Use dynamic minimum length
+        alert(`Posts shorter than ${minLength} characters are not allowed! Current length: ${rawText.length}`);
         btnGet.disabled = false; // Re-enable button so the user can try again
       } else {
         console.error(rawText);
@@ -154,6 +183,7 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
     }
   };
 }
+
 window.onload = async function () {
   startTime = Date.now();
   const user_id = getQueryParam("user_id");
@@ -166,9 +196,11 @@ window.onload = async function () {
     alert("Missing user or platform or task info in URL");
   }
 };
+
 darkBtn.onclick = function () {
   darkBtn.classList.toggle("dark_btn_on");
 };
+
 function passvalue() {
   var message = document.getElementById("");
 }

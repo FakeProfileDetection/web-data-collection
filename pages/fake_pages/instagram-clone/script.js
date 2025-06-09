@@ -248,9 +248,31 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
       return;
     }
 
+    /**
+ * Get the minimum post length from CONFIG
+ */
+  function getMinPostLength() {
+    // Check if CONFIG is available from common.js
+    if (typeof CONFIG !== 'undefined' && CONFIG.POST_VALIDATION) {
+      console.log(`Using CONFIG minimum length: ${CONFIG.POST_VALIDATION.currentMinLength}`);
+      return CONFIG.POST_VALIDATION.currentMinLength;
+    }
+    
+    // If CONFIG is not available, show error and use emergency fallback
+    console.error('CONFIG not loaded! Make sure common.js is included before this script.');
+    alert('Configuration error: Please refresh the page. If this persists, contact the research team.');
+    
+    // Emergency fallback (should never be used if common.js is loaded properly)
+    return 100; // Conservative fallback
+  }
+
     // 3) If too short, alert and stop
-    if (rawText.length < 200) {
-      alert('Posts shorter than 200 chars are not allowed!');
+    // 3) Use centralized configuration for minimum length
+    const minLength = getMinPostLength();
+    console.log(`Using minimum post length: ${minLength} characters`);
+
+    if (rawText.length < minLength) {
+      alert(`Posts shorter than ${minLength} characters are not allowed! Current length: ${rawText.length}`);
       return;
     }
 

@@ -37,6 +37,7 @@
         display: flex;
         justify-content: space-between;
         margin-top: 20px;
+        gap: 10px;
       }
       button {
         flex: 1;
@@ -46,21 +47,36 @@
         border: none;
         border-radius: 8px;
         cursor: pointer;
-        transition: background-color 0.3s ease;
+        transition: all 0.3s ease;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
       }
       .next-button {
         background-color: #28a745;
         color: white;
       }
-      .next-button:hover {
+      .next-button:hover:not(:disabled) {
         background-color: #218838;
       }
       .back-button {
         background-color: #6c757d;
         color: white;
       }
-      .back-button:hover {
+      .back-button:hover:not(:disabled) {
         background-color: #5a6268;
+      }
+      .complete-button {
+        background-color: #007bff;
+        color: white;
+      }
+      .complete-button:hover:not(:disabled) {
+        background-color: #0056b3;
       }
 
       .progress-container {
@@ -76,6 +92,7 @@
         width: 0%;
         background-color: #4caf50;
         transition: width 0.4s ease-in-out;
+        border-radius: 8px;
       }
       #task-counter {
         position: absolute;
@@ -86,23 +103,47 @@
         font-weight: bold;
         color: #333;
       }
+
+      /* Error message styling */
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border: 1px solid #f5c6cb;
+      }
+
+      /* Success message styling */
+      .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border: 1px solid #c3e6cb;
+      }
+
+      /* Loading state */
+      .loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
     <div class="task-container">
-      <h1 id="platform-name">Facebook</h1>
-      <h2 id="task-name">Task 1: Watch Coach Carter Movie Clip</h2>
+      <h1 id="platform-name">Loading...</h1>
+      <h2 id="task-name">Initializing tasks...</h2>
 
       <div class="progress-container">
         <div class="progress-bar" id="progress-bar"></div>
-        <span id="task-counter">Task 1 of 18</span>
+        <span id="task-counter">Loading...</span>
       </div>
 
       <video controls id="video-frame">
-        <source
-          src="videos/Coach Carter (6_9) Movie CLIP - Our Deepest Fear (2005) HD.mp4"
-          type="video/mp4"
-        />
+        <source src="" type="video/mp4" />
+        Your browser does not support the video tag.
       </video>
 
       <div class="button-container">
@@ -115,147 +156,184 @@
           ← Back
         </button>
         <button class="next-button" id="next-task" onclick="nextTask()">
-          Next Task →
+          Loading...
         </button>
       </div>
     </div>
 
+    <!-- Import our shared utilities -->
+    <script src="../../utils/common.js"></script>
+    
     <script>
-      // Fake platform URLs
-      const FACEBOOK_FAKE_URL =
-        "https://fakeprofiledetection.github.io/web-data-collection/pages/fake_pages/Facebook-Clone/index.html";
-      const INSTAGRAM_FAKE_URL =
-        "https://fakeprofiledetection.github.io/web-data-collection/pages/fake_pages/instagram-clone/index.html";
-      const TWITTER_FAKE_URL =
-        "https://fakeprofiledetection.github.io/web-data-collection/pages/fake_pages/twitter-clone/index.html";
-
-      // Video sources
-      const CARTER_PATH =
-        "videos/Coach Carter (6_9) Movie CLIP - Our Deepest Fear (2005) HD.mp4";
-      const OSCARS_PATH =
-        "videos/Watch the uncensored moment Will Smith smacks Chris Rock on stage at the Oscars, drops F-bomb.mp4";
-      const TRUMP_PATH =
-        "videos/TrumpandVancecallZelenskyydisrespectfulinOvalOfficemeeting.mp4";
-
-      // Task definitions
+      // Task definitions using the CONFIG from common.js
       const tasks = [
+        // First cycle
         {
-          platform: "Facebook",
+          platform: CONFIG.PLATFORMS.FACEBOOK.name,
           task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: FACEBOOK_FAKE_URL,
+          video: CONFIG.VIDEOS.CARTER,
+          link: CONFIG.PLATFORMS.FACEBOOK.url,
+          platformId: CONFIG.PLATFORMS.FACEBOOK.id
         },
         {
-          platform: "Instagram",
+          platform: CONFIG.PLATFORMS.INSTAGRAM.name,
           task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: INSTAGRAM_FAKE_URL,
+          video: CONFIG.VIDEOS.CARTER,
+          link: CONFIG.PLATFORMS.INSTAGRAM.url,
+          platformId: CONFIG.PLATFORMS.INSTAGRAM.id
         },
         {
-          platform: "Twitter",
+          platform: CONFIG.PLATFORMS.TWITTER.name,
           task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: TWITTER_FAKE_URL,
+          video: CONFIG.VIDEOS.CARTER,
+          link: CONFIG.PLATFORMS.TWITTER.url,
+          platformId: CONFIG.PLATFORMS.TWITTER.id
         },
         {
-          platform: "Facebook",
+          platform: CONFIG.PLATFORMS.FACEBOOK.name,
           task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: FACEBOOK_FAKE_URL,
+          video: CONFIG.VIDEOS.OSCARS,
+          link: CONFIG.PLATFORMS.FACEBOOK.url,
+          platformId: CONFIG.PLATFORMS.FACEBOOK.id
         },
         {
-          platform: "Instagram",
+          platform: CONFIG.PLATFORMS.INSTAGRAM.name,
           task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: INSTAGRAM_FAKE_URL,
+          video: CONFIG.VIDEOS.OSCARS,
+          link: CONFIG.PLATFORMS.INSTAGRAM.url,
+          platformId: CONFIG.PLATFORMS.INSTAGRAM.id
         },
         {
-          platform: "Twitter",
+          platform: CONFIG.PLATFORMS.TWITTER.name,
           task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: TWITTER_FAKE_URL,
+          video: CONFIG.VIDEOS.OSCARS,
+          link: CONFIG.PLATFORMS.TWITTER.url,
+          platformId: CONFIG.PLATFORMS.TWITTER.id
         },
         {
-          platform: "Facebook",
+          platform: CONFIG.PLATFORMS.FACEBOOK.name,
           task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: FACEBOOK_FAKE_URL,
+          video: CONFIG.VIDEOS.TRUMP,
+          link: CONFIG.PLATFORMS.FACEBOOK.url,
+          platformId: CONFIG.PLATFORMS.FACEBOOK.id
         },
         {
-          platform: "Instagram",
+          platform: CONFIG.PLATFORMS.INSTAGRAM.name,
           task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: INSTAGRAM_FAKE_URL,
+          video: CONFIG.VIDEOS.TRUMP,
+          link: CONFIG.PLATFORMS.INSTAGRAM.url,
+          platformId: CONFIG.PLATFORMS.INSTAGRAM.id
         },
         {
-          platform: "Twitter",
+          platform: CONFIG.PLATFORMS.TWITTER.name,
           task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: TWITTER_FAKE_URL,
+          video: CONFIG.VIDEOS.TRUMP,
+          link: CONFIG.PLATFORMS.TWITTER.url,
+          platformId: CONFIG.PLATFORMS.TWITTER.id
         },
-        // Repeat to make 18 tasks total
+        // Second cycle (repeat)
         {
-          platform: "Facebook",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: FACEBOOK_FAKE_URL,
-        },
-        {
-          platform: "Instagram",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: INSTAGRAM_FAKE_URL,
+          platform: CONFIG.PLATFORMS.FACEBOOK.name,
+          task: "Watch Coach Carter Movie Clip (Round 2)",
+          video: CONFIG.VIDEOS.CARTER,
+          link: CONFIG.PLATFORMS.FACEBOOK.url,
+          platformId: CONFIG.PLATFORMS.FACEBOOK.id
         },
         {
-          platform: "Twitter",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: TWITTER_FAKE_URL,
+          platform: CONFIG.PLATFORMS.INSTAGRAM.name,
+          task: "Watch Coach Carter Movie Clip (Round 2)",
+          video: CONFIG.VIDEOS.CARTER,
+          link: CONFIG.PLATFORMS.INSTAGRAM.url,
+          platformId: CONFIG.PLATFORMS.INSTAGRAM.id
         },
         {
-          platform: "Facebook",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: FACEBOOK_FAKE_URL,
+          platform: CONFIG.PLATFORMS.TWITTER.name,
+          task: "Watch Coach Carter Movie Clip (Round 2)",
+          video: CONFIG.VIDEOS.CARTER,
+          link: CONFIG.PLATFORMS.TWITTER.url,
+          platformId: CONFIG.PLATFORMS.TWITTER.id
         },
         {
-          platform: "Instagram",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: INSTAGRAM_FAKE_URL,
+          platform: CONFIG.PLATFORMS.FACEBOOK.name,
+          task: "Watch The Oscar Slap Clip (Round 2)",
+          video: CONFIG.VIDEOS.OSCARS,
+          link: CONFIG.PLATFORMS.FACEBOOK.url,
+          platformId: CONFIG.PLATFORMS.FACEBOOK.id
         },
         {
-          platform: "Twitter",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: TWITTER_FAKE_URL,
+          platform: CONFIG.PLATFORMS.INSTAGRAM.name,
+          task: "Watch The Oscar Slap Clip (Round 2)",
+          video: CONFIG.VIDEOS.OSCARS,
+          link: CONFIG.PLATFORMS.INSTAGRAM.url,
+          platformId: CONFIG.PLATFORMS.INSTAGRAM.id
         },
         {
-          platform: "Facebook",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: FACEBOOK_FAKE_URL,
+          platform: CONFIG.PLATFORMS.TWITTER.name,
+          task: "Watch The Oscar Slap Clip (Round 2)",
+          video: CONFIG.VIDEOS.OSCARS,
+          link: CONFIG.PLATFORMS.TWITTER.url,
+          platformId: CONFIG.PLATFORMS.TWITTER.id
         },
         {
-          platform: "Instagram",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: INSTAGRAM_FAKE_URL,
+          platform: CONFIG.PLATFORMS.FACEBOOK.name,
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting (Round 2)",
+          video: CONFIG.VIDEOS.TRUMP,
+          link: CONFIG.PLATFORMS.FACEBOOK.url,
+          platformId: CONFIG.PLATFORMS.FACEBOOK.id
         },
         {
-          platform: "Twitter",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: TWITTER_FAKE_URL,
+          platform: CONFIG.PLATFORMS.INSTAGRAM.name,
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting (Round 2)",
+          video: CONFIG.VIDEOS.TRUMP,
+          link: CONFIG.PLATFORMS.INSTAGRAM.url,
+          platformId: CONFIG.PLATFORMS.INSTAGRAM.id
         },
+        {
+          platform: CONFIG.PLATFORMS.TWITTER.name,
+          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting (Round 2)",
+          video: CONFIG.VIDEOS.TRUMP,
+          link: CONFIG.PLATFORMS.TWITTER.url,
+          platformId: CONFIG.PLATFORMS.TWITTER.id
+        }
       ];
 
-      // Helper to read query params
-      function getQueryParam(name) {
-        return new URLSearchParams(window.location.search).get(name);
-      }
-
+      // Global state
       let currentTaskIndex = 0;
+      let userId = null;
+
+      // Initialize when page loads
+      window.addEventListener('load', function() {
+        console.log('Tasks page loaded');
+        initializePage();
+      });
+
+      function initializePage() {
+        try {
+          // Get user ID from URL or cookie
+          userId = NavigationManager.getQueryParam('user_id') || 
+                   SecureCookieManager.getCookie('user_id');
+          
+          if (!userId) {
+            FormValidator.showError('Session not found. Please start from the beginning.');
+            setTimeout(() => {
+              window.location.href = 'consent.html';
+            }, 3000);
+            return;
+          }
+
+          console.log('Tasks initialized for user:', userId);
+          
+          // Store in cookie for consistency
+          SecureCookieManager.setCookie('user_id', userId);
+          
+          // Load the first task
+          loadTask(currentTaskIndex);
+          
+        } catch (error) {
+          console.error('Failed to initialize tasks page:', error);
+          FormValidator.showError('Failed to initialize tasks. Please try again.');
+        }
+      }
 
       // Update progress bar & counter
       function updateProgressBar() {
@@ -268,58 +346,141 @@
 
       // Load a given task, toggle Back button visibility
       function loadTask(index) {
-        const task = tasks[index];
-        document.getElementById("platform-name").textContent = task.platform;
-        document.getElementById("task-name").textContent = task.task;
-        document.getElementById("video-frame").src = task.video;
-        document.getElementById("next-task").dataset.link = task.link;
+        try {
+          if (index < 0 || index >= tasks.length) {
+            console.error('Invalid task index:', index);
+            return;
+          }
 
-        // Back button hidden on first task
-        document.getElementById("back-task").style.display =
-          index === 0 ? "none" : "inline-block";
+          const task = tasks[index];
+          
+          // Update UI elements
+          document.getElementById("platform-name").textContent = task.platform;
+          document.getElementById("task-name").textContent = `Task ${index + 1}: ${task.task}`;
+          
+          const videoElement = document.getElementById("video-frame");
+          videoElement.src = task.video;
+          
+          // Update button states
+          const backButton = document.getElementById("back-task");
+          const nextButton = document.getElementById("next-task");
+          
+          backButton.style.display = index === 0 ? "none" : "inline-block";
+          
+          if (index >= tasks.length - 1) {
+            nextButton.textContent = "Complete Study";
+            nextButton.className = "complete-button";
+          } else {
+            nextButton.textContent = "Next Task →";
+            nextButton.className = "next-button";
+          }
 
-        updateProgressBar();
+          updateProgressBar();
+          
+          console.log(`Loaded task ${index + 1}: ${task.platform} - ${task.task}`);
+          
+        } catch (error) {
+          console.error('Failed to load task:', error);
+          FormValidator.showError('Failed to load task. Please refresh the page.');
+        }
       }
 
       // Next: open platform page in new tab & advance UI
       async function nextTask() {
-        // This must be <= to make sure the twitter page gets opened before the
-        // completion page is loaded when next task is clicked again
-        if (currentTaskIndex <= tasks.length - 1) {
+        const nextButton = document.getElementById("next-task");
+        
+        try {
+          // Check if we're at the end
+          if (currentTaskIndex >= tasks.length) {
+            window.location.href = "complete.html";
+            return;
+          }
+
           const task = tasks[currentTaskIndex];
-          const userId = getQueryParam("user_id");
-          if (!userId) alert("user_id not found in URL");
+          
+          if (!userId) {
+            FormValidator.showError('User session lost. Please start from the beginning.');
+            return;
+          }
 
-          // determine platform_id param
-          let pid = 0;
-          if (task.link.includes("facebook")) pid = 0;
-          if (task.link.includes("instagram")) pid = 1;
-          if (task.link.includes("twitter")) pid = 2;
+          // Show loading state
+          nextButton.disabled = true;
+          const originalText = nextButton.textContent;
+          nextButton.textContent = "Opening platform...";
 
-          const url =
-            `${task.link}` +
-            `?user_id=${encodeURIComponent(userId)}` +
-            `&platform_id=${pid}` +
-            `&task_id=${currentTaskIndex}`;
+          console.log(`Opening platform for task ${currentTaskIndex + 1}:`, task.platform);
 
-          window.open(url, "_blank");
+          // Open platform window
+          const success = NavigationManager.openPlatform(
+            task.link, 
+            userId, 
+            task.platformId, 
+            currentTaskIndex
+          );
+
+          if (!success) {
+            // Error already shown by NavigationManager
+            nextButton.disabled = false;
+            nextButton.textContent = originalText;
+            return;
+          }
+
+          // Show success message
+          const successDiv = document.createElement('div');
+          successDiv.className = 'success-message';
+          successDiv.textContent = `${task.platform} opened in new tab. Complete your post there, then return here.`;
+          document.querySelector('.task-container').insertBefore(successDiv, document.querySelector('.button-container'));
+          
+          // Auto-remove success message
+          setTimeout(() => successDiv.remove(), 5000);
+
+          // Advance to next task
           currentTaskIndex++;
-          loadTask(currentTaskIndex);
-        } else {
-          window.location.href = "complete.html";
+          
+          // Update UI for next task or completion
+          if (currentTaskIndex >= tasks.length) {
+            nextButton.textContent = "Complete Study";
+            nextButton.className = "complete-button";
+            nextButton.disabled = false;
+          } else {
+            loadTask(currentTaskIndex);
+            nextButton.disabled = false;
+          }
+
+        } catch (error) {
+          console.error('Failed to advance task:', error);
+          FormValidator.showError('Failed to open platform. Please try again.');
+          
+          // Reset button state
+          nextButton.disabled = false;
+          nextButton.textContent = originalText;
         }
       }
 
-      // Back: only update UI, don’t open new tab
+      // Back: only update UI, don't open new tab
       function previousTask() {
-        if (currentTaskIndex > 0) {
-          currentTaskIndex--;
-          loadTask(currentTaskIndex);
+        try {
+          if (currentTaskIndex > 0) {
+            currentTaskIndex--;
+            loadTask(currentTaskIndex);
+            console.log(`Went back to task ${currentTaskIndex + 1}`);
+          }
+        } catch (error) {
+          console.error('Failed to go back:', error);
+          FormValidator.showError('Failed to go back. Please try again.');
         }
       }
 
-      // initial render
-      loadTask(currentTaskIndex);
+      // Error handling
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        FormValidator.showError('An unexpected error occurred. Please try again.');
+      });
+
+      window.addEventListener('error', function(event) {
+        console.error('JavaScript error:', event.error);
+        FormValidator.showError('An unexpected error occurred. Please try again.');
+      });
     </script>
   </body>
 </html>

@@ -39,6 +39,24 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
     return json.url; // public URL returned by your function
   };
 
+  /**
+   * Get the minimum post length from CONFIG
+   */
+  function getMinPostLength() {
+    // Check if CONFIG is available from common.js
+    if (typeof CONFIG !== 'undefined' && CONFIG.POST_VALIDATION) {
+      console.log(`Using CONFIG minimum length: ${CONFIG.POST_VALIDATION.currentMinLength}`);
+      return CONFIG.POST_VALIDATION.currentMinLength;
+    }
+    
+    // If CONFIG is not available, show error and use emergency fallback
+    console.error('CONFIG not loaded! Make sure common.js is included before this script.');
+    alert('Configuration error: Please refresh the page. If this persists, contact the research team.');
+    
+    // Emergency fallback (should never be used if common.js is loaded properly)
+    return 100; // Conservative fallback
+  }
+
   /* -------------------- 4.  click handler ---------------------- */
   tweet_button.onclick = async () => {
     if (tweet_button.disabled) return; // avoid double‑clicks
@@ -68,15 +86,22 @@ function startKeyLogger(user_id_str, platform_initial, task_id) {
         type: "text/csv;charset=utf-8",
       });
 
+      
+
+      // ⭐ UPDATED: Use centralized configuration
+      const minLength = getMinPostLength();
+      console.log(`Using minimum post length: ${minLength} characters`);
+
       /* ---- build TXT ---- */
       const inputEl = document.getElementById("input_value");
       const rawText = inputEl ? inputEl.value : ""; // safe if element missing
       if (!rawText || rawText.length === 0) {
         alert("Empty posts are not allowed!");
         tweet_button.disabled = false; // Re-enable button so the user can try again
-      } else if (rawText.length < 200) {
-        alert("posts shorter than 200 chars are not allowed!");
-        tweet_button.disabled = false; // Re-enable button so the user can try again
+      } else if (rawText.length < minLength) {
+        // ⭐ UPDATED: Use dynamic minimum length
+        alert(`Posts shorter than ${minLength} characters are not allowed! Current length: ${rawText.length}`);
+        btnGet.disabled = false; // Re-enable button so the user can try again
       } else {
         console.error(rawText);
         const txtBlob = new Blob([rawText], {

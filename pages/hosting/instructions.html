@@ -11,7 +11,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
         margin: 0;
       }
       .instructions-container {
@@ -62,13 +62,26 @@
         border-radius: 8px;
         cursor: pointer;
         transition: background-color 0.3s ease;
-      }
-      .back-button {
         background-color: #007bff;
         color: white;
       }
-      .back-button:hover {
+      button:hover:not(:disabled) {
         background-color: #0056b3;
+        transform: translateY(-1px);
+      }
+      button:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+      }
+      /* Error message styling */
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border: 1px solid #f5c6cb;
       }
     </style>
   </head>
@@ -83,7 +96,7 @@
         <p>
           On the following tasks page, you will see a series of videos. Once
           you've finished watching a video, click the 'Next Task' button to post
-          your thoughts on the social media platform. Make sure once your done
+          your thoughts on the social media platform. Make sure once you're done
           you press the "Post" button. Now navigate back to the tasks page, and
           repeat the process.
         </p>
@@ -102,28 +115,87 @@
       <p class="cta">Are you ready? Begin!</p>
 
       <div class="button-container">
-        <button class="back-button" onclick="goToTasks()">
+        <button id="start-button" onclick="goToTasks()">
           Go to Tasks
         </button>
       </div>
     </div>
+
+    <!-- Import our shared utilities -->
+    <script src="../../utils/common.js"></script>
+    
     <script>
-      function getQueryParam(name) {
-        return new URLSearchParams(window.location.search).get(name);
+      // Initialize when page loads
+      window.addEventListener('load', function() {
+        console.log('Instructions page loaded');
+        initializePage();
+      });
+
+      function initializePage() {
+        try {
+          // Verify we have a user ID from the previous page
+          const userId = NavigationManager.getQueryParam('user_id');
+          if (!userId) {
+            FormValidator.showError('Session not found. Please start from the beginning.');
+            setTimeout(() => {
+              window.location.href = 'consent.html';
+            }, 3000);
+            return;
+          }
+
+          console.log('User ID verified:', userId);
+          
+          // Store in cookie for consistency
+          SecureCookieManager.setCookie('user_id', userId);
+          
+        } catch (error) {
+          console.error('Failed to initialize instructions page:', error);
+          FormValidator.showError('Failed to initialize page. Please try again.');
+        }
       }
 
       function goToTasks() {
-        let userId = getQueryParam("user_id");
-        console.error("The retrieved cookie value was:" + userId);
-        if (!userId) {
-          alert("Cookie not set in URL Query params");
-        } else {
-          console.error("Existing user_id cookie:", userId);
+        const startButton = document.getElementById('start-button');
+        
+        try {
+          // Get user ID
+          const userId = NavigationManager.getQueryParam('user_id') || 
+                         SecureCookieManager.getCookie('user_id');
+          
+          if (!userId) {
+            FormValidator.showError('User ID not found. Please start from the beginning.');
+            return;
+          }
+
+          // Show loading state
+          startButton.disabled = true;
+          startButton.textContent = 'Loading...';
+
+          console.log('Navigating to tasks with user ID:', userId);
+          
+          // Navigate to tasks page
+          NavigationManager.navigateWithUserId('tasks.html', userId);
+
+        } catch (error) {
+          console.error('Failed to navigate to tasks:', error);
+          FormValidator.showError('Failed to start tasks. Please try again.');
+          
+          // Reset button
+          startButton.disabled = false;
+          startButton.textContent = 'Go to Tasks';
         }
-        window.location.href = `tasks.html?user_id=${encodeURIComponent(
-          userId
-        )}`;
       }
+
+      // Error handling
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        FormValidator.showError('An unexpected error occurred. Please try again.');
+      });
+
+      window.addEventListener('error', function(event) {
+        console.error('JavaScript error:', event.error);
+        FormValidator.showError('An unexpected error occurred. Please try again.');
+      });
     </script>
   </body>
 </html>

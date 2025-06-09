@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Completion</title>
+    <title>Study Complete</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -24,19 +24,164 @@
         text-align: center;
       }
       h1 {
-        font-size: 2em;
-        color: #333;
+        font-size: 2.5em;
+        color: #28a745;
+        margin-bottom: 20px;
       }
       p {
         font-size: 1.2em;
         color: #555;
         margin-bottom: 30px;
+        line-height: 1.6;
+      }
+      .study-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border-left: 4px solid #007bff;
+      }
+      .contact-info {
+        font-size: 1em;
+        color: #666;
+        margin-top: 30px;
+        padding: 20px;
+        background: #e9ecef;
+        border-radius: 8px;
+      }
+      .thank-you {
+        font-size: 1.4em;
+        font-weight: bold;
+        color: #007bff;
+        margin: 20px 0;
+      }
+      /* Error message styling */
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border: 1px solid #f5c6cb;
       }
     </style>
   </head>
   <body>
     <div class="completion-container">
       <h1>Congratulations! 🎉</h1>
-      <p>Thank you for completing all the tasks.</p>
+      
+      <p>Thank you for completing all the tasks in our research study.</p>
+      
+      <div class="study-info">
+        <h3>Study Summary</h3>
+        <p>You have successfully completed:</p>
+        <ul style="text-align: left; display: inline-block;">
+          <li>✅ Consent form</li>
+          <li>✅ Demographics questionnaire</li>
+          <li>✅ 18 social media posting tasks</li>
+          <li>✅ Typing dynamics data collection</li>
+        </ul>
+      </div>
+
+      <p class="thank-you">
+        Your participation is invaluable to our research on fake profile detection.
+      </p>
+
+      <p>
+        Your data has been securely collected and will be used solely for academic 
+        research purposes. All information will remain confidential and anonymous.
+      </p>
+
+      <div class="contact-info">
+        <h4>Questions or Concerns?</h4>
+        <p>
+          If you have any questions about this study or would like to receive 
+          information about the results, please contact the research team using 
+          the contact information provided in your consent form.
+        </p>
+      </div>
+
+      <p>
+        <strong>You may now safely close this browser window.</strong>
+      </p>
+    </div>
+
+    <!-- Import our shared utilities -->
+    <script src="../../utils/common.js"></script>
+    
+    <script>
+      // Initialize when page loads
+      window.addEventListener('load', function() {
+        console.log('Completion page loaded');
+        logStudyCompletion();
+      });
+
+      async function logStudyCompletion() {
+        try {
+          // Get user ID to log completion
+          const userId = NavigationManager.getQueryParam('user_id') || 
+                         SecureCookieManager.getCookie('user_id');
+          
+          if (userId) {
+            console.log('Study completed for user:', userId);
+            
+            // Log completion metadata (in production, this would upload to server)
+            const completionData = {
+              completion_timestamp: new Date().toISOString(),
+              user_id: userId,
+              study_version: '1.0',
+              completion_status: 'success'
+            };
+
+            console.log('Study completion data:', completionData);
+
+            // In local development, just log the completion
+            if (APIClient.isLocalDevelopment()) {
+              console.log('🧪 LOCAL DEV: Would upload completion data:', completionData);
+            } else {
+              // In production, upload completion data
+              try {
+                const jsonBlob = new Blob([JSON.stringify(completionData, null, 2)], {
+                  type: "application/json",
+                });
+                
+                await APIClient.uploadFile(jsonBlob, `${userId}_completion.json`, userId);
+                console.log('✅ Completion data uploaded');
+              } catch (error) {
+                console.error('❌ Failed to upload completion data:', error);
+                // Don't show error to user on completion page - study is done
+              }
+            }
+
+            // Optional: Clear sensitive data from browser
+            setTimeout(() => {
+              try {
+                // Clear the user ID cookie after a delay
+                SecureCookieManager.deleteCookie('user_id');
+                console.log('User session cleaned up');
+              } catch (error) {
+                console.error('Failed to clean up session:', error);
+              }
+            }, 30000); // 30 seconds delay
+
+          } else {
+            console.log('Completion page reached without user ID');
+          }
+
+        } catch (error) {
+          console.error('Failed to log study completion:', error);
+          // Don't show error message on completion page
+        }
+      }
+
+      // Error handling (silent on completion page)
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection on completion page:', event.reason);
+      });
+
+      window.addEventListener('error', function(event) {
+        console.error('JavaScript error on completion page:', event.error);
+      });
+    </script>
   </body>
 </html>

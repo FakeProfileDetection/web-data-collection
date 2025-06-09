@@ -41,6 +41,7 @@
         border: 1px solid #ccc;
         border-radius: 8px;
         font-size: 1em;
+        box-sizing: border-box;
       }
       .button-container {
         display: flex;
@@ -50,60 +51,89 @@
       }
 
       button {
-        width: 100%;
+        flex: 1;
         padding: 12px;
         font-size: 1.1em;
-        background-color: #007bff;
-        color: white;
         border: none;
         border-radius: 8px;
         cursor: pointer;
         margin-bottom: 20px;
         transition: background-color 0.3s ease;
       }
-      button:hover {
-        background-color: #0056b3;
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
       }
       .previous-button {
         background-color: #6c757d;
         color: white;
       }
-      .previous-button:hover {
+      .previous-button:hover:not(:disabled) {
         background-color: #5a6268;
       }
       .next-button {
         background-color: #007bff;
         color: white;
       }
-      .next-button:hover {
+      .next-button:hover:not(:disabled) {
         background-color: #0056b3;
       }
-      /* Style the checkbox label to remove bold text */
-      #consent_for_email_reachout_in_future + label {
+      
+      /* Email consent styling */
+      .email-consent {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        text-align: left;
+      }
+      .email-consent input[type="checkbox"] {
+        width: auto;
+        margin-right: 10px;
+        margin-top: 4px;
+        flex-shrink: 0;
+      }
+      .email-consent label {
         font-weight: normal;
+        font-size: 0.95em;
+        margin-bottom: 0;
+        line-height: 1.4;
       }
 
-      /* Add spacing for the checkbox and text */
-      #consent_for_email_reachout_in_future {
-        margin-right: 8px;
+      /* Loading state */
+      .loading {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      /* Error message styling */
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border: 1px solid #f5c6cb;
       }
     </style>
   </head>
   <body>
     <div class="form-container">
       <h1>Demographics Form</h1>
-      <form>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" />
-        <label for="consent_for_email_reachout_in_future">
-          <input
-            type="checkbox"
-            id="consent_for_email_reachout_in_future"
-            required
-          />
-          I consent to the researchers storing my email address for potential
-          future research study participation
-        </label>
+      <form id="demographics-form">
+        <label for="email">Email (Optional):</label>
+        <input type="email" id="email" name="email" placeholder="your.email@example.com" />
+        
+        <div class="email-consent">
+          <input type="checkbox" id="consent_for_email_reachout_in_future" />
+          <label for="consent_for_email_reachout_in_future">
+            I consent to the researchers storing my email address for potential
+            future research study participation
+          </label>
+        </div>
 
         <label for="gender">Gender:</label>
         <select id="gender" name="gender" required>
@@ -111,6 +141,7 @@
           <option value="male">Male</option>
           <option value="female">Female</option>
           <option value="other">Other</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
         </select>
 
         <label for="handedness">Handedness:</label>
@@ -121,120 +152,194 @@
           <option value="ambidextrous">Ambidextrous</option>
         </select>
 
-        <label for="education">Education:</label>
+        <label for="education">Education Level:</label>
         <select id="education" name="education" required>
           <option value="">Select</option>
-          <option value="Bachelor">Before College</option>
-          <option value="Bachelor">Bachelor</option>
-          <option value="Masters">Masters</option>
-          <option value="Phd">PhD</option>
+          <option value="before_college">Before College</option>
+          <option value="bachelor">Bachelor's Degree</option>
+          <option value="masters">Master's Degree</option>
+          <option value="phd">PhD</option>
+          <option value="other">Other</option>
         </select>
+        
         <div class="button-container">
-          <button
-            type="button"
-            class="previous-button"
-            onclick="navigateToPrevious()"
-          >
+          <button type="button" class="previous-button" onclick="navigateToPrevious()">
             Previous
           </button>
-          <button type="button" class="next-button" onclick="navigateToNext()">
+          <button type="button" class="next-button" id="next-button" onclick="handleFormSubmission()">
             Next
           </button>
         </div>
       </form>
     </div>
+
+    <!-- Import our shared utilities -->
+    <script src="../../utils/common.js"></script>
+    
     <script>
-      function getQueryParam(name) {
-        return new URLSearchParams(window.location.search).get(name);
-      }
+      // Initialize when page loads
+      window.addEventListener('load', function() {
+        console.log('Demographics page loaded');
+        initializePage();
+      });
 
-      async function navigateToNext() {
-        let email_value = document.getElementById("email").value;
-        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$|^$/;
-        if (emailRegex.test(email_value) == false) {
-          alert("Invalid email");
-          return;
-        }
-        let gender_value = document.getElementById("gender").value;
-        if (gender_value == "") {
-          alert("Select a gender");
-          return;
-        }
-        let handedness_value = document.getElementById("handedness").value;
-        if (handedness_value == "") {
-          alert("Select a handedness");
-          return;
-        }
-
-        let education_value = document.getElementById("education").value;
-        if (education_value == "") {
-          alert("Select an education");
-          return;
-        }
-        const consentChecked = document.getElementById(
-          "consent_for_email_reachout_in_future"
-        ).checked;
-
-        if (!consentChecked) {
-          const ok = confirm(
-            "Are you sure you do not want us to store your e-mail for a follow-up?\n" +
-              "You can still continue if you are sure."
-          );
-          if (!ok) {
-            // user clicked “Cancel” so stay on the page
+      function initializePage() {
+        try {
+          // Verify we have a user ID from the previous page
+          const userId = NavigationManager.getQueryParam('user_id');
+          if (!userId) {
+            FormValidator.showError('Session not found. Please start from the beginning.');
+            setTimeout(() => {
+              window.location.href = 'consent.html';
+            }, 3000);
             return;
           }
-        }
-        let userId = getQueryParam("user_id");
-        console.error("The retrieved cookie value was:" + userId);
-        if (!userId) {
-          alert("Cookie not set in URL Query params");
-        } else {
-          console.error("Existing user_id cookie:", userId);
-        }
-        let demographics_object = {
-          email: email_value,
-          gender: gender_value,
-          handedness: handedness_value,
-          education: education_value,
-          consent_email_for_future: consentChecked,
-        };
-        const jsonBlob = new Blob(
-          [JSON.stringify(demographics_object, null, 2)],
-          {
-            type: "application/json",
-          }
-        );
-        /* 3 — wrap in multipart/form-data (same format your function expects) */
-        const fd = new FormData();
-        fd.append("file", jsonBlob, `${userId}_demographics.json`); // filename= is vital for saver’s regex
 
-        /* 4 — POST to the Netlify Function */
+          console.log('User ID from URL:', userId);
+          
+          // Store in cookie for consistency
+          SecureCookieManager.setCookie('user_id', userId);
+          
+        } catch (error) {
+          console.error('Failed to initialize demographics page:', error);
+          FormValidator.showError('Failed to initialize page. Please try again.');
+        }
+      }
+
+      async function handleFormSubmission() {
+        const form = document.getElementById('demographics-form');
+        const nextButton = document.getElementById('next-button');
+
         try {
-          const res = await fetch(
-            "https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver",
-            {
-              method: "POST",
-              body: fd,
-            }
-          );
-          const result = await res.json();
+          // Validate form
+          const formData = validateAndGetFormData();
+          if (!formData) {
+            return; // Validation errors already shown
+          }
 
-          if (!res.ok) throw new Error(JSON.stringify(result));
+          // Show loading state
+          nextButton.disabled = true;
+          nextButton.textContent = 'Processing...';
+          form.classList.add('loading');
 
-          alert(`✅ Demographics uploaded! Go to the next page!`);
-        } catch (err) {
-          console.error("❌ Upload failed:", err);
-          alert("❌ Upload failed - check console");
+          // Get user ID
+          const userId = NavigationManager.getQueryParam('user_id') || 
+                         SecureCookieManager.getCookie('user_id');
+          
+          if (!userId) {
+            throw new Error('User ID not found');
+          }
+
+          // Upload demographics data
+          await uploadDemographicsData(formData, userId);
+
+          console.log('✅ Demographics data uploaded successfully');
+          
+          // Navigate to next page
+          NavigationManager.navigateWithUserId('instructions.html', userId);
+
+        } catch (error) {
+          console.error('❌ Form submission failed:', error);
+          FormValidator.showError('Failed to submit form. Please try again.');
+          
+          // Reset button state
+          nextButton.disabled = false;
+          nextButton.textContent = 'Next';
+          form.classList.remove('loading');
+        }
+      }
+
+      function validateAndGetFormData() {
+        // Get form values
+        const email = document.getElementById('email').value.trim();
+        const gender = document.getElementById('gender').value;
+        const handedness = document.getElementById('handedness').value;
+        const education = document.getElementById('education').value;
+        const emailConsent = document.getElementById('consent_for_email_reachout_in_future').checked;
+
+        // Validate email if provided
+        if (email) {
+          const emailValidation = FormValidator.validateEmail(email);
+          if (!emailValidation.valid) {
+            FormValidator.showError(emailValidation.message);
+            return null;
+          }
         }
 
-        window.location.href = `instructions.html?user_id=${encodeURIComponent(
-          userId
-        )}`;
+        // Validate required fields
+        const genderValidation = FormValidator.validateSelect(gender, 'Gender');
+        if (!genderValidation.valid) {
+          FormValidator.showError(genderValidation.message);
+          return null;
+        }
+
+        const handednessValidation = FormValidator.validateSelect(handedness, 'Handedness');
+        if (!handednessValidation.valid) {
+          FormValidator.showError(handednessValidation.message);
+          return null;
+        }
+
+        const educationValidation = FormValidator.validateSelect(education, 'Education');
+        if (!educationValidation.valid) {
+          FormValidator.showError(educationValidation.message);
+          return null;
+        }
+
+        // Handle email consent validation
+        if (email && !emailConsent) {
+          const confirmed = confirm(
+            "You provided an email but didn't consent to us storing it for future research. " +
+            "Your email will not be saved. Do you want to continue?"
+          );
+          if (!confirmed) {
+            return null;
+          }
+        }
+
+        return {
+          email: emailConsent ? email : '', // Only store email if consent given
+          gender,
+          handedness,
+          education,
+          consent_email_for_future: emailConsent,
+          submission_timestamp: new Date().toISOString()
+        };
       }
+
+      async function uploadDemographicsData(formData, userId) {
+        console.log('Uploading demographics data...');
+
+        const jsonBlob = new Blob([JSON.stringify(formData, null, 2)], {
+          type: "application/json",
+        });
+
+        const fileName = `${userId}_demographics.json`;
+        
+        try {
+          const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
+          console.log('✅ Demographics data uploaded:', result.fileName);
+          return result;
+        } catch (error) {
+          console.error('❌ Demographics upload failed:', error);
+          throw new Error('Failed to upload demographics data');
+        }
+      }
+
       function navigateToPrevious() {
-        window.location.href = "consent.html";
+        // Go back to consent page
+        window.location.href = 'consent.html';
       }
+
+      // Error handling for unhandled errors
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        FormValidator.showError('An unexpected error occurred. Please try again.');
+      });
+
+      window.addEventListener('error', function(event) {
+        console.error('JavaScript error:', event.error);
+        FormValidator.showError('An unexpected error occurred. Please try again.');
+      });
     </script>
   </body>
 </html>
