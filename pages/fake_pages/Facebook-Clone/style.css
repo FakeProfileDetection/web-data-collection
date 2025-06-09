@@ -326,8 +326,9 @@ nav {
 }
 
 .post_input_container {
-    padding-left: 55px;
-    padding-top: 20px;
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-right: 10px
 }
 
 /* ⭐ REMOVED: The problematic input styling that caused horizontal scrolling */
@@ -335,6 +336,10 @@ nav {
 .add_post_link {
     display: flex;
     margin-top: 15px; /* ⭐ FIXED: Changed from -20px to 15px */
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start; /* ⭐ FIXED: Changed from space-between to flex-start */
+    margin-left: 10px; /* ⭐ FIXED: Added margin-left to align with the post input */
 }
 
 .add_post_link a {
