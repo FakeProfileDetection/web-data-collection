@@ -9,7 +9,7 @@ const TasksController = {
   
   // Task definitions
   tasks: [
-    // First cycle
+     // First cycle
     {
       platform: "Facebook",
       platformClass: "facebook",
@@ -193,7 +193,7 @@ const TasksController = {
     }
   ],
 
-  // Initialize the controller
+   // Initialize the controller
   init() {
     console.log('Tasks controller initializing...');
     
@@ -219,26 +219,18 @@ const TasksController = {
     if (completedTask !== null) {
       // User is returning from completing a task
       const taskIndex = parseInt(completedTask);
-      console.log('Completed task parameter:', taskIndex, 'Current index:', this.currentTaskIndex);
+      console.log('Returning from completed task:', taskIndex);
       
-      // Get saved task index from cookie/storage
-      const savedTaskIndex = parseInt(SecureCookieManager.getCookie('current_task_index') || '0');
+      // Set to the next task (completed task + 1)
+      this.currentTaskIndex = taskIndex + 1;
+      console.log('Moving to task:', this.currentTaskIndex);
       
-      if (!isNaN(taskIndex) && taskIndex >= savedTaskIndex) {
-        // Move to next task
-        this.currentTaskIndex = taskIndex + 1;
-        console.log('Task completed, advancing from', taskIndex, 'to', this.currentTaskIndex);
-        
-        // Save the new current task index
-        SecureCookieManager.setCookie('current_task_index', this.currentTaskIndex.toString());
-        
-        // Clean URL to remove completed_task parameter
-        const cleanUrl = `${window.location.pathname}?user_id=${encodeURIComponent(this.userId)}`;
-        window.history.replaceState({}, document.title, cleanUrl);
-      } else {
-        // Restore from saved index if URL param is invalid
-        this.currentTaskIndex = savedTaskIndex;
-      }
+      // Save the new current task index
+      SecureCookieManager.setCookie('current_task_index', this.currentTaskIndex.toString());
+      
+      // Clean URL to remove completed_task parameter
+      const cleanUrl = `${window.location.pathname}?user_id=${encodeURIComponent(this.userId)}`;
+      window.history.replaceState({}, document.title, cleanUrl);
     } else {
       // No completed_task param, check for saved progress
       const savedTaskIndex = parseInt(SecureCookieManager.getCookie('current_task_index') || '0');
@@ -404,31 +396,41 @@ const TasksController = {
       nextButton.disabled = true;
       nextButton.innerHTML = '<span class="spinner"></span> Opening platform...';
 
-      console.log(`Opening platform for task ${this.currentTaskIndex + 1}:`, task.platform);
+      console.log(`Opening platform for task ${this.currentTaskIndex}: ${task.platform}`);
 
       // Build the return URL with the current task index
       const baseUrl = window.location.origin + window.location.pathname;
       const returnUrl = `${baseUrl}?user_id=${encodeURIComponent(this.userId)}&completed_task=${this.currentTaskIndex}`;
       
-      console.log('Navigating to platform with return URL:', returnUrl);
+      console.log('Return URL:', returnUrl);
       
-      // Use relative paths for local development
+      // Build platform URL
       let platformUrl;
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
+      
+      // Check if we're in local development or GitHub Pages
+      const isLocalDev = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' || 
+                         window.location.protocol === 'file:';
+      
+      if (isLocalDev) {
         // Local development - use relative paths
         const relativePaths = {
           0: '../fake_pages/Facebook-Clone/index.html',  // Facebook
-          1: '../fake_pages/instagram-clone/index.html', // Instagram
+          1: '../fake_pages/instagram-clone/index.html', // Instagram - FIXED PATH
           2: '../fake_pages/twitter-clone/index.html'     // Twitter
         };
-        const relativePath = relativePaths[task.platformId];
-        platformUrl = `${relativePath}?user_id=${encodeURIComponent(this.userId)}&platform_id=${task.platformId}&task_id=${this.currentTaskIndex}&return_url=${encodeURIComponent(returnUrl)}`;
+        
+        platformUrl = `${relativePaths[task.platformId]}?user_id=${encodeURIComponent(this.userId)}&platform_id=${task.platformId}&task_id=${this.currentTaskIndex}&return_url=${encodeURIComponent(returnUrl)}`;
       } else {
-        // Production - use the CONFIG URLs
+        // Production (GitHub Pages) - use absolute URLs from CONFIG
         platformUrl = `${task.link}?user_id=${encodeURIComponent(this.userId)}&platform_id=${task.platformId}&task_id=${this.currentTaskIndex}&return_url=${encodeURIComponent(returnUrl)}`;
       }
       
-      console.log('Full platform URL:', platformUrl);
+      console.log('Navigating to:', platformUrl);
+      console.log('Platform:', task.platform, 'ID:', task.platformId);
+      
+      // Save current state before navigating
+      SecureCookieManager.setCookie('current_task_index', this.currentTaskIndex.toString());
       
       // Navigate in the same tab
       window.location.href = platformUrl;
