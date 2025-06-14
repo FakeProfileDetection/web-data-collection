@@ -192,6 +192,9 @@
 
       function initializePage() {
         try {
+          // Clear any lingering task progress from previous users
+          SecureCookieManager.deleteCookie('current_task_index');
+
           // Create or get user ID using secure utility
           const userId = SecureCookieManager.getOrCreateUserId();
           console.log('User ID initialized:', userId);
@@ -200,6 +203,7 @@
           showMessage('Failed to initialize session. Please refresh the page.', 'error');
         }
       }
+     
 
       async function handleConsentSubmission() {
         const consentCheckbox = document.getElementById('consent');
