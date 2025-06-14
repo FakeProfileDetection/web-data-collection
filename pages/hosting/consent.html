@@ -190,7 +190,7 @@
         initializePage();
       });
 
-      function initializePage() {
+      /* function initializePage() {
         try {
           // Clear any lingering task progress from previous users
           SecureCookieManager.deleteCookie('current_task_index');
@@ -202,56 +202,72 @@
           console.error('Failed to initialize user ID:', error);
           showMessage('Failed to initialize session. Please refresh the page.', 'error');
         }
+      } */
+      function initializePage() {
+        try {
+          // Clear ALL session data from previous users
+          SecureCookieManager.deleteCookie('current_task_index');
+          SecureCookieManager.deleteCookie('user_id');  // Add this line!
+          
+          // Now create a fresh user ID for this new session
+          const userId = SecureCookieManager.generateSecureUserId();
+          SecureCookieManager.setCookie('user_id', userId);
+          
+          console.log('Fresh user ID created:', userId);
+        } catch (error) {
+          console.error('Failed to initialize user ID:', error);
+          showMessage('Failed to initialize session. Please refresh the page.', 'error');
+        }
       }
      
 
       async function handleConsentSubmission() {
-        const consentCheckbox = document.getElementById('consent');
-        const nextButton = document.getElementById('next-button');
+      const consentCheckbox = document.getElementById('consent');
+      const nextButton = document.getElementById('next-button');
 
-        // Clear any existing messages
-        clearMessages();
+      // Clear any existing messages
+      clearMessages();
 
-        // Validate consent checkbox
-        if (!consentCheckbox.checked) {
-          showMessage('Please check the consent box to continue', 'error');
-          return;
-        }
-
-        try {
-          // Show loading state
-          nextButton.disabled = true;
-          nextButton.innerHTML = '<span class="spinner"></span> Processing...';
-
-          // Get user ID
-          const userId = SecureCookieManager.getOrCreateUserId();
-          if (!userId) {
-            throw new Error('Unable to get user ID');
-          }
-
-          // Upload consent data
-          await uploadConsentData(userId);
-          
-          // Upload start time metadata
-          await uploadStartTime(userId);
-
-          // Show success message briefly
-          showMessage('Consent recorded successfully!', 'success');
-          
-          // Navigate to next page after short delay
-          setTimeout(() => {
-            NavigationManager.navigateWithUserId('demographics.html', userId);
-          }, 500);
-
-        } catch (error) {
-          console.error('Consent submission failed:', error);
-          showMessage('Failed to submit consent. Please try again.', 'error');
-          
-          // Re-enable button
-          nextButton.disabled = false;
-          nextButton.innerHTML = 'Continue to Demographics';
-        }
+      // Validate consent checkbox
+      if (!consentCheckbox.checked) {
+        showMessage('Please check the consent box to continue', 'error');
+        return;
       }
+
+      try {
+        // Show loading state
+        nextButton.disabled = true;
+        nextButton.innerHTML = '<span class="spinner"></span> Processing...';
+
+        // Get user ID (only once!)
+        const userId = SecureCookieManager.getCookie('user_id');
+        if (!userId) {
+          throw new Error('User ID not found. Please refresh the page.');
+        }
+
+        // Upload consent data
+        await uploadConsentData(userId);
+        
+        // Upload start time metadata
+        await uploadStartTime(userId);
+
+        // Show success message briefly
+        showMessage('Consent recorded successfully!', 'success');
+        
+        // Navigate to next page after short delay
+        setTimeout(() => {
+          NavigationManager.navigateWithUserId('demographics.html', userId);
+        }, 500);
+
+      } catch (error) {
+        console.error('Consent submission failed:', error);
+        showMessage('Failed to submit consent. Please try again.', 'error');
+        
+        // Re-enable button
+        nextButton.disabled = false;
+        nextButton.innerHTML = 'Continue to Demographics';
+      }
+    }
 
       async function uploadConsentData(userId) {
         console.log('Uploading consent data...');
