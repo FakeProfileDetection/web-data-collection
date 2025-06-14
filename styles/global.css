@@ -63,6 +63,14 @@ body {
   background-color: var(--gray-100);
 }
 
+.body-text {
+  color: var(--gray-700);
+  margin: var(--spacing-md) 0;
+  background-color: var(--white);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+}
+
 .page-container {
   display: flex;
   justify-content: center;
