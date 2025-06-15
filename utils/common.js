@@ -460,6 +460,7 @@ const PlatformSubmissionHandler = {
   keyEvents: [],
   startTime: null,
   isInitialized: false,
+  hasSubmitted: false,  // Add this flag
 
   /**
    * Initialize the platform handler
@@ -471,6 +472,20 @@ const PlatformSubmissionHandler = {
    * @param {function} config.onAfterSubmit - Optional callback after successful submission
    */
   init(config) {
+    // Check if already submitted for this task
+    const urlParams = this.getUrlParameters();
+    const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
+    this.hasSubmitted = sessionStorage.getItem(submissionKey) === 'true';
+    
+    // Store config first
+    this.config = config;
+    
+    if (this.hasSubmitted) {
+      console.log("Task already submitted, disabling form");
+      this.disableForm();
+      return;
+    }
+
     if (this.isInitialized) {
       console.log("Platform handler already initialized, skipping...");
       return;
@@ -478,11 +493,7 @@ const PlatformSubmissionHandler = {
 
     this.isInitialized = true;
     this.startTime = Date.now();
-    this.config = config;
 
-    // Get URL parameters
-    const urlParams = this.getUrlParameters();
-    
     console.log(`=== ${config.platform.toUpperCase()} PAGE LOADED ===`);
     console.log("Current URL:", window.location.href);
     console.log("Parsed parameters:", urlParams);
@@ -500,7 +511,60 @@ const PlatformSubmissionHandler = {
     // Set up submit button
     this.setupSubmitButton(urlParams);
 
+    // Set up visibility handler
+    this.setupVisibilityHandler();
+
     console.log(`✅ ${config.platform} handler initialized successfully`);
+  },
+
+  /**
+   * Disable form when already submitted
+   */
+  disableForm() {
+    const inputEl = document.getElementById(this.config.textInputId);
+    const submitButton = document.getElementById(this.config.submitButtonId);
+    
+    if (inputEl) {
+      inputEl.disabled = true;
+      inputEl.value = "You have already submitted this task.";
+    }
+    
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "Already Submitted";
+    }
+  },
+
+  /**
+   * Setup visibility handler to handle back/forward navigation
+   */
+  setupVisibilityHandler() {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !this.hasSubmitted) {
+        // Page is visible again and not submitted
+        console.log("Page visible again, state preserved");
+        
+        // Re-check textarea value
+        const inputEl = document.getElementById(this.config.textInputId);
+        if (inputEl && inputEl.value) {
+          console.log("Previous text preserved:", inputEl.value.length, "chars");
+        }
+      }
+    });
+
+    // Also handle page show event for back/forward cache
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted && !this.hasSubmitted) {
+        console.log("Page restored from cache");
+        // Re-validate state
+        const urlParams = this.getUrlParameters();
+        const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
+        if (sessionStorage.getItem(submissionKey) === 'true') {
+          this.hasSubmitted = true;
+          this.disableForm();
+        }
+      }
+    });
   },
 
   /**
@@ -576,6 +640,13 @@ const PlatformSubmissionHandler = {
    * Handle form submission
    */
   async handleSubmission(urlParams, submitButton) {
+    // Check if already submitted
+    if (this.hasSubmitted) {
+      alert('You have already submitted this task. Please continue to the next task.');
+      this.navigateBackToTasks(urlParams);
+      return;
+    }
+
     if (submitButton.disabled) return;
     
     const originalButtonText = submitButton.textContent;
@@ -618,6 +689,11 @@ const PlatformSubmissionHandler = {
       console.log('✅ TXT uploaded →', txtUrl);
       console.log('✅ Metadata uploaded →', metadataUrl);
 
+      // After successful upload, mark as submitted
+      const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
+      sessionStorage.setItem(submissionKey, 'true');
+      this.hasSubmitted = true;
+
       // Call after submit callback if provided
       if (this.config.onAfterSubmit) {
         this.config.onAfterSubmit();
@@ -638,15 +714,19 @@ const PlatformSubmissionHandler = {
    * Validate post content
    */
   validatePost(text) {
-    if (!text || text.length === 0) {
+    // Always get fresh value from DOM
+    const inputEl = document.getElementById(this.config.textInputId);
+    const currentText = inputEl ? inputEl.value.trim() : text;
+    
+    if (!currentText || currentText.length === 0) {
       return { isValid: false, message: 'Empty posts are not allowed!' };
     }
 
     const minLength = this.getMinPostLength();
-    if (text.length < minLength) {
+    if (currentText.length < minLength) {
       return { 
         isValid: false, 
-        message: `Posts shorter than ${minLength} characters are not allowed! Current length: ${text.length}` 
+        message: `Posts shorter than ${minLength} characters are not allowed! Current length: ${currentText.length}` 
       };
     }
 
