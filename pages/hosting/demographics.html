@@ -389,9 +389,17 @@
           }
         } else if (!email && emailConsent) {
           // Consent checked but no email provided
-          showMessage('You checked the consent box but didn\'t provide an email address. Please enter your email to be eligible to win gift card.', 'error');
-          document.getElementById('email').focus();
-          return null;
+          const confirmed = confirm(
+            "You checked the consent box but didn't provide an email address.\n\n" +
+            "Without an email:\n" +
+            "1) We will NOT contact you for future studies\n" +
+            "2) You will NOT be entered to win a gift card\n\n" +
+            "Continue anyway?"
+          );
+          if (!confirmed) {
+            document.getElementById('email').focus();
+            return null;
+          }
         } else if (email && !emailConsent) {
           // Email provided but no consent
           const confirmed = confirm(
