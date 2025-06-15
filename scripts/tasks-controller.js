@@ -318,7 +318,7 @@ const TasksController = {
       const nextButton = document.getElementById('next-button');
       
       if (index >= this.tasks.length - 1) {
-        nextButton.textContent = 'Complete Study';
+        nextButton.textContent = 'Complete Study--Last Task';
         nextButton.className = 'btn-task-complete btn-block';
       } else {
         nextButton.textContent = 'Open Platform';
