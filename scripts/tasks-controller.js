@@ -196,17 +196,11 @@ const TasksController = {
    // Initialize the controller
   init() {
     console.log('Tasks controller initializing...');
-    console.log('Current URL:', window.location.href);
-    console.log('URL search params:', window.location.search);
-
-    // Debug the user ID retrieval
-    const urlUserId = NavigationManager.getQueryParam('user_id');
-    const cookieUserId = SecureCookieManager.getCookie('user_id');
     
-    console.log('User ID from URL:', urlUserId);
-    console.log('User ID from cookie:', cookieUserId);
     
-    this.userId = urlUserId || cookieUserId;
+    // Get user ID
+    this.userId = NavigationManager.getQueryParam('user_id') || 
+                  SecureCookieManager.getCookie('user_id');
     
     // Prevent users from manually navigating to tasks page without proper flow
     if (!this.userId) {
@@ -214,9 +208,7 @@ const TasksController = {
       return;
     }
     
-    // Get user ID
-    this.userId = NavigationManager.getQueryParam('user_id') || 
-                  SecureCookieManager.getCookie('user_id');
+    
     
     if (!this.userId) {
       console.error('No user ID found!');
