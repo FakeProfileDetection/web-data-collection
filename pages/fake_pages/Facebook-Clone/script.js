@@ -17,6 +17,105 @@ if (darkBtn) {
   };
 }
 
+// PLATFORM CONFIGURATION - Change this per platform
+const PLATFORM_CONFIG = {
+  // FOR FACEBOOK:
+  name: 'facebook',
+  textInputId: 'input_value',
+  submitButtonId: 'button_value',
+  submitButtonSelector: '#button_value',
+  
+  // FOR INSTAGRAM:
+  // name: 'instagram',
+  // textInputId: 'comment_input',
+  // submitButtonId: 'post_comment',
+  // submitButtonSelector: '#post_comment',
+  
+  // FOR TWITTER:
+  // name: 'twitter',
+  // textInputId: 'input_value',
+  // submitButtonId: 'tweet_button',
+  // submitButtonSelector: '.tweetBox__tweetButton',
+};
+
+// ===================================
+// SAVE/RESTORE TEXT FUNCTIONALITY
+// ===================================
+
+// Save text to sessionStorage when leaving page
+window.addEventListener('beforeunload', function() {
+  const textInput = document.getElementById(PLATFORM_CONFIG.textInputId);
+  if (textInput && textInput.value.trim()) {
+    const taskId = new URLSearchParams(window.location.search).get('task_id');
+    const storageKey = `draft_${PLATFORM_CONFIG.name}_${taskId}`;
+    sessionStorage.setItem(storageKey, textInput.value);
+    console.log(`Saved draft for ${storageKey}:`, textInput.value);
+  }
+});
+
+// Restore text when page loads
+function restoreSavedText() {
+  const taskId = new URLSearchParams(window.location.search).get('task_id');
+  const storageKey = `draft_${PLATFORM_CONFIG.name}_${taskId}`;
+  const savedText = sessionStorage.getItem(storageKey);
+  
+  if (savedText) {
+    const textInput = document.getElementById(PLATFORM_CONFIG.textInputId);
+    if (textInput) {
+      textInput.value = savedText;
+      console.log(`Restored draft for ${storageKey}:`, savedText);
+      
+      // Trigger any auto-resize functions
+      textInput.dispatchEvent(new Event('input'));
+      
+      // Clear the saved text after restoring
+      // Comment this out if you want to keep drafts even after submission
+      // sessionStorage.removeItem(storageKey);
+    }
+  }
+}
+
+// ===================================
+// INITIALIZE PLATFORM
+// ===================================
+
+window.addEventListener('load', function () {
+  console.log(`Initializing ${PLATFORM_CONFIG.name} platform...`);
+  
+  // Check if PlatformSubmissionHandler is available
+  if (typeof PlatformSubmissionHandler === 'undefined') {
+    console.error('PlatformSubmissionHandler not found! Make sure common.js is loaded first.');
+    alert('Configuration error: Please refresh the page.');
+    return;
+  }
+
+  // Handle Twitter's class-based button
+  if (PLATFORM_CONFIG.submitButtonSelector && PLATFORM_CONFIG.submitButtonSelector.startsWith('.')) {
+    const button = document.querySelector(PLATFORM_CONFIG.submitButtonSelector);
+    if (button && !button.id) {
+      button.id = PLATFORM_CONFIG.submitButtonId;
+    }
+  }
+
+  // Initialize the standardized handler
+  PlatformSubmissionHandler.init({
+    platform: PLATFORM_CONFIG.name,
+    textInputId: PLATFORM_CONFIG.textInputId,
+    submitButtonId: PLATFORM_CONFIG.submitButtonId,
+    onAfterSubmit: () => {
+      // Clear the saved draft after successful submission
+      const taskId = new URLSearchParams(window.location.search).get('task_id');
+      const storageKey = `draft_${PLATFORM_CONFIG.name}_${taskId}`;
+      sessionStorage.removeItem(storageKey);
+      console.log(`Cleared draft for ${storageKey}`);
+    }
+  });
+  
+  // Restore any saved text
+  restoreSavedText();
+});
+
+
 // Initialize platform handler when page loads
 window.addEventListener('load', function () {
   // Check if PlatformSubmissionHandler is available
