@@ -197,6 +197,12 @@ const TasksController = {
   init() {
     console.log('Tasks controller initializing...');
     
+    // Prevent users from manually navigating to tasks page without proper flow
+    if (!this.userId) {
+      window.location.replace('consent.html');
+      return;
+    }
+    
     // Get user ID
     this.userId = NavigationManager.getQueryParam('user_id') || 
                   SecureCookieManager.getCookie('user_id');
@@ -236,6 +242,22 @@ const TasksController = {
       const savedTaskIndex = parseInt(SecureCookieManager.getCookie('current_task_index') || '0');
       this.currentTaskIndex = savedTaskIndex;
       console.log('Loaded saved task index:', this.currentTaskIndex);
+
+      // Reset button state in case user came back via browser back button
+      // const nextButton = document.getElementById('next-button');
+      // if (nextButton) {
+      //   nextButton.disabled = false;
+
+      //   // Restore appropriate button text based on task index
+      //   if (this.currentTaskIndex >= this.tasks.length - 1) {
+      //     nextButton.textContent = 'Complete Study--Last Task';
+      //     nextButton.className = 'btn-task-complete btn-block';
+      //   } else {
+      //     nextButton.textContent = 'Open Platform';
+      //     nextButton.className = 'btn-primary btn-block';
+      //   }
+      // }
+
     }
     
     // Initialize progress visualization
@@ -433,7 +455,8 @@ const TasksController = {
       SecureCookieManager.setCookie('current_task_index', this.currentTaskIndex.toString());
       
       // Navigate in the same tab
-      window.location.href = platformUrl;
+      // window.location.href = platformUrl;
+      window.location.replace(platformUrl);
 
     } catch (error) {
       console.error('Failed to advance task:', error);

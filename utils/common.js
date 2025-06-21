@@ -534,6 +534,41 @@ const PlatformSubmissionHandler = {
       submitButton.textContent = "Already Submitted";
     }
   },
+  /**
+   * Save draft text to sessionStorage
+   */
+  saveDraft() {
+    const inputEl = document.getElementById(this.config.textInputId);
+    if (inputEl && inputEl.value.trim()) {
+      const urlParams = this.getUrlParameters();
+      const storageKey = `draft_${this.config.platform}_${urlParams.task_id}`;
+      sessionStorage.setItem(storageKey, inputEl.value);
+      console.log(`Saved draft for ${storageKey}`);
+    }
+  },
+
+  /**
+   * Restore draft text from sessionStorage
+   */
+  restoreDraft() {
+    const urlParams = this.getUrlParameters();
+    const storageKey = `draft_${this.config.platform}_${urlParams.task_id}`;
+    const savedText = sessionStorage.getItem(storageKey);
+    
+    if (savedText) {
+      const inputEl = document.getElementById(this.config.textInputId);
+      if (inputEl) {
+        inputEl.value = savedText;
+        console.log(`Restored draft for ${storageKey}`);
+        
+        // Trigger input event for auto-resize
+        inputEl.dispatchEvent(new Event('input'));
+        
+        // Show a message that draft was restored
+        this.showDraftRestoredMessage();
+      }
+    }
+  },
 
   /**
    * Setup visibility handler to handle back/forward navigation
@@ -756,6 +791,7 @@ const PlatformSubmissionHandler = {
       if (urlParams.user_id && urlParams.task_id) {
         const fallbackUrl = `/web-data-collection/pages/hosting/tasks.html?user_id=${urlParams.user_id}&completed_task=${urlParams.task_id}`;
         console.log("Using fallback URL:", fallbackUrl);
+        // window.location.replace(fallbackUrl);
         window.location.replace(fallbackUrl);
       } else {
         alert("Cannot return to tasks page. Please navigate back manually.");
