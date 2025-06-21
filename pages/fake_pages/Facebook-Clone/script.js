@@ -27,7 +27,7 @@ const PLATFORM_CONFIG = {
   
   // FOR INSTAGRAM:
   // name: 'instagram',
-  // textInputId: 'comment_input',
+  // textInputId: 'input_value',
   // submitButtonId: 'post_comment',
   // submitButtonSelector: '#post_comment',
   
