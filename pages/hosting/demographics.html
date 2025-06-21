@@ -439,7 +439,7 @@
           device_type: deviceInfo.deviceType
         };
 
-        const jsonBlob = new Blob([JSON.stringify(formData, null, 2)], {
+        const jsonBlob = new Blob([JSON.stringify(enrichedData, null, 2)], {
           type: "application/json",
         });
 
