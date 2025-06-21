@@ -205,6 +205,14 @@
       } */
       function initializePage() {
         try {
+          // Check for mobile device FIRST
+          const deviceInfo = DeviceDetector.getDeviceInfo();
+          
+          if (deviceInfo.isMobile) {
+            // Show mobile warning
+            showMobileWarning(deviceInfo);
+          }
+         
           // Clear ALL session data from previous users
           SecureCookieManager.deleteCookie('current_task_index');
           SecureCookieManager.deleteCookie('user_id');  // Add this line!
@@ -214,10 +222,86 @@
           SecureCookieManager.setCookie('user_id', userId);
           
           console.log('Fresh user ID created:', userId);
+
         } catch (error) {
           console.error('Failed to initialize user ID:', error);
           showMessage('Failed to initialize session. Please refresh the page.', 'error');
         }
+      }
+
+      function showMobileWarning(deviceInfo) {
+        // Create a prominent warning div
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'mobile-warning';
+        warningDiv.innerHTML = `
+          <div class="mobile-warning-content">
+            <h3>⚠️ Mobile Device Detected</h3>
+            <p>This study is designed for desktop/laptop computers with standard keyboards.</p>
+            <p>You're currently using a <strong>${deviceInfo.deviceType}</strong> device.</p>
+            <p>While you can continue, please note:</p>
+            <ul>
+              <li>Keystroke data collection may not work properly on mobile devices</li>
+              <li>The typing experience will be different from a standard keyboard</li>
+              <li>Your data will be flagged as mobile and may be excluded from analysis</li>
+            </ul>
+            <p><strong>For best results, please use a desktop or laptop computer.</strong></p>
+            <button onclick="this.parentElement.parentElement.remove()" class="btn-secondary">
+              I understand, continue anyway
+            </button>
+          </div>
+        `;
+        
+        // Add styles for the warning
+        const style = document.createElement('style');
+        style.textContent = `
+          .mobile-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+          }
+          
+          .mobile-warning-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+            text-align: left;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          }
+          
+          .mobile-warning h3 {
+            color: #dc3545;
+            margin-top: 0;
+            margin-bottom: 15px;
+          }
+          
+          .mobile-warning ul {
+            margin: 15px 0;
+            padding-left: 25px;
+          }
+          
+          .mobile-warning li {
+            margin-bottom: 8px;
+            color: #666;
+          }
+          
+          .mobile-warning button {
+            margin-top: 20px;
+            width: 100%;
+          }
+        `;
+        
+        document.head.appendChild(style);
+        document.body.appendChild(warningDiv);
       }
      
 

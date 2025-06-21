@@ -427,6 +427,18 @@
       async function uploadDemographicsData(formData, userId) {
         console.log('Uploading demographics data...');
 
+        // Get device info from sessionStorage
+        const deviceInfoStr = sessionStorage.getItem('device_info');
+        const deviceInfo = deviceInfoStr ? JSON.parse(deviceInfoStr) : DeviceDetector.getDeviceInfo();
+
+        // Add device info to form data
+        const enrichedData = {
+          ...formData,
+          device_info: deviceInfo,
+          is_mobile: deviceInfo.isMobile,
+          device_type: deviceInfo.deviceType
+        };
+
         const jsonBlob = new Blob([JSON.stringify(formData, null, 2)], {
           type: "application/json",
         });
