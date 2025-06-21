@@ -258,10 +258,12 @@ class EnhancedKeyLogger {
 
   handleKeyDown(event) {
     this.addKeyEvent('P', event.key);
+    this.saveKeystrokes(); 
   }
 
   handleKeyUp(event) {
     this.addKeyEvent('R', event.key);
+    this.saveKeystrokes(); 
   }
 
   addKeyEvent(type, key) {
@@ -465,6 +467,62 @@ const PlatformSubmissionHandler = {
   hasSubmitted: false,  // Add this flag
 
   /**
+   * Save keystrokes to sessionStorage
+   */
+  saveKeystrokes() {
+    try {
+      const urlParams = this.getUrlParameters();
+      const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
+      
+      // Only limit if absolutely necessary
+      const maxKeystrokes = 50000; // Much higher limit
+      if (this.keyEvents.length > maxKeystrokes) {
+        console.error(`Critical: Keystroke limit reached (${this.keyEvents.length}). Data may be lost.`);
+        // For research, you might want to alert the user or auto-submit
+        alert('Maximum keystroke limit reached. Please submit your post.');
+        return;
+      }
+      
+      sessionStorage.setItem(storageKey, JSON.stringify(this.keyEvents));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        console.error('Storage quota exceeded! Cannot save keystrokes.');
+        // For research integrity, this is critical - alert the user
+        alert('Storage limit reached. Please submit your post now to avoid data loss.');
+      }
+    }
+  },
+
+  /**
+   * Load keystrokes from sessionStorage
+   */
+  loadKeystrokes() {
+    const urlParams = this.getUrlParameters();
+    const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
+    
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved) {
+        this.keyEvents = JSON.parse(saved);
+        console.log(`Loaded ${this.keyEvents.length} saved keystrokes`);
+      }
+    } catch (e) {
+      console.error('Failed to load keystrokes:', e);
+      this.keyEvents = []; // Reset on error
+    }
+  },
+
+  /**
+   * Clear keystrokes from sessionStorage
+   */
+  clearKeystrokes() {
+    const urlParams = this.getUrlParameters();
+    const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
+    sessionStorage.removeItem(storageKey);
+    console.log('Cleared saved keystrokes');
+  },
+
+  /**
    * Initialize the platform handler
    * @param {Object} config - Configuration object
    * @param {string} config.platform - Platform name (facebook, instagram, twitter)
@@ -509,6 +567,18 @@ const PlatformSubmissionHandler = {
 
     // Start keylogger
     this.startKeyLogger(urlParams);
+    
+    // Load any saved keystrokes
+    this.loadKeystrokes();
+
+    // If we have saved keystrokes but the textarea is empty, clear them
+    // (user might have cleared the form before refresh)
+    const inputEl = document.getElementById(this.config.textInputId);
+    if (inputEl && !inputEl.value.trim() && this.keyEvents.length > 0) {
+      console.log('Text is empty but keystrokes exist - clearing keystrokes');
+      this.keyEvents = [];
+      this.clearKeystrokes();
+    }
 
     // Set up submit button
     this.setupSubmitButton(urlParams);
@@ -730,6 +800,8 @@ const PlatformSubmissionHandler = {
       const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
       sessionStorage.setItem(submissionKey, 'true');
       this.hasSubmitted = true;
+      // Clear keystroke data
+      this.clearKeystrokes();
 
       // Call after submit callback if provided
       if (this.config.onAfterSubmit) {
