@@ -364,7 +364,9 @@ class NavigationManager {
     }
     
     const url = `${page}?user_id=${encodeURIComponent(finalUserId)}`;
-    window.location.href = url;
+    // window.location.href = url;
+    window.location.replace(url);
+
   }
 
   static openPlatform(platformUrl, userId, platformId, taskId) {
