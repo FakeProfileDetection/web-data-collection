@@ -536,6 +536,17 @@ const PlatformSubmissionHandler = {
     const urlParams = this.getUrlParameters();
     const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
     this.hasSubmitted = sessionStorage.getItem(submissionKey) === 'true';
+
+    // Prevent accidental refresh
+    window.addEventListener('beforeunload', (e) => {
+      // Only show warning if there's unsaved text
+      const inputEl = document.getElementById(this.config.textInputId);
+      if (inputEl && inputEl.value.trim() && !this.hasSubmitted) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved text. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    });
     
     // Store config first
     this.config = config;
