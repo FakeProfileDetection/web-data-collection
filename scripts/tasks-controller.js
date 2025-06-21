@@ -196,6 +196,17 @@ const TasksController = {
    // Initialize the controller
   init() {
     console.log('Tasks controller initializing...');
+    console.log('Current URL:', window.location.href);
+    console.log('URL search params:', window.location.search);
+
+    // Debug the user ID retrieval
+    const urlUserId = NavigationManager.getQueryParam('user_id');
+    const cookieUserId = SecureCookieManager.getCookie('user_id');
+    
+    console.log('User ID from URL:', urlUserId);
+    console.log('User ID from cookie:', cookieUserId);
+    
+    this.userId = urlUserId || cookieUserId;
     
     // Prevent users from manually navigating to tasks page without proper flow
     if (!this.userId) {
@@ -208,6 +219,9 @@ const TasksController = {
                   SecureCookieManager.getCookie('user_id');
     
     if (!this.userId) {
+      console.error('No user ID found!');
+      console.error('URL params:', new URLSearchParams(window.location.search).toString());
+      console.error('All cookies:', document.cookie);
       this.showMessage('Session not found. Redirecting...', 'error');
       setTimeout(() => {
         window.location.href = 'consent.html';
