@@ -208,7 +208,7 @@ posts.forEach((post) => {
 
 // Auto-grow textarea functionality
 function initializeAutoGrowTextarea() {
-  const textarea = document.getElementById('comment_input');
+  const textarea = document.getElementById('input_value');
   if (!textarea) {
     console.log('Textarea not found for auto-grow');
     return;
@@ -243,7 +243,7 @@ window.addEventListener('load', function () {
   // Initialize the standardized handler
   PlatformSubmissionHandler.init({
     platform: 'instagram',
-    textInputId: 'comment_input',
+    textInputId: 'input_value',
     submitButtonId: 'post_comment'
   });
 });
