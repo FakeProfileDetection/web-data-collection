@@ -300,14 +300,6 @@ const TasksController = {
         dot.classList.add('current');
       }
     });
-
-    // Update progress bar
-    const percent = ((this.currentTaskIndex + 1) / this.tasks.length) * 100;
-    document.getElementById('progress-bar').style.width = percent + '%';
-    document.getElementById('progress-text').textContent = 
-      `Task ${this.currentTaskIndex + 1} of ${this.tasks.length}`;
-    document.getElementById('progress-percent').textContent = 
-      Math.round(percent) + '%';
   },
 
   // Load a specific task

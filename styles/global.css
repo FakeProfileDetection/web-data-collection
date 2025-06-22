@@ -282,23 +282,6 @@ button:disabled {
   overflow: hidden;
 }
 
-.progress-bar {
-  height: 100%;
-  background-color: var(--success-color);
-  transition: width 0.4s ease;
-  border-radius: var(--radius-md);
-}
-
-.progress-text {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 14px;
-  font-weight: bold;
-  color: var(--gray-800);
-}
-
 /* ===============================================
    Info Boxes
    =============================================== */
