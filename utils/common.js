@@ -454,6 +454,60 @@ if (typeof module !== 'undefined' && module.exports) {
   };
 }
 
+/**
+ * Device detection utilities
+ */
+class DeviceDetector {
+  static isMobile() {
+    // Check multiple indicators for mobile devices
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    
+    // Check for mobile user agents
+    const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
+    const isMobileUA = mobileRegex.test(userAgent);
+    
+    // Check for touch capability (though some laptops have touch)
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // Check screen size (mobile typically < 768px)
+    const isMobileWidth = window.innerWidth < 768;
+    
+    // Check for mobile-specific features
+    const hasMobileOrientation = typeof window.orientation !== 'undefined';
+    
+    // Combine checks - if multiple indicators suggest mobile, it probably is
+    return isMobileUA || (hasTouch && isMobileWidth) || hasMobileOrientation;
+  }
+  
+  static getDeviceInfo() {
+    const info = {
+      isMobile: this.isMobile(),
+      userAgent: navigator.userAgent,
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+      touchCapable: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+      platform: navigator.platform,
+      vendor: navigator.vendor,
+      deviceType: this.isMobile() ? 'mobile' : 'desktop'
+    };
+    
+    // Add specific device type detection
+    if (info.isMobile) {
+      if (/iPad/i.test(navigator.userAgent)) {
+        info.deviceType = 'tablet';
+      } else if (/iPhone/i.test(navigator.userAgent)) {
+        info.deviceType = 'iphone';
+      } else if (/Android/i.test(navigator.userAgent)) {
+        info.deviceType = 'android';
+      }
+    }
+    
+    return info;
+  }
+}
+
 // ============================================
 // PLATFORM SUBMISSION HANDLER
 // Claude says add this to common.js
@@ -599,7 +653,6 @@ const PlatformSubmissionHandler = {
     this.setupVisibilityHandler();
 
     // Set up paste prevention
-    const inputEl = document.getElementById(this.config.textInputId);
     if (inputEl) {
       inputEl.addEventListener('paste', this.handlePaste.bind(this));
       console.log('Paste prevention enabled for', this.config.textInputId);
@@ -1058,56 +1111,3 @@ const PlatformSubmissionHandler = {
   }
 };
 
-/**
- * Device detection utilities
- */
-class DeviceDetector {
-  static isMobile() {
-    // Check multiple indicators for mobile devices
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    
-    // Check for mobile user agents
-    const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i;
-    const isMobileUA = mobileRegex.test(userAgent);
-    
-    // Check for touch capability (though some laptops have touch)
-    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    // Check screen size (mobile typically < 768px)
-    const isMobileWidth = window.innerWidth < 768;
-    
-    // Check for mobile-specific features
-    const hasMobileOrientation = typeof window.orientation !== 'undefined';
-    
-    // Combine checks - if multiple indicators suggest mobile, it probably is
-    return isMobileUA || (hasTouch && isMobileWidth) || hasMobileOrientation;
-  }
-  
-  static getDeviceInfo() {
-    const info = {
-      isMobile: this.isMobile(),
-      userAgent: navigator.userAgent,
-      screenWidth: window.screen.width,
-      screenHeight: window.screen.height,
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
-      touchCapable: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
-      platform: navigator.platform,
-      vendor: navigator.vendor,
-      deviceType: this.isMobile() ? 'mobile' : 'desktop'
-    };
-    
-    // Add specific device type detection
-    if (info.isMobile) {
-      if (/iPad/i.test(navigator.userAgent)) {
-        info.deviceType = 'tablet';
-      } else if (/iPhone/i.test(navigator.userAgent)) {
-        info.deviceType = 'iphone';
-      } else if (/Android/i.test(navigator.userAgent)) {
-        info.deviceType = 'android';
-      }
-    }
-    
-    return info;
-  }
-}
