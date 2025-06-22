@@ -329,6 +329,14 @@ const TasksController = {
       document.getElementById('task-title').textContent = task.task;
       document.getElementById('video-number').textContent = `${task.videoNumber} of 3`;
       document.getElementById('round-number').textContent = `${task.round} of 2`;
+      document.getElementById('progress-percent').textContent = `${task.round / 18}0}%`;
+      // Calculate percentage of completion
+      const percentComplete = Math.round(((index + 1) / 18) * 100);
+      document.getElementById('progress-percent').textContent = `${percentComplete}%`;
+
+      // Update progress bar width (you already have this correct)
+      const progressBar = document.getElementById('progress-bar');
+      progressBar.style.width = `${(index + 1) / this.tasks.length * 100}%`;
       
       // Update video
       const videoPlayer = document.getElementById('video-player');
