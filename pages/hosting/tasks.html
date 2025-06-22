@@ -3,323 +3,279 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Task Spotlight</title>
+    <title>Study Tasks</title>
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="../../styles/global.css">
+    
+    <!-- Page-specific Styles -->
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #f4f4f4;
-        text-align: center;
+      /* Task container specific styling */
+      .task-header {
+        margin-bottom: var(--spacing-lg);
       }
-      .task-container {
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        max-width: 650px;
-        width: 100%;
-        background: white;
-        padding: 20px;
+      
+      .platform-badge {
+        display: inline-block;
+        padding: var(--spacing-xs) var(--spacing-md);
+        border-radius: var(--radius-sm);
+        font-weight: bold;
+        font-size: 0.9em;
+        margin-bottom: var(--spacing-sm);
       }
-      h1,
-      h2 {
-        color: #333;
+      
+      .platform-badge.facebook {
+        background: #1877f2;
+        color: white;
       }
+      
+      .platform-badge.instagram {
+        background: #E4405F;
+        color: white;
+      }
+      
+      .platform-badge.twitter {
+        background: #1DA1F2;
+        color: white;
+      }
+      
+      /* Video container */
+      .video-container {
+        position: relative;
+        margin-bottom: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+      }
+      
       video {
         width: 100%;
         height: auto;
-        margin-top: 10px;
-        border-radius: 8px;
+        display: block;
       }
-      .button-container {
+      
+      /* Task status indicator */
+      .task-status {
         display: flex;
         justify-content: space-between;
-        margin-top: 20px;
+        align-items: center;
+        background: var(--light-gray);
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
       }
-      button {
+      
+      .status-item {
+        text-align: center;
         flex: 1;
-        padding: 12px;
-        margin: 5px;
-        font-size: 1.1em;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
       }
-      .next-button {
-        background-color: #28a745;
-        color: white;
+      
+      .status-label {
+        font-size: 0.8em;
+        color: var(--gray-600);
+        display: block;
       }
-      .next-button:hover {
-        background-color: #218838;
-      }
-      .back-button {
-        background-color: #6c757d;
-        color: white;
-      }
-      .back-button:hover {
-        background-color: #5a6268;
-      }
-
-      .progress-container {
-        width: 100%;
-        background-color: #ddd;
-        border-radius: 8px;
-        margin: 15px 0;
-        height: 30px;
-        position: relative;
-      }
-      .progress-bar {
-        height: 100%;
-        width: 0%;
-        background-color: #4caf50;
-        transition: width 0.4s ease-in-out;
-      }
-      #task-counter {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 14px;
+      
+      .status-value {
+        font-size: 1.2em;
         font-weight: bold;
-        color: #333;
+        color: var(--gray-800);
+      }
+      
+      /* Progress visualization */
+      .task-progress {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: var(--spacing-xs);
+        margin-bottom: var(--spacing-lg);
+      }
+      
+      .task-dot {
+        height: 8px;
+        background: var(--gray-300);
+        border-radius: var(--radius-sm);
+        transition: all var(--transition-base);
+      }
+      
+      .task-dot.completed {
+        background: var(--success-color);
+      }
+      
+      .task-dot.current {
+        background: var(--primary-color);
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+      }
+      
+      /* Instructions reminder */
+      .task-reminder {
+        background: #e3f2fd;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+      }
+      
+      .task-reminder-icon {
+        font-size: 1.5em;
+      }
+      
+      .task-reminder-text {
+        flex: 1;
+        font-size: 0.95em;
+        color: var(--gray-700);
+      }
+      
+      /* Button enhancements */
+      .task-navigation {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-top: var(--spacing-xl);
+      }
+      
+      .task-navigation button {
+        flex: 1;
+      }
+      
+      .btn-task-complete {
+        background: linear-gradient(135deg, var(--success-color), #20c997);
+        color: white;
+      }
+      
+      .btn-task-complete:hover:not(:disabled) {
+        background: linear-gradient(135deg, var(--success-hover), #1ba57e);
+      }
+      
+      /* Help tooltip */
+      .help-icon {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        background: var(--gray-400);
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 20px;
+        font-size: 12px;
+        cursor: help;
+        margin-left: var(--spacing-sm);
+      }
+      
+      .tooltip {
+        position: relative;
+        display: inline-block;
+      }
+      
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 200px;
+        background-color: var(--gray-800);
+        color: white;
+        text-align: center;
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -100px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.85em;
+      }
+      
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
       }
     </style>
   </head>
   <body>
-    <div class="task-container">
-      <h1 id="platform-name">Facebook</h1>
-      <h2 id="task-name">Task 1: Watch Coach Carter Movie Clip</h2>
+    <div class="page-container">
+      <div class="content-container wide">
+        <!-- Task Header -->
+        <div class="task-header text-center">
+          <h1>Task <span id="current-task-number">1</span> of 18</h1>
+          <div id="platform-badge" class="platform-badge facebook">Facebook</div>
+        </div>
 
-      <div class="progress-container">
-        <div class="progress-bar" id="progress-bar"></div>
-        <span id="task-counter">Task 1 of 18</span>
-      </div>
+        <!-- Progress Visualization -->
+        <div class="task-progress" id="task-progress">
+          <!-- Will be populated by JavaScript -->
+        </div>
 
-      <video controls id="video-frame">
-        <source
-          src="videos/Coach Carter (6_9) Movie CLIP - Our Deepest Fear (2005) HD.mp4"
-          type="video/mp4"
-        />
-      </video>
+        <!-- Task Status -->
+        <div class="task-status">
+          <div class="status-item">
+            <span class="status-label">Current Video</span>
+            <span class="status-value" id="video-number">1 of 3</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Current Round</span>
+            <span class="status-value" id="round-number">1 of 2</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Progress</span>
+            <span class="status-value" id="progress-percent">6%</span>
+          </div>
+        </div>
 
-      <div class="button-container">
-        <button
-          class="back-button"
-          id="back-task"
-          onclick="previousTask()"
-          style="display: none"
-        >
-          ← Back
-        </button>
-        <button class="next-button" id="next-task" onclick="nextTask()">
-          Next Task →
-        </button>
+        <!-- Task Reminder -->
+        <div class="task-reminder" id="task-reminder">
+          <div class="task-reminder-icon">💡</div>
+          <div class="task-reminder-text">
+            <strong>Next:</strong> Watch the video below, then click "Open Platform" to share your thoughts
+          </div>
+        </div>
+
+        <!-- Task Title -->
+        <h2 id="task-title">Watch Coach Carter Movie Clip</h2>
+
+        <!-- Video Container -->
+        <div class="video-container">
+          <video controls id="video-player">
+            <source src="" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        <!-- Platform Opened Indicator (hidden by default) -->
+        <div id="platform-opened" class="platform-opened d-none">
+          ✓ Platform opened in new tab. Complete your post there, then return here.
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="task-navigation">
+          <button 
+            id="next-button" 
+            class="btn-primary btn-block" 
+            onclick="nextTask()"
+          >
+            Open Platform
+          </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container mt-3">
+          <div class="progress-bar" id="progress-bar"></div>
+          <span class="progress-text" id="progress-text">Task 1 of 18</span>
+        </div>
+
+        <!-- Message Container -->
+        <div id="message-container"></div>
       </div>
     </div>
 
-    <script>
-      // Fake platform URLs
-      const FACEBOOK_FAKE_URL =
-        "https://fakeprofiledetection.github.io/web-data-collection/pages/fake_pages/Facebook-Clone/index.html";
-      const INSTAGRAM_FAKE_URL =
-        "https://fakeprofiledetection.github.io/web-data-collection/pages/fake_pages/instagram-clone/index.html";
-      const TWITTER_FAKE_URL =
-        "https://fakeprofiledetection.github.io/web-data-collection/pages/fake_pages/twitter-clone/index.html";
-
-      // Video sources
-      const CARTER_PATH =
-        "videos/Coach Carter (6_9) Movie CLIP - Our Deepest Fear (2005) HD.mp4";
-      const OSCARS_PATH =
-        "videos/Watch the uncensored moment Will Smith smacks Chris Rock on stage at the Oscars, drops F-bomb.mp4";
-      const TRUMP_PATH =
-        "videos/TrumpandVancecallZelenskyydisrespectfulinOvalOfficemeeting.mp4";
-
-      // Task definitions
-      const tasks = [
-        {
-          platform: "Facebook",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: FACEBOOK_FAKE_URL,
-        },
-        {
-          platform: "Instagram",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: INSTAGRAM_FAKE_URL,
-        },
-        {
-          platform: "Twitter",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: TWITTER_FAKE_URL,
-        },
-        {
-          platform: "Facebook",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: FACEBOOK_FAKE_URL,
-        },
-        {
-          platform: "Instagram",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: INSTAGRAM_FAKE_URL,
-        },
-        {
-          platform: "Twitter",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: TWITTER_FAKE_URL,
-        },
-        {
-          platform: "Facebook",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: FACEBOOK_FAKE_URL,
-        },
-        {
-          platform: "Instagram",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: INSTAGRAM_FAKE_URL,
-        },
-        {
-          platform: "Twitter",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: TWITTER_FAKE_URL,
-        },
-        // Repeat to make 18 tasks total
-        {
-          platform: "Facebook",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: FACEBOOK_FAKE_URL,
-        },
-        {
-          platform: "Instagram",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: INSTAGRAM_FAKE_URL,
-        },
-        {
-          platform: "Twitter",
-          task: "Watch Coach Carter Movie Clip",
-          video: CARTER_PATH,
-          link: TWITTER_FAKE_URL,
-        },
-        {
-          platform: "Facebook",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: FACEBOOK_FAKE_URL,
-        },
-        {
-          platform: "Instagram",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: INSTAGRAM_FAKE_URL,
-        },
-        {
-          platform: "Twitter",
-          task: "Watch The Oscar Slap Clip",
-          video: OSCARS_PATH,
-          link: TWITTER_FAKE_URL,
-        },
-        {
-          platform: "Facebook",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: FACEBOOK_FAKE_URL,
-        },
-        {
-          platform: "Instagram",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: INSTAGRAM_FAKE_URL,
-        },
-        {
-          platform: "Twitter",
-          task: "Watch Trump/Vance & Zelenskyy Oval Office Meeting",
-          video: TRUMP_PATH,
-          link: TWITTER_FAKE_URL,
-        },
-      ];
-
-      // Helper to read query params
-      function getQueryParam(name) {
-        return new URLSearchParams(window.location.search).get(name);
-      }
-
-      let currentTaskIndex = 0;
-
-      // Update progress bar & counter
-      function updateProgressBar() {
-        const percent = ((currentTaskIndex + 1) / tasks.length) * 100;
-        document.getElementById("progress-bar").style.width = percent + "%";
-        document.getElementById("task-counter").textContent = `Task ${
-          currentTaskIndex + 1
-        } of ${tasks.length}`;
-      }
-
-      // Load a given task, toggle Back button visibility
-      function loadTask(index) {
-        const task = tasks[index];
-        document.getElementById("platform-name").textContent = task.platform;
-        document.getElementById("task-name").textContent = task.task;
-        document.getElementById("video-frame").src = task.video;
-        document.getElementById("next-task").dataset.link = task.link;
-
-        // Back button hidden on first task
-        document.getElementById("back-task").style.display =
-          index === 0 ? "none" : "inline-block";
-
-        updateProgressBar();
-      }
-
-      // Next: open platform page in new tab & advance UI
-      async function nextTask() {
-        // This must be <= to make sure the twitter page gets opened before the
-        // completion page is loaded when next task is clicked again
-        if (currentTaskIndex <= tasks.length - 1) {
-          const task = tasks[currentTaskIndex];
-          const userId = getQueryParam("user_id");
-          if (!userId) alert("user_id not found in URL");
-
-          // determine platform_id param
-          let pid = 0;
-          if (task.link.includes("facebook")) pid = 0;
-          if (task.link.includes("instagram")) pid = 1;
-          if (task.link.includes("twitter")) pid = 2;
-
-          const url =
-            `${task.link}` +
-            `?user_id=${encodeURIComponent(userId)}` +
-            `&platform_id=${pid}` +
-            `&task_id=${currentTaskIndex}`;
-
-          window.open(url, "_blank");
-          currentTaskIndex++;
-          loadTask(currentTaskIndex);
-        } else {
-          window.location.href = "complete.html";
-        }
-      }
-
-      // Back: only update UI, don’t open new tab
-      function previousTask() {
-        if (currentTaskIndex > 0) {
-          currentTaskIndex--;
-          loadTask(currentTaskIndex);
-        }
-      }
-
-      // initial render
-      loadTask(currentTaskIndex);
-    </script>
+    <!-- Import shared utilities -->
+    <script src="../../utils/common.js"></script>
+    
+    <!-- Page-specific Scripts -->
+    <script src="../../scripts/tasks-controller.js"></script>
   </body>
 </html>

@@ -4,237 +4,478 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Demographics Form</title>
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="../../styles/global.css">
+    
+    <!-- Page-specific Styles -->
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #f4f4f4;
+      /* Enhanced form styling */
+      .form-header {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
       }
-      h1 {
-        font-size: 1.8em;
-        margin-bottom: 20px;
-        color: #333;
+      
+      .form-header h1 {
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-sm);
       }
-      .form-container {
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        max-width: 400px;
-        width: 100%;
+      
+      .form-group {
+        margin-bottom: var(--spacing-lg);
+        text-align: left;
       }
-      label {
-        display: block;
+      
+      .form-group label {
+        color: var(--gray-700);
         font-size: 1.1em;
-        margin-bottom: 10px;
-        font-weight: bold;
+        margin-bottom: var(--spacing-sm);
       }
-      select,
-      input {
-        width: 100%;
-        padding: 12px;
-        margin-bottom: 20px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 1em;
+      
+      /* Email section styling */
+      .email-section {
+        background: var(--light-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
       }
-      .button-container {
+      
+      .email-consent {
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--gray-300);
+      }
+      
+      .email-consent label {
         display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        margin-top: 20px;
-      }
-
-      button {
-        width: 100%;
-        padding: 12px;
-        font-size: 1.1em;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 8px;
+        align-items: flex-start;
+        font-weight: normal;
+        font-size: 0.95em;
         cursor: pointer;
-        margin-bottom: 20px;
-        transition: background-color 0.3s ease;
       }
-      button:hover {
-        background-color: #0056b3;
+      
+      .email-consent input[type="checkbox"] {
+        margin-right: var(--spacing-sm);
+        margin-top: 2px;
+        cursor: pointer;
       }
-      .previous-button {
-        background-color: #6c757d;
-        color: white;
-      }
-      .previous-button:hover {
-        background-color: #5a6268;
-      }
-      .next-button {
-        background-color: #007bff;
-        color: white;
-      }
-      .next-button:hover {
-        background-color: #0056b3;
-      }
-      /* Style the checkbox label to remove bold text */
-      #consent_for_email_reachout_in_future + label {
+      
+      /* Optional badge */
+      .optional-badge {
+        display: inline-block;
+        background: #17a2b8;
+        color: var(--white);
+        font-size: 0.75em;
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+        margin-left: var(--spacing-sm);
         font-weight: normal;
       }
+      /* Important notes */
+    .important-note {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: var(--spacing-md);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--spacing-xl);
+      text-align: left;  /* Add this line */
+    }
 
-      /* Add spacing for the checkbox and text */
-      #consent_for_email_reachout_in_future {
-        margin-right: 8px;
+    .important-note p {
+      text-align: left;  /* Ensure paragraph text is also left-aligned */
+      margin: 0;         /* Remove default paragraph margins for cleaner spacing */
+    }
+      
+      /* Progress indicator */
+      .progress-dots {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-2xl);
+      }
+      
+      .progress-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gray-300);
+        transition: all var(--transition-base);
+      }
+      
+      .progress-dot.active {
+        background: var(--primary-color);
+        transform: scale(1.2);
+      }
+      
+      .progress-dot.completed {
+        background: var(--success-color);
+      }
+      
+      /* Select styling enhancement */
+      select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+        background-size: 1em;
+        padding-right: 2.5rem;
       }
     </style>
   </head>
   <body>
-    <div class="form-container">
-      <h1>Demographics Form</h1>
-      <form>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" />
-        <label for="consent_for_email_reachout_in_future">
-          <input
-            type="checkbox"
-            id="consent_for_email_reachout_in_future"
-            required
-          />
-          I consent to the researchers storing my email address for potential
-          future research study participation
-        </label>
-
-        <label for="gender">Gender:</label>
-        <select id="gender" name="gender" required>
-          <option value="">Select</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
-
-        <label for="handedness">Handedness:</label>
-        <select id="handedness" name="handedness" required>
-          <option value="">Select</option>
-          <option value="right">Right-handed</option>
-          <option value="left">Left-handed</option>
-          <option value="ambidextrous">Ambidextrous</option>
-        </select>
-
-        <label for="education">Education:</label>
-        <select id="education" name="education" required>
-          <option value="">Select</option>
-          <option value="Bachelor">Before College</option>
-          <option value="Bachelor">Bachelor</option>
-          <option value="Masters">Masters</option>
-          <option value="Phd">PhD</option>
-        </select>
-        <div class="button-container">
-          <button
-            type="button"
-            class="previous-button"
-            onclick="navigateToPrevious()"
-          >
-            Previous
-          </button>
-          <button type="button" class="next-button" onclick="navigateToNext()">
-            Next
-          </button>
+    <div class="page-container">
+      <div class="form-container">
+        <!-- Progress indicator -->
+        <div class="progress-dots">
+          <div class="progress-dot completed"></div>
+          <div class="progress-dot active"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
         </div>
-      </form>
+
+        <!-- Header -->
+        <div class="form-header">
+          <h1>Demographics Information</h1>
+          <p class="text-muted">Help us understand you better</p>
+        </div>
+
+        <form id="demographics-form">
+          <!-- Email Section -->
+          <div class="email-section">
+            <div class="form-group">
+              <label for="email">
+                Email Address
+                <span class="optional-badge">Optional</span>
+              </label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="your.email@example.com"
+              />
+            </div>
+            
+            <div class="email-consent">
+              <label>
+                <input type="checkbox" id="consent_for_email_reachout_in_future" />
+                I consent to providing my email address.<br>
+                
+              </label>
+
+
+            </div>
+          </div>
+
+          <div class="important-note">
+            <p class="text-muted">
+              How do we use your email address?<br>
+              1. We may contact you for future studies related to this research.<br>
+              2. If you provide your email, you will be entered into a drawing for one of several $25 Amazon gift cards. 
+              We will contact you by email if you win.<br><br>
+              
+              How do we ensure your privacy?<br>
+              1. This study received appropriate Institutional Review Board (IRB) approval for data colection.<br>
+              2. Your data is associated with a random key and NOT your email address.<br> 
+              3. Your email address and demographics data are kept in a separate file from your data and stored in a secure, private cloud bucket.<br>
+              4. Your email address will not be shared with anyone outside of this study or any third parties.<br>
+              5. Once data collection is completed, and we no longer need to contact you, we will delete your email address.<br>
+              6. Your email address will not be used for any other purpose.<br>
+              
+              <br>
+              <strong>Note:</strong> If you do not provide an email, you will not be entered into the drawing. But you can still participate in the study.</strong>
+            </p>
+          </div>
+
+            
+        
+
+          <!-- Gender -->
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" required>
+              <option value="">Please select...</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="non-binary">Non-binary</option>
+              <option value="other">Other</option>
+              <option value="prefer_not_to_say">Prefer not to say</option>
+            </select>
+          </div>
+
+          <!-- Handedness -->
+          <div class="form-group">
+            <label for="handedness">Handedness</label>
+            <select id="handedness" name="handedness" required>
+              <option value="">Please select...</option>
+              <option value="right">Right-handed</option>
+              <option value="left">Left-handed</option>
+              <option value="ambidextrous">Ambidextrous</option>
+            </select>
+          </div>
+
+          <!-- Education -->
+          <div class="form-group">
+            <label for="education">Education Level</label>
+            <select id="education" name="education" required>
+              <option value="">Please select...</option>
+              <option value="high_school">High School or Less</option>
+              <option value="some_college">Some College</option>
+              <option value="bachelor">Bachelor's Degree</option>
+              <option value="masters">Master's Degree</option>
+              <option value="doctorate">Doctorate</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <!-- Buttons -->
+          <div class="button-container">
+            <button type="button" class="btn-secondary" onclick="navigateToPrevious()">
+              Previous
+            </button>
+            <button type="button" class="btn-primary" id="next-button" onclick="handleFormSubmission()">
+              Next
+            </button>
+          </div>
+        </form>
+
+        <!-- Message Container -->
+        <div id="message-container"></div>
+      </div>
     </div>
+
+    <!-- Import shared utilities -->
+    <script src="../../utils/common.js"></script>
+    
+    <!-- Page-specific Scripts -->
     <script>
-      function getQueryParam(name) {
-        return new URLSearchParams(window.location.search).get(name);
-      }
+      // Initialize when page loads
+      window.addEventListener('load', function() {
+        console.log('Demographics page loaded');
+        initializePage();
+      });
 
-      async function navigateToNext() {
-        let email_value = document.getElementById("email").value;
-        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$|^$/;
-        if (emailRegex.test(email_value) == false) {
-          alert("Invalid email");
-          return;
-        }
-        let gender_value = document.getElementById("gender").value;
-        if (gender_value == "") {
-          alert("Select a gender");
-          return;
-        }
-        let handedness_value = document.getElementById("handedness").value;
-        if (handedness_value == "") {
-          alert("Select a handedness");
-          return;
-        }
-
-        let education_value = document.getElementById("education").value;
-        if (education_value == "") {
-          alert("Select an education");
-          return;
-        }
-        const consentChecked = document.getElementById(
-          "consent_for_email_reachout_in_future"
-        ).checked;
-
-        if (!consentChecked) {
-          const ok = confirm(
-            "Are you sure you do not want us to store your e-mail for a follow-up?\n" +
-              "You can still continue if you are sure."
-          );
-          if (!ok) {
-            // user clicked “Cancel” so stay on the page
+      function initializePage() {
+        try {
+          // Verify we have a user ID from the previous page
+          const userId = NavigationManager.getQueryParam('user_id');
+          if (!userId) {
+            showMessage('Session not found. Redirecting...', 'error');
+            setTimeout(() => {
+              window.location.href = 'consent.html';
+            }, 2000);
             return;
           }
-        }
-        let userId = getQueryParam("user_id");
-        console.error("The retrieved cookie value was:" + userId);
-        if (!userId) {
-          alert("Cookie not set in URL Query params");
-        } else {
-          console.error("Existing user_id cookie:", userId);
-        }
-        let demographics_object = {
-          email: email_value,
-          gender: gender_value,
-          handedness: handedness_value,
-          education: education_value,
-          consent_email_for_future: consentChecked,
-        };
-        const jsonBlob = new Blob(
-          [JSON.stringify(demographics_object, null, 2)],
-          {
-            type: "application/json",
-          }
-        );
-        /* 3 — wrap in multipart/form-data (same format your function expects) */
-        const fd = new FormData();
-        fd.append("file", jsonBlob, `${userId}_demographics.json`); // filename= is vital for saver’s regex
 
-        /* 4 — POST to the Netlify Function */
+          console.log('User ID verified:', userId);
+          
+          // Store in cookie for consistency
+          SecureCookieManager.setCookie('user_id', userId);
+          
+        } catch (error) {
+          console.error('Failed to initialize demographics page:', error);
+          showMessage('Failed to initialize page. Please try again.', 'error');
+        }
+      }
+
+      async function handleFormSubmission() {
+        const nextButton = document.getElementById('next-button');
+
         try {
-          const res = await fetch(
-            "https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver",
-            {
-              method: "POST",
-              body: fd,
-            }
-          );
-          const result = await res.json();
+          // Clear any existing messages
+          clearMessages();
 
-          if (!res.ok) throw new Error(JSON.stringify(result));
+          // Validate form
+          const formData = validateAndGetFormData();
+          if (!formData) {
+            return; // Validation errors already shown
+          }
 
-          alert(`✅ Demographics uploaded! Go to the next page!`);
-        } catch (err) {
-          console.error("❌ Upload failed:", err);
-          alert("❌ Upload failed - check console");
+          // Show loading state
+          nextButton.disabled = true;
+          nextButton.innerHTML = '<span class="spinner"></span> Processing...';
+          document.getElementById('demographics-form').classList.add('loading');
+
+          // Get user ID
+          const userId = NavigationManager.getQueryParam('user_id') || 
+                         SecureCookieManager.getCookie('user_id');
+          
+          if (!userId) {
+            throw new Error('User ID not found');
+          }
+
+          // Upload demographics data
+          await uploadDemographicsData(formData, userId);
+
+          // Show success briefly
+          showMessage('Information saved successfully!', 'success');
+          
+          // Navigate to next page
+          setTimeout(() => {
+            NavigationManager.navigateWithUserId('instructions.html', userId);
+          }, 500);
+
+        } catch (error) {
+          console.error('Form submission failed:', error);
+          showMessage('Failed to submit form. Please try again.', 'error');
+          
+          // Reset button state
+          nextButton.disabled = false;
+          nextButton.innerHTML = 'Next';
+          document.getElementById('demographics-form').classList.remove('loading');
+        }
+      }
+
+      function validateAndGetFormData() {
+        // Get form values
+        const email = document.getElementById('email').value.trim();
+        const gender = document.getElementById('gender').value;
+        const handedness = document.getElementById('handedness').value;
+        const education = document.getElementById('education').value;
+        const emailConsent = document.getElementById('consent_for_email_reachout_in_future').checked;
+
+        // Validate email if provided
+        if (email) {
+          const emailValidation = FormValidator.validateEmail(email);
+          if (!emailValidation.valid) {
+            showMessage(emailValidation.message, 'error');
+            document.getElementById('email').focus();
+            return null;
+          }
         }
 
-        window.location.href = `instructions.html?user_id=${encodeURIComponent(
-          userId
-        )}`;
+        // Validate required fields
+        if (!gender) {
+          showMessage('Please select your gender', 'error');
+          document.getElementById('gender').focus();
+          return null;
+        }
+
+        if (!handedness) {
+          showMessage('Please select your handedness', 'error');
+          document.getElementById('handedness').focus();
+          return null;
+        }
+
+        if (!education) {
+          showMessage('Please select your education level', 'error');
+          document.getElementById('education').focus();
+          return null;
+        }
+
+        /* Handle email consent validation
+        if (email && !emailConsent) {
+          const confirmed = confirm(
+            "You provided an email but didn't consent to future contact. " +
+            "Your email will not be saved and you will not be entered to win a gift certificate. Continue anyway?"
+          );
+          if (!confirmed) {
+            return null;
+          }
+        } */
+
+        // Handle email consent validation
+        if (!email && !emailConsent) {
+          // No email provided and no consent checked
+          const confirmed = confirm(
+            "You haven't provided an email address. " +
+            "Without an email:\n" +
+            "1) We will not contact you for future studies\n" +
+            "2) But you will NOT be entered to win a gift card\n\n" +
+            "Continue anyway?"
+          );
+          if (!confirmed) {
+            document.getElementById('email').focus();
+            return null;
+          }
+        } else if (!email && emailConsent) {
+          // Consent checked but no email provided
+          const confirmed = confirm(
+            "You checked the consent box but didn't provide an email address.\n\n" +
+            "Without an email:\n" +
+            "1) We will NOT contact you for future studies\n" +
+            "2) You will NOT be entered to win a gift card\n\n" +
+            "Continue anyway?"
+          );
+          if (!confirmed) {
+            document.getElementById('email').focus();
+            return null;
+          }
+        } else if (email && !emailConsent) {
+          // Email provided but no consent
+          const confirmed = confirm(
+            "You provided an email but didn't consent to future contact.\n\n" +
+            "Without consent:\n" +
+            "1) Your email will NOT be saved\n" +
+            "2) You will NOT be entered to win a gift card\n\n" +
+            "Continue anyway?"
+          );
+          if (!confirmed) {
+            return null;
+          }
+        }
+
+        return {
+          email: emailConsent ? email : '', // Only store email if consent given
+          gender,
+          handedness,
+          education,
+          consent_email_for_future: emailConsent,
+          submission_timestamp: new Date().toISOString()
+        };
       }
+
+      async function uploadDemographicsData(formData, userId) {
+        console.log('Uploading demographics data...');
+
+        // Get device info from sessionStorage
+        const deviceInfoStr = sessionStorage.getItem('device_info');
+        const deviceInfo = deviceInfoStr ? JSON.parse(deviceInfoStr) : DeviceDetector.getDeviceInfo();
+
+        // Add device info to form data
+        const enrichedData = {
+          ...formData,
+          device_info: deviceInfo,
+          is_mobile: deviceInfo.isMobile,
+          device_type: deviceInfo.deviceType
+        };
+
+        const jsonBlob = new Blob([JSON.stringify(enrichedData, null, 2)], {
+          type: "application/json",
+        });
+
+        const fileName = `${userId}_demographics.json`;
+        
+        const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
+        console.log('✅ Demographics data uploaded:', result.fileName);
+        return result;
+      }
+
       function navigateToPrevious() {
-        window.location.href = "consent.html";
+        if (confirm('Are you sure you want to go back? Your current progress will be lost.')) {
+          window.location.href = 'consent.html';
+        }
       }
+
+      function showMessage(message, type) {
+        const container = document.getElementById('message-container');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `${type}-message mt-2`;
+        messageDiv.textContent = message;
+        container.appendChild(messageDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => messageDiv.remove(), 5000);
+      }
+
+      function clearMessages() {
+        document.getElementById('message-container').innerHTML = '';
+      }
+
+      // Error handling
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        showMessage('An unexpected error occurred. Please try again.', 'error');
+      });
     </script>
   </body>
 </html>

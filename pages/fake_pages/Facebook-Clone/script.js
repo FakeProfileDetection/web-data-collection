@@ -1,178 +1,157 @@
+// Facebook Clone script.js - COMPLETE REPLACEMENT
+// This file uses the PlatformSubmissionHandler from common.js
+
+// Facebook-specific UI elements
 var settingsMenu = document.querySelector(".setting_menu");
 var darkBtn = document.getElementById("dark_btn");
-let startTime;
+
+// Facebook-specific UI functions
 function settingsMenuToggle() {
   settingsMenu.classList.toggle("setting_menu_height");
 }
-function getQueryParam(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
-function replaceJsKey(e) {
-  if (e.key === "Shift") {
-    return "Key.shift";
-  } else if (e.key === "Control") {
-    return "Key.ctrl";
-  } else if (e.key === "Alt") {
-    return "Key.alt";
-  } else if (e.key === "Meta") {
-    return "Key.cmd";
-  } else if (e.key === "Enter") {
-    return "Key.enter";
-  } else if (e.key === "Backspace") {
-    return "Key.backspace";
-  } else if (e.key === "Escape") {
-    return "Key.esc";
-  } else if (e.key === "Tab") {
-    return "Key.tab";
-  } else if (e.code === "Space") {
-    return "Key.space";
-  } else if (e.key === "ArrowLeft") {
-    return "Key.left";
-  } else if (e.key === "ArrowRight") {
-    return "Key.right";
-  } else if (e.key === "ArrowUp") {
-    return "Key.up";
-  } else if (e.key === "ArrowDown") {
-    return "Key.down";
-  } else if (e.key === "CapsLock") {
-    return "Key.caps_lock";
-  } else {
-    return e.key;
-  }
-}
 
-/**
- * Start recording keystrokes and expose a “Submit Keylog” button.
- * The button uploads a CSV (keystrokes) and a TXT (raw text typed in
- * the #input_value element) to the Netlify `saver` function.
- */
-function startKeyLogger(user_id_str, platform_initial, task_id) {
-  /* -------------------- 1.  collect events -------------------- */
-  const keyEvents = [];
-
-  const onKeyDown = (e) => keyEvents.push(["P", replaceJsKey(e), Date.now()]);
-  const onKeyUp = (e) => keyEvents.push(["R", replaceJsKey(e), Date.now()]);
-
-  document.addEventListener("keydown", onKeyDown);
-  document.addEventListener("keyup", onKeyUp);
-
-  /* -------------------- 2.  helper to upload a file ------------ */
-  const uploadToSaver = async (fileBlob, filename) => {
-    const fd = new FormData();
-    fd.append("file", fileBlob, filename);
-
-    const res = await fetch(
-      "https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver",
-      { method: "POST", body: fd }
-    );
-
-    const json = await res.json();
-    if (!res.ok) throw new Error(json?.error || res.statusText);
-    return json.url; // public URL returned by your function
+// Dark mode functionality
+if (darkBtn) {
+  darkBtn.onclick = function () {
+    darkBtn.classList.toggle("dark_btn_on");
   };
+}
 
-  /* -------------------- 4.  click handler ---------------------- */
-  btnGet.onclick = async () => {
-    if (btnGet.disabled) return; // avoid double‑clicks
-    btnGet.disabled = true;
+// PLATFORM CONFIGURATION - Change this per platform
+const PLATFORM_CONFIG = {
+  // FOR FACEBOOK:
+  name: 'facebook',
+  textInputId: 'input_value',
+  submitButtonId: 'button_value',
+  submitButtonSelector: '#button_value',
+  
+  // FOR INSTAGRAM:
+  // name: 'instagram',
+  // textInputId: 'input_value',
+  // submitButtonId: 'post_comment',
+  // submitButtonSelector: '#post_comment',
+  
+  // FOR TWITTER:
+  // name: 'twitter',
+  // textInputId: 'input_value',
+  // submitButtonId: 'tweet_button',
+  // submitButtonSelector: '.tweetBox__tweetButton',
+};
 
-    try {
-      /* ---- filenames ---- */
-      const p =
-        platform_initial === "0"
-          ? "f"
-          : platform_initial === "1"
-          ? "i"
-          : platform_initial === "2"
-          ? "t"
-          : "u";
-      const csvName = `${p}_${user_id_str}_${task_id}.csv`;
-      const txtName = `${p}_${user_id_str}_${task_id}_raw.txt`;
-      const metadataName = `${p}_${user_id_str}_${task_id}_metadata.json`;
+// ===================================
+// SAVE/RESTORE TEXT FUNCTIONALITY
+// ===================================
 
-      /* ---- build CSV ---- */
-      const heading = [["Press or Release", "Key", "Time"]];
-      const csvString = heading
-        .concat(keyEvents)
-        .map((row) => row.join(","))
-        .join("\n");
-      const csvBlob = new Blob([csvString], {
-        type: "text/csv;charset=utf-8",
-      });
+// Save text to sessionStorage when leaving page
+window.addEventListener('beforeunload', function() {
+  const textInput = document.getElementById(PLATFORM_CONFIG.textInputId);
+  if (textInput && textInput.value.trim()) {
+    const taskId = new URLSearchParams(window.location.search).get('task_id');
+    const storageKey = `draft_${PLATFORM_CONFIG.name}_${taskId}`;
+    sessionStorage.setItem(storageKey, textInput.value);
+    console.log(`Saved draft for ${storageKey}:`, textInput.value);
+  }
+});
 
-      /* ---- build TXT ---- */
-      const inputEl = document.getElementById("input_value");
-      const rawText = inputEl ? inputEl.value : ""; // safe if element missing
-      /* ---- build metadata JSON ---- */
-      const endTime = Date.now(); // Record end time just before uploading
-      const metadata = {
-        user_id: user_id_str,
-        platform_initial: platform_initial,
-        task_id: task_id,
-        start_time: startTime,
-        end_time: endTime,
-        duration_ms: endTime - startTime,
-      };
-      if (!rawText || rawText.length === 0 || keyEvents.length === 0) {
-        alert("Empty posts are not allowed!");
-        btnGet.disabled = false; // Re-enable button so the user can try again
-      } else if (rawText.length < 200) {
-        alert("posts shorter than 200 chars are not allowed!");
-        btnGet.disabled = false; // Re-enable button so the user can try again
-      } else {
-        console.error(rawText);
-        const txtBlob = new Blob([rawText], {
-          type: "text/plain;charset=utf-8",
-        });
-        const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
-          type: "application/json",
-        });
-
-        /* ---- upload both in parallel ---- */
-        const [csvUrl, txtUrl, metadataUrl] = await Promise.all([
-          uploadToSaver(csvBlob, csvName),
-          uploadToSaver(txtBlob, txtName),
-          uploadToSaver(metadataBlob, metadataName),
-        ]);
-
-        console.log("✅ CSV uploaded →", csvUrl);
-        console.log("✅ TXT uploaded →", txtUrl);
-        console.log("✅ Metadata uploaded →", metadataUrl);
-        console.log("✅ Keylog submitted!");
-        alert(
-          "Keystroke CSV, raw text, and metadata uploaded successfully! This tab will be closed after dismissing this message!"
-        );
-        window.close();
-      }
-      /* ---- optional: stop recording after successful upload ---- */
-      // document.removeEventListener("keydown", onKeyDown);
-      // document.removeEventListener("keyup",   onKeyUp);
-    } catch (err) {
-      console.error("❌ Upload failed:", err);
-      console.error("❌ Upload failed – see console for details");
-      btnGet.disabled = false; // let user try again
+// Restore text when page loads
+function restoreSavedText() {
+  const taskId = new URLSearchParams(window.location.search).get('task_id');
+  const storageKey = `draft_${PLATFORM_CONFIG.name}_${taskId}`;
+  const savedText = sessionStorage.getItem(storageKey);
+  
+  if (savedText) {
+    const textInput = document.getElementById(PLATFORM_CONFIG.textInputId);
+    if (textInput) {
+      textInput.value = savedText;
+      console.log(`Restored draft for ${storageKey}:`, savedText);
+      
+      // Trigger any auto-resize functions
+      textInput.dispatchEvent(new Event('input'));
+      
+      // Clear the saved text after restoring
+      // Comment this out if you want to keep drafts even after submission
+      // sessionStorage.removeItem(storageKey);
     }
-  };
-}
-window.onload = async function () {
-  startTime = Date.now();
-  const user_id = getQueryParam("user_id");
-  const platform_id = getQueryParam("platform_id");
-  const task_id = getQueryParam("task_id");
-
-  if (user_id && platform_id && task_id) {
-    startKeyLogger(user_id, platform_id, task_id);
-  } else {
-    alert("Missing user or platform or task info in URL");
   }
-};
-darkBtn.onclick = function () {
-  darkBtn.classList.toggle("dark_btn_on");
-};
+}
+
+// ===================================
+// INITIALIZE PLATFORM
+// ===================================
+
+window.addEventListener('load', function () {
+  console.log(`Initializing ${PLATFORM_CONFIG.name} platform...`);
+  
+  // Check if PlatformSubmissionHandler is available
+  if (typeof PlatformSubmissionHandler === 'undefined') {
+    console.error('PlatformSubmissionHandler not found! Make sure common.js is loaded first.');
+    alert('Configuration error: Please refresh the page.');
+    return;
+  }
+
+  // Handle Twitter's class-based button
+  if (PLATFORM_CONFIG.submitButtonSelector && PLATFORM_CONFIG.submitButtonSelector.startsWith('.')) {
+    const button = document.querySelector(PLATFORM_CONFIG.submitButtonSelector);
+    if (button && !button.id) {
+      button.id = PLATFORM_CONFIG.submitButtonId;
+    }
+  }
+
+  // Initialize the standardized handler
+  PlatformSubmissionHandler.init({
+    platform: PLATFORM_CONFIG.name,
+    textInputId: PLATFORM_CONFIG.textInputId,
+    submitButtonId: PLATFORM_CONFIG.submitButtonId,
+    onAfterSubmit: () => {
+      // Clear the saved draft after successful submission
+      const taskId = new URLSearchParams(window.location.search).get('task_id');
+      const storageKey = `draft_${PLATFORM_CONFIG.name}_${taskId}`;
+      sessionStorage.removeItem(storageKey);
+      console.log(`Cleared draft for ${storageKey}`);
+    }
+  });
+  
+  // Restore any saved text
+  restoreSavedText();
+});
+
+
+// Initialize platform handler when page loads
+window.addEventListener('load', function () {
+  // Check if PlatformSubmissionHandler is available
+  if (typeof PlatformSubmissionHandler === 'undefined') {
+    console.error('PlatformSubmissionHandler not found! Make sure common.js is loaded first.');
+    alert('Configuration error: Please refresh the page.');
+    return;
+  }
+
+  // Initialize the standardized handler
+  PlatformSubmissionHandler.init({
+    platform: 'facebook',
+    textInputId: 'input_value',
+    submitButtonId: 'button_value'
+  });
+});
+
+// Prevent form submissions from reloading the page
+document.addEventListener('DOMContentLoaded', function() {
+  // Find any forms and prevent their default submission
+  const forms = document.querySelectorAll('form');
+  forms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      console.log("Form submission prevented in Facebook");
+    });
+  });
+  
+  // Ensure the text input is a textarea for multi-line support
+  const inputEl = document.getElementById("input_value");
+  if (inputEl && inputEl.tagName.toLowerCase() !== 'textarea') {
+    console.warn("Warning: input_value should be a textarea for multi-line support");
+  }
+});
+
+// Legacy function kept for compatibility
 function passvalue() {
   var message = document.getElementById("");
 }
-
-let btnGet = document.querySelector("#button_value");
-let inputGet = document.querySelector("#input_vlaue");
-let post = document.querySelector("#post");

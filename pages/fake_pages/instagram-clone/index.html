@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="shortcut icon" href="assets/favicon.svg" type="image/x-icon" />
     <link rel="stylesheet" type="text/css" href="style.css" />
-    <script src="script.js" defer></script>
   </head>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -691,7 +690,7 @@
                   </button>
                 </div>
                 <div class="comment-box" id="comment_box">
-                  <textarea id="comment_input" placeholder="Type your comment here, then post..."></textarea>
+                  <textarea id="input_value" placeholder="Type your comment here, then post" rows="3"></textarea>
                   <button class="post-comment" id="post_comment">Post</button>
               </div>
                 <div class="post__infos">
@@ -699,7 +698,7 @@
                     <a href="#" class="post__likes-avatar">
                       <img src="assets/default-user.png" alt="User Picture" />
                     </a>
-
+ 
                     <span
                       >Liked by
                       <a class="post__name--underline" href="#">user123</a> and
@@ -956,5 +955,7 @@
         </div>
       </button>
     </nav>
+    <script src="../../../utils/common.js"></script>
+    <script src="script.js" defer></script>
   </body>
 </html>

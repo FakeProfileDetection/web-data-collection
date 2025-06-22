@@ -3,257 +3,418 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Consent Form</title>
+    <title>Research Study Consent</title>
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="../../styles/global.css">
+    
+    <!-- Page-specific Styles -->
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #f4f4f4;
+      /* Enhanced styling for consent page */
+      .consent-header {
+        text-align: center;
+        margin-bottom: var(--spacing-2xl);
       }
-      .form-container {
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        max-width: 600px;
-        width: 100%;
+      
+      .consent-header h1 {
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .consent-content {
+        background: var(--light-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
+        text-align: left;
+      }
+      
+      .consent-points {
+        margin: var(--spacing-lg) 0;
+      }
+      
+      .consent-points li {
+        margin-bottom: var(--spacing-sm);
+        color: var(--gray-700);
+      }
+      
+      .download-section {
+        background: #e3f2fd;
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
         text-align: center;
       }
-      h1 {
-        font-size: 1.8em;
-        margin-bottom: 20px;
-        color: #333;
-      }
-      p {
-        text-align: left;
-        font-size: 1em;
-        margin-bottom: 20px;
-        line-height: 1.6;
-      }
-      label {
-        font-size: 1.1em;
-        margin-bottom: 10px;
+      
+      .download-link {
+        color: var(--primary-color);
+        text-decoration: none;
         font-weight: bold;
-        display: block;
+        display: inline-block;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border: 2px solid var(--primary-color);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-base);
       }
-      input[type="checkbox"] {
-        margin-right: 10px;
+      
+      .download-link:hover {
+        background: var(--primary-color);
+        color: var(--white);
       }
-      #the-canvas {
-        border: 1px solid black;
-        direction: ltr;
+      
+      .consent-checkbox {
+        background: var(--light-gray);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
       }
-      .button-container {
-        margin-top: 20px;
-      }
-      button {
-        width: 100%;
-        padding: 12px;
-        font-size: 1.1em;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 8px;
+      
+      .consent-checkbox label {
+        display: flex;
+        align-items: flex-start;
+        font-weight: normal;
         cursor: pointer;
-        transition: background-color 0.3s ease;
-        margin-bottom: 10px;
       }
-      button:hover {
-        background-color: #0056b3;
+      
+      .consent-checkbox input[type="checkbox"] {
+        margin-right: var(--spacing-sm);
+        margin-top: 4px;
+        cursor: pointer;
       }
-      /* Revert CSS style of target element and its children */
-      .reset-style,
-      .reset-style * {
-        all: revert;
+      
+      /* Progress indicator */
+      .progress-dots {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-2xl);
+      }
+      
+      .progress-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gray-300);
+        transition: all var(--transition-base);
+      }
+      
+      .progress-dot.active {
+        background: var(--primary-color);
+        transform: scale(1.2);
       }
     </style>
   </head>
   <body>
-    <div class="form-container">
-      <h1>Consent Form</h1>
-      <p>
-        Thank you for participating in our research study. Please carefully read
-        the information below before proceeding:
-      </p>
-      <p>
-        By agreeing to participate, you consent to the collection of data for
-        research purposes. Your responses will be kept confidential and used
-        solely for academic purposes. Participation is voluntary, and you may
-        withdraw at any time without penalty.
-      </p>
-      <p>Please download and review the consent form below:</p>
-      <h1>Download Consent Form</h1>
-      <a href="Informed Consent.pdf" download="Informed Consent.pdf"
-        >Click to download file</a
-      >
-
-      <p>By clicking the checkbox below, you confirm that you have:</p>
-      <ol>
-        <li>
-          You have signed a physical consent form or a consent form emailed to
-          you, which you have returned to the researcher.
-        </li>
-        <li>
-          By clicking the checkbox, you are electronically signing this consent
-          form. Your action constitutes a digital signature, which has the same
-          legal effect as a handwritten signature on a physical consent form.
-        </li>
-      </ol>
-      <form>
-        <label>
-          <input type="checkbox" id="consent" required />
-          I have read and understood the above information and consent to
-          participate.
-        </label>
-
-        <div class="button-container">
-          <button type="button" onclick="navigateToNext()">
-            Go to next page
-          </button>
+    <div class="page-container">
+      <div class="form-container">
+        <!-- Progress indicator -->
+        <div class="progress-dots">
+          <div class="progress-dot active"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
         </div>
-      </form>
+
+        <!-- Header -->
+        <div class="consent-header">
+          <h1>Research Study Consent</h1>
+          <p class="text-muted">Fake Profile Detection Study</p>
+        </div>
+
+        <!-- Consent Information -->
+        <div class="consent-content">
+          <h3>Study Overview</h3>
+          <p>
+            Thank you for your interest in participating in our research study. 
+            This study aims to collect typing dynamics data to improve methods 
+            for detecting fake profiles on social media platforms.
+          </p>
+          
+          <h4>What to Expect:</h4>
+          <ul class="consent-points">
+            <li>Complete a brief demographics questionnaire</li>
+            <li>Watch short video clips and share your thoughts</li>
+            <li>Make posts on simulated social media platforms</li>
+            <li>Total time: approximately 20-30 minutes</li>
+          </ul>
+          
+          <h4>Your Privacy:</h4>
+          <ul class="consent-points">
+            <li>All data collected will be kept confidential and anonymous</li>
+            <li>Data will be used solely for academic research</li>
+            <li>You may withdraw at any time without penalty</li>
+          </ul>
+        </div>
+
+        <!-- Download Section -->
+        <div class="download-section">
+          <h3>📄 Detailed Consent Form</h3>
+          <p>Please download and review the full consent document:</p>
+          <a href="Informed Consent.pdf" download="Informed Consent.pdf" class="download-link">
+            Download PDF
+          </a>
+        </div>
+
+        <!-- Consent Checkbox -->
+        <div class="consent-checkbox">
+          <h4>Electronic Consent</h4>
+          <p class="text-muted mb-2">
+            By checking this box, you confirm that you have read and understood 
+            the consent form and agree to participate in this study.
+          </p>
+          <label>
+            <input type="checkbox" id="consent" required />
+            I consent to participate in this research study
+          </label>
+          
+        </div>
+
+        <!-- Submit Button -->
+        <button type="button" class="btn-primary btn-block" id="next-button" onclick="handleConsentSubmission()">
+          Continue to Demographics
+        </button>
+        
+        <!-- Message Container -->
+        <div id="message-container"></div>
+      </div>
     </div>
+
+    <!-- Import shared utilities -->
+    <script src="../../utils/common.js"></script>
+    
+    <!-- Page-specific Scripts -->
     <script>
-      window.onload = () => {
-        /* optional: don’t overwrite an existing user_id */
-        const hasId = document.cookie
-          .split("; ")
-          .some((c) => c.startsWith("user_id="));
-        if (!hasId) {
-          setUserIdCookie();
+      // Initialize when page loads
+      window.addEventListener('load', function() {
+        console.log('Consent page loaded');
+        initializePage();
+      });
+
+      /* function initializePage() {
+        try {
+          // Clear any lingering task progress from previous users
+          SecureCookieManager.deleteCookie('current_task_index');
+
+          // Create or get user ID using secure utility
+          const userId = SecureCookieManager.getOrCreateUserId();
+          console.log('User ID initialized:', userId);
+        } catch (error) {
+          console.error('Failed to initialize user ID:', error);
+          showMessage('Failed to initialize session. Please refresh the page.', 'error');
         }
-      };
-
-      function setUserIdCookie() {
-        // Generate a secure random user_id using crypto API
-        let userId = crypto.getRandomValues(new Uint8Array(16)).toString("hex");
-        console.error("Generated user id:" + userId);
-        // Set the cookie with the name 'user_id' and the generated value
-        document.cookie = `user_id=${userId}; path=/; SameSite=None;Secure`;
-        console.error("Cookies:" + document.cookie);
-      }
-      // Function to retrieve a cookie by its name
-      function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(";").shift();
-        return null;
-      }
-
-      async function navigateToNext() {
-        var isChecked = document.getElementById("consent").checked;
-        if (isChecked == false) {
-          alert(
-            "You must provide consent before proceeding to the next page!"
-          );
-        } else {
-          const consent_obj = {
-            consented: "Yes",
-          };
-          const jsonBlob = new Blob([JSON.stringify(consent_obj, null, 2)], {
-            type: "application/json",
-          });
-          let userId = getCookie("user_id");
-          console.error("The retrieved cookie value was:" + userId);
-          if (!userId) {
-            // If the cookie is not set, call setUserIdCookie
-            setUserIdCookie();
-            userId = getCookie("user_id");
-          } else {
-            console.error("Existing user_id cookie:", userId);
+      } */
+      function initializePage() {
+        try {
+          // Check for mobile device FIRST
+          const deviceInfo = DeviceDetector.getDeviceInfo();
+          
+          if (deviceInfo.isMobile) {
+            // Show mobile warning
+            showMobileWarning(deviceInfo);
           }
+         
+          // Clear ALL session data from previous users
+          SecureCookieManager.deleteCookie('current_task_index');
+          SecureCookieManager.deleteCookie('user_id');  // Add this line!
+          
+          // Now create a fresh user ID for this new session
+          const userId = SecureCookieManager.generateSecureUserId();
+          SecureCookieManager.setCookie('user_id', userId);
+          
+          console.log('Fresh user ID created:', userId);
 
-          /* 3 — wrap in multipart/form-data (same format your function expects) */
-          const fd = new FormData();
-          fd.append("file", jsonBlob, `${userId}_consent.json`); // filename= is vital for saver’s regex
-
-          /* 4 — POST to the Netlify Function */
-          try {
-            const res = await fetch(
-              "https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver",
-              {
-                method: "POST",
-                body: fd,
-              }
-            );
-            const result = await res.json();
-
-            if (!res.ok) throw new Error(JSON.stringify(result));
-
-            alert(`✅ Consent uploaded!`);
-          } catch (err) {
-            console.error("❌ Upload failed:", err);
-            alert("❌ Upload failed - check console");
-          }
-          userId = getCookie("user_id");
-          console.error("The retrieved cookie value was:" + userId);
-          if (!userId) {
-            // If the cookie is not set, call setUserIdCookie
-            setUserIdCookie();
-            userId = getCookie("user_id");
-          } else {
-            console.error("Existing user_id cookie:", userId);
-          }
-          const start_time_obj = {
-            start_timestamp: new Date().toISOString(), // Adds the current time in ISO format
-          };
-          const startTimeBlob = new Blob(
-            [JSON.stringify(start_time_obj, null, 2)],
-            {
-              type: "application/json",
-            }
-          );
-          userId = getCookie("user_id");
-          console.error("The retrieved cookie value was:" + userId);
-          if (!userId) {
-            // If the cookie is not set, call setUserIdCookie
-            setUserIdCookie();
-            userId = getCookie("user_id");
-          } else {
-            console.error("Existing user_id cookie:", userId);
-          }
-
-          /* 3 — wrap in multipart/form-data (same format your function expects) */
-          const other_fd = new FormData();
-          other_fd.append("file", startTimeBlob, `${userId}_start_time.json`);
-
-          /* 4 — POST to the Netlify Function */
-          try {
-            const res = await fetch(
-              "https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver",
-              {
-                method: "POST",
-                body: other_fd,
-              }
-            );
-            const result = await res.json();
-
-            if (!res.ok) throw new Error(JSON.stringify(result));
-
-            alert(`✅ Start time metadata uploaded! Go to the next page!`);
-          } catch (err) {
-            console.error("❌ Upload failed:", err);
-            alert("❌ Upload failed - check console");
-          }
-          userId = getCookie("user_id");
-          console.error("The retrieved cookie value was:" + userId);
-          if (!userId) {
-            // If the cookie is not set, call setUserIdCookie
-            setUserIdCookie();
-            userId = getCookie("user_id");
-          } else {
-            console.error("Existing user_id cookie:", userId);
-          }
-
-          window.location.href = `demographics.html?user_id=${encodeURIComponent(
-            userId
-          )}`;
+        } catch (error) {
+          console.error('Failed to initialize user ID:', error);
+          showMessage('Failed to initialize session. Please refresh the page.', 'error');
         }
       }
+
+      function showMobileWarning(deviceInfo) {
+        // Create a prominent warning div
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'mobile-warning';
+        warningDiv.innerHTML = `
+          <div class="mobile-warning-content">
+            <h3>⚠️ Mobile Device Detected</h3>
+            <p>This study is designed for desktop/laptop computers with standard keyboards.</p>
+            <p>You're currently using a <strong>${deviceInfo.deviceType}</strong> device.</p>
+            <p>While you can continue, please note:</p>
+            <ul>
+              <li>Keystroke data collection may not work properly on mobile devices</li>
+              <li>The typing experience will be different from a standard keyboard</li>
+              <li>Your data will be flagged as mobile and may be excluded from analysis</li>
+            </ul>
+            <p><strong>For best results, please use a desktop or laptop computer.</strong></p>
+            <button onclick="this.parentElement.parentElement.remove()" class="btn-secondary">
+              I understand, continue anyway
+            </button>
+          </div>
+        `;
+        
+        // Add styles for the warning
+        const style = document.createElement('style');
+        style.textContent = `
+          .mobile-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+          }
+          
+          .mobile-warning-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+            text-align: left;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          }
+          
+          .mobile-warning h3 {
+            color: #dc3545;
+            margin-top: 0;
+            margin-bottom: 15px;
+          }
+          
+          .mobile-warning ul {
+            margin: 15px 0;
+            padding-left: 25px;
+          }
+          
+          .mobile-warning li {
+            margin-bottom: 8px;
+            color: #666;
+          }
+          
+          .mobile-warning button {
+            margin-top: 20px;
+            width: 100%;
+          }
+        `;
+        
+        document.head.appendChild(style);
+        document.body.appendChild(warningDiv);
+      }
+     
+
+      async function handleConsentSubmission() {
+        const consentCheckbox = document.getElementById('consent');
+        const nextButton = document.getElementById('next-button');
+
+        // Clear any existing messages
+        clearMessages();
+
+        // Validate consent checkbox
+        if (!consentCheckbox.checked) {
+          showMessage('Please check the consent box to continue', 'error');
+          return;
+        }
+
+        try {
+          // Show loading state
+          nextButton.disabled = true;
+          nextButton.innerHTML = '<span class="spinner"></span> Processing...';
+
+          // Get user ID (only once!)
+          const userId = SecureCookieManager.getCookie('user_id');
+          if (!userId) {
+            throw new Error('User ID not found. Please refresh the page.');
+          }
+
+          // Upload consent data
+          await uploadConsentData(userId);
+          
+          // Upload start time metadata
+          await uploadStartTime(userId);
+
+          // Show success message briefly
+          showMessage('Consent recorded successfully!', 'success');
+          
+          // Navigate to next page after short delay
+          setTimeout(() => {
+            NavigationManager.navigateWithUserId('demographics.html', userId);
+          }, 500);
+
+        } catch (error) {
+          console.error('Consent submission failed:', error);
+          showMessage('Failed to submit consent. Please try again.', 'error');
+          
+          // Re-enable button
+          nextButton.disabled = false;
+          nextButton.innerHTML = 'Continue to Demographics';
+        }
+      }
+
+      async function uploadConsentData(userId) {
+        console.log('Uploading consent data...');
+        
+        const consentData = {
+          consented: "Yes",
+          userId: userId,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href
+        };
+
+        const jsonBlob = new Blob([JSON.stringify(consentData, null, 2)], {
+          type: "application/json",
+        });
+
+        const fileName = `${userId}_consent.json`;
+        
+        const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
+        console.log('✅ Consent data uploaded:', result.fileName);
+        return result;
+      }
+
+      async function uploadStartTime(userId) {
+        console.log('Uploading start time metadata...');
+        
+        const startTimeData = {
+          start_timestamp: new Date().toISOString(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          session_id: userId
+        };
+
+        const jsonBlob = new Blob([JSON.stringify(startTimeData, null, 2)], {
+          type: "application/json",
+        });
+
+        const fileName = `${userId}_start_time.json`;
+        
+        const result = await APIClient.uploadFile(jsonBlob, fileName, userId);
+        console.log('✅ Start time uploaded:', result.fileName);
+        return result;
+      }
+
+      function showMessage(message, type) {
+        const container = document.getElementById('message-container');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `${type}-message mt-2`;
+        messageDiv.textContent = message;
+        container.appendChild(messageDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => messageDiv.remove(), 5000);
+      }
+
+      function clearMessages() {
+        document.getElementById('message-container').innerHTML = '';
+      }
+
+      // Error handling
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        showMessage('An unexpected error occurred. Please try again.', 'error');
+      });
     </script>
   </body>
 </html>
