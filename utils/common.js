@@ -598,6 +598,13 @@ const PlatformSubmissionHandler = {
     // Set up visibility handler
     this.setupVisibilityHandler();
 
+    // Set up paste prevention
+    const inputEl = document.getElementById(this.config.textInputId);
+    if (inputEl) {
+      inputEl.addEventListener('paste', this.handlePaste.bind(this));
+      console.log('Paste prevention enabled for', this.config.textInputId);
+    }
+
     console.log(`✅ ${config.platform} handler initialized successfully`);
   },
 
@@ -684,6 +691,54 @@ const PlatformSubmissionHandler = {
         }
       }
     });
+  },
+
+  /**
+   * Handle paste events
+   */
+  handlePaste(e) {
+    e.preventDefault(); // This stops the paste from happening
+    
+    // Show warning message
+    this.showPasteWarning();
+    
+    // Log the attempt for debugging
+    console.warn('Paste attempt blocked at', new Date().toISOString());
+  },
+
+  /**
+   * Show paste warning message
+   */
+  showPasteWarning() {
+    // Create warning element
+    const warning = document.createElement('div');
+    warning.className = 'paste-warning';
+    warning.innerHTML = `
+      <strong>⚠️ Paste Disabled</strong><br>
+      Please type your response. This study requires actual typing for data collection.
+    `;
+    
+    // Style the warning
+    warning.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ff6b6b;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 5px;
+      z-index: 10000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      text-align: center;
+      font-family: Arial, sans-serif;
+    `;
+    
+    // Add to page
+    document.body.appendChild(warning);
+    
+    // Remove after 5 seconds
+    setTimeout(() => warning.remove(), 5000);
   },
 
   /**
