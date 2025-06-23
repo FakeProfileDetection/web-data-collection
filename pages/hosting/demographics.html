@@ -200,6 +200,21 @@
             </select>
           </div>
 
+          <div class="form-group">
+            <label for="age">Age</label>
+            <select id="age" name="age" required>
+              <option value="">Please select...</option>
+              <option value="under_18">Under 18</option>
+              <option value="18_24">18–24</option>
+              <option value="25_34">25–34</option>
+              <option value="35_44">35–44</option>
+              <option value="45_54">45–54</option>
+              <option value="55_64">55–64</option>
+              <option value="65_plus">65 or older</option>
+            </select>
+          </div>
+
+
           <!-- Handedness -->
           <div class="form-group">
             <label for="handedness">Handedness</label>
@@ -327,6 +342,7 @@
         // Get form values
         const email = document.getElementById('email').value.trim();
         const gender = document.getElementById('gender').value;
+        const age = document.getElementById('age').value; // Get age value
         const handedness = document.getElementById('handedness').value;
         const education = document.getElementById('education').value;
         const emailConsent = document.getElementById('consent_for_email_reachout_in_future').checked;
@@ -345,6 +361,18 @@
         if (!gender) {
           showMessage('Please select your gender', 'error');
           document.getElementById('gender').focus();
+          return null;
+        }
+
+        if (!age) { // Validate age
+          showMessage('Please select your age', 'error');
+          document.getElementById('age').focus();
+          return null;
+        }
+
+        if (age === 'under_18') { // Restrict participants under 18
+          showMessage('Participants under 18 are not eligible to participate in this study.', 'error');
+          document.getElementById('age').focus();
           return null;
         }
 
@@ -405,6 +433,7 @@
         return {
           email: emailConsent ? email : '', // Only store email if consent given
           gender,
+          age,
           handedness,
           education,
           consent_email_for_future: emailConsent,
