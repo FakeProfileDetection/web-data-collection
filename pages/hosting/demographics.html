@@ -169,12 +169,10 @@
           <div class="important-note">
             <p class="text-muted">
               How do we use your email address?<br>
-              1. We may contact you for future studies related to this research.<br>
-              2. If you provide your email, you will be entered into a drawing for one of several $25 Amazon gift cards. 
-              We will contact you by email if you win.<br><br>
+              1. We may contact you for future studies related to this research and any outcomes of this research or if we need to reach out to you for any reason.<br><br>
               
               How do we ensure your privacy?<br>
-              1. This study received appropriate Institutional Review Board (IRB) approval for data colection.<br>
+              1. This study received appropriate Institutional Review Board (IRB) approval for data collection.<br>
               2. Your data is associated with a random key and NOT your email address.<br> 
               3. Your email address and demographics data are kept in a separate file from your data and stored in a secure, private cloud bucket.<br>
               4. Your email address will not be shared with anyone outside of this study or any third parties.<br>
@@ -362,16 +360,6 @@
           return null;
         }
 
-        /* Handle email consent validation
-        if (email && !emailConsent) {
-          const confirmed = confirm(
-            "You provided an email but didn't consent to future contact. " +
-            "Your email will not be saved and you will not be entered to win a gift certificate. Continue anyway?"
-          );
-          if (!confirmed) {
-            return null;
-          }
-        } */
 
         // Handle email consent validation
         if (!email && !emailConsent) {
@@ -380,7 +368,7 @@
             "You haven't provided an email address. " +
             "Without an email:\n" +
             "1) We will not contact you for future studies\n" +
-            "2) But you will NOT be entered to win a gift card\n\n" +
+            // "2) But you will NOT be entered to win a gift card\n\n" +
             "Continue anyway?"
           );
           if (!confirmed) {
@@ -393,7 +381,7 @@
             "You checked the consent box but didn't provide an email address.\n\n" +
             "Without an email:\n" +
             "1) We will NOT contact you for future studies\n" +
-            "2) You will NOT be entered to win a gift card\n\n" +
+            // "2) You will NOT be entered to win a gift card\n\n" +
             "Continue anyway?"
           );
           if (!confirmed) {
@@ -406,7 +394,7 @@
             "You provided an email but didn't consent to future contact.\n\n" +
             "Without consent:\n" +
             "1) Your email will NOT be saved\n" +
-            "2) You will NOT be entered to win a gift card\n\n" +
+            // "2) You will NOT be entered to win a gift card\n\n" +
             "Continue anyway?"
           );
           if (!confirmed) {
