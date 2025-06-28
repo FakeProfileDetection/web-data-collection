@@ -333,6 +333,13 @@
                 </div>
         <!-- todo: Right  SIdeBar End -->
 
+    <!-- Load WASM module -->
+    <script type="module">
+    import { wasmKeystrokeManager } from '../../../utils/wasm-keystroke.js';
+    // Make it globally available for common.js
+    window.wasmKeystrokeManager = wasmKeystrokeManager;
+    </script>
+
     <script src="../../../utils/common.js"></script>
     <script src="script.js"></script>
 </body>

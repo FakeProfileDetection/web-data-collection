@@ -395,6 +395,9 @@ const PlatformSubmissionHandler = {
   keyCodeMap: null,
   keyCodeIndex: 0,
 
+  useWASM: false, // Will be set to true when WASM loads
+  wasmCapture: null, // Will hold the WASM capture instance
+
   initHighPerformanceCapture() {
     // Pre-allocate typed arrays for maximum performance
     this.keyBuffer = {
@@ -420,11 +423,26 @@ const PlatformSubmissionHandler = {
    * @param {function} config.onBeforeSubmit - Optional callback before submission
    * @param {function} config.onAfterSubmit - Optional callback after successful submission
    */
-  init(config) {
+  async init(config) {
     // Check if already submitted for this task
     const urlParams = this.getUrlParameters();
     const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
     this.hasSubmitted = sessionStorage.getItem(submissionKey) === 'true';
+
+    // Check if WASM is available (it will be loaded by the HTML page)
+    if (window.wasmKeystrokeManager) {
+        try {
+            await window.wasmKeystrokeManager.initialize();
+            this.wasmCapture = window.wasmKeystrokeManager;
+            this.useWASM = true;
+            console.log('✅ Using WASM for high-performance keystroke capture');
+        } catch (error) {
+            console.error('Failed to initialize WASM, falling back to JavaScript:', error);
+            this.useWASM = false;
+        }
+    } else {
+        console.log('WASM not available, using JavaScript keystroke capture');
+    }
 
     // Prevent accidental refresh
     window.addEventListener('beforeunload', (e) => {
@@ -607,69 +625,142 @@ const PlatformSubmissionHandler = {
    * Start keystroke logging
    */
   startKeyLogger(urlParams) {
-    // Initialize high-performance capture
-    this.initHighPerformanceCapture();
-    
-    const captureEvent = (e, eventType) => {
-      // Capture timestamp with maximum precision
-      const timestamp = performance.now();
-      const idx = this.keyBuffer.index;
-      
-      // Get or create key code
-      let keyCode = this.keyCodeMap.get(e.key);
-      if (keyCode === undefined) {
-        keyCode = this.keyCodeIndex++;
-        this.keyCodeMap.set(e.key, keyCode);
+      if (this.useWASM && this.wasmCapture) {
+          // Use WASM for capture
+          console.log('Using WASM keystroke capture');
+          
+          document.addEventListener('keydown', (e) => {
+              this.wasmCapture.captureKeyDown(e.key);
+              
+              // Handle Enter key
+              if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
+                  e.preventDefault();
+                  const textarea = e.target;
+                  const start = textarea.selectionStart;
+                  const end = textarea.selectionEnd;
+                  textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
+                  textarea.selectionStart = textarea.selectionEnd = start + 1;
+                  textarea.dispatchEvent(new Event('input'));
+              }
+          });
+          
+          document.addEventListener('keyup', (e) => {
+              this.wasmCapture.captureKeyUp(e.key);
+          });
+      } else {
+          // Fallback to original JavaScript implementation
+          console.log('Using JavaScript keystroke capture');
+          
+          // Initialize high-performance capture
+          this.initHighPerformanceCapture();
+          
+          const captureEvent = (e, eventType) => {
+              // Capture timestamp with maximum precision
+              const timestamp = performance.now();
+              const idx = this.keyBuffer.index;
+              
+              // Get or create key code
+              let keyCode = this.keyCodeMap.get(e.key);
+              if (keyCode === undefined) {
+                  keyCode = this.keyCodeIndex++;
+                  this.keyCodeMap.set(e.key, keyCode);
+              }
+              
+              // Store in typed arrays (extremely fast)
+              this.keyBuffer.types[idx] = eventType; // 0 for press, 1 for release
+              this.keyBuffer.keys[idx] = keyCode;
+              this.keyBuffer.timestamps[idx] = timestamp;
+              this.keyBuffer.index++;
+              
+              // Handle Enter key without blocking
+              if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
+                  e.preventDefault();
+                  requestAnimationFrame(() => {
+                      const textarea = e.target;
+                      const start = textarea.selectionStart;
+                      const end = textarea.selectionEnd;
+                      textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
+                      textarea.selectionStart = textarea.selectionEnd = start + 1;
+                      textarea.dispatchEvent(new Event('input'));
+                  });
+              }
+          };
+          
+          document.addEventListener('keydown', (e) => captureEvent(e, 0), { passive: false });
+          document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
       }
-      
-      // Store in typed arrays (extremely fast)
-      this.keyBuffer.types[idx] = eventType; // 0 for press, 1 for release
-      this.keyBuffer.keys[idx] = keyCode;
-      this.keyBuffer.timestamps[idx] = timestamp;
-      this.keyBuffer.index++;
-      
-      // Handle Enter key without blocking
-      if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
-        e.preventDefault();
-        requestAnimationFrame(() => {
-          const textarea = e.target;
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
-          textarea.selectionStart = textarea.selectionEnd = start + 1;
-          textarea.dispatchEvent(new Event('input'));
-        });
-      }
-    };
-    
-    document.addEventListener('keydown', (e) => captureEvent(e, 0), { passive: false });
-    document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
   },
 
+  // startKeyLogger(urlParams) {
+  //   // Initialize high-performance capture
+  //   this.initHighPerformanceCapture();
+    
+  //   const captureEvent = (e, eventType) => {
+  //     // Capture timestamp with maximum precision
+  //     const timestamp = performance.now();
+  //     const idx = this.keyBuffer.index;
+      
+  //     // Get or create key code
+  //     let keyCode = this.keyCodeMap.get(e.key);
+  //     if (keyCode === undefined) {
+  //       keyCode = this.keyCodeIndex++;
+  //       this.keyCodeMap.set(e.key, keyCode);
+  //     }
+      
+  //     // Store in typed arrays (extremely fast)
+  //     this.keyBuffer.types[idx] = eventType; // 0 for press, 1 for release
+  //     this.keyBuffer.keys[idx] = keyCode;
+  //     this.keyBuffer.timestamps[idx] = timestamp;
+  //     this.keyBuffer.index++;
+      
+  //     // Handle Enter key without blocking
+  //     if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
+  //       e.preventDefault();
+  //       requestAnimationFrame(() => {
+  //         const textarea = e.target;
+  //         const start = textarea.selectionStart;
+  //         const end = textarea.selectionEnd;
+  //         textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
+  //         textarea.selectionStart = textarea.selectionEnd = start + 1;
+  //         textarea.dispatchEvent(new Event('input'));
+  //       });
+  //     }
+  //   };
+    
+  //   document.addEventListener('keydown', (e) => captureEvent(e, 0), { passive: false });
+  //   document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
+  // },
+
   getKeystrokeData() {
-    const events = [];
-    const keyMap = Array.from(this.keyCodeMap.entries());
-    
-    for (let i = 0; i < this.keyBuffer.index; i++) {
-      const keyEntry = keyMap.find(([_, code]) => code === this.keyBuffer.keys[i]);
-      if (keyEntry) {
-        const originalKey = keyEntry[0];
-        
-        // Create a more complete fake event object for replaceJsKey
-        const fakeEvent = {
-          key: originalKey,
-          code: originalKey === ' ' ? 'Space' : `Key${originalKey.toUpperCase()}`
-        };
-        
-        events.push([
-          this.keyBuffer.types[i] === 0 ? 'P' : 'R',
-          this.replaceJsKey(fakeEvent),
-          Math.round(this.keyBuffer.timestamps[i] + performance.timeOrigin)
-        ]);
+      if (this.useWASM && this.wasmCapture) {
+          // Get data from WASM
+          return this.wasmCapture.getRawData();
+      } else {
+          // Original implementation
+          const events = [];
+          const keyMap = Array.from(this.keyCodeMap.entries());
+          
+          for (let i = 0; i < this.keyBuffer.index; i++) {
+              const keyEntry = keyMap.find(([_, code]) => code === this.keyBuffer.keys[i]);
+              if (keyEntry) {
+                  const originalKey = keyEntry[0];
+                  
+                  // Create a more complete fake event object for replaceJsKey
+                  const fakeEvent = {
+                      key: originalKey,
+                      code: originalKey === ' ' ? 'Space' : `Key${originalKey.toUpperCase()}`
+                  };
+                  
+                  events.push([
+                      this.keyBuffer.types[i] === 0 ? 'P' : 'R',
+                      this.replaceJsKey(fakeEvent),
+                      Math.round(this.keyBuffer.timestamps[i] + performance.timeOrigin)
+                  ]);
+              }
+          }
+          
+          return events;
       }
-    }
-    
-    return events;
   },
 
   /**
@@ -791,9 +882,16 @@ const PlatformSubmissionHandler = {
       };
     }
 
-    // Check the buffer instead of the text input
-    if (!this.keyBuffer || this.keyBuffer.index === 0) {
-      return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
+    // Check keystroke data
+    if (this.useWASM && this.wasmCapture) {
+        if (this.wasmCapture.getEventCount() === 0) {
+            return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
+        }
+    } else {
+        // Check the buffer instead of the text input
+        if (!this.keyBuffer || this.keyBuffer.index === 0) {
+            return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
+        }
     }
 
     return { isValid: true };
@@ -888,15 +986,22 @@ const PlatformSubmissionHandler = {
    * Build CSV blob from keystroke events
    */
   buildCsvBlob() {
-    // Convert high-performance buffer to array format only when needed
-    this.keyEvents = this.getKeystrokeData();
-    
-    const heading = [['Press or Release', 'Key', 'Time']];
-    const csvString = heading
-      .concat(this.keyEvents)
-      .map(row => row.join(','))
-      .join('\n');
-    return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+      if (this.useWASM && this.wasmCapture) {
+          // Get CSV directly from WASM
+          const csvString = this.wasmCapture.exportAsCSV();
+          return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+      } else {
+          // Original implementation
+          // Convert high-performance buffer to array format only when needed
+          this.keyEvents = this.getKeystrokeData();
+          
+          const heading = [['Press or Release', 'Key', 'Time']];
+          const csvString = heading
+              .concat(this.keyEvents)
+              .map(row => row.join(','))
+              .join('\n');
+          return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+      }
   },
 
   /**
