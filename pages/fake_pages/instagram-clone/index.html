@@ -964,13 +964,6 @@
             window.wasmKeystrokeManager = wasmKeystrokeManager;
             // Debug: Check if it loaded
             console.log('WASM manager loaded?', window.wasmKeystrokeManager);
-
-            // Try to initialize
-            wasmKeystrokeManager.initialize().then(() => {
-                console.log('WASM initialized successfully!');
-            }).catch(err => {
-                console.error('WASM initialization failed:', err);
-            });
     </script>
     <script src="../../../utils/common.js"></script>
     <script src="script.js" defer></script>
