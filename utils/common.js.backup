@@ -219,130 +219,130 @@ class APIClient {
 /**
  * Enhanced keylogger with memory management and performance optimization
  */
-// class EnhancedKeyLogger {
-//   constructor(userId, platformId) {
-//     this.userId = userId;
-//     this.platformId = platformId;
-//     this.keyEvents = [];
-//     this.maxEvents = 10000; // Prevent memory leaks
-//     this.isActive = false;
+class EnhancedKeyLogger {
+  constructor(userId, platformId) {
+    this.userId = userId;
+    this.platformId = platformId;
+    this.keyEvents = [];
+    this.maxEvents = 10000; // Prevent memory leaks
+    this.isActive = false;
     
-//     // Bind methods to preserve context
-//     this.handleKeyDown = this.handleKeyDown.bind(this);
-//     this.handleKeyUp = this.handleKeyUp.bind(this);
-//   }
+    // Bind methods to preserve context
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleKeyUp = this.handleKeyUp.bind(this);
+  }
 
-//   start() {
-//     if (this.isActive) return;
+  start() {
+    if (this.isActive) return;
     
-//     this.isActive = true;
-//     document.addEventListener('keydown', this.handleKeyDown);
-//     document.addEventListener('keyup', this.handleKeyUp);
+    this.isActive = true;
+    document.addEventListener('keydown', this.handleKeyDown);
+    document.addEventListener('keyup', this.handleKeyUp);
     
-//     this.createDownloadButton();
-//     console.log('Keylogger started');
-//   }
+    this.createDownloadButton();
+    console.log('Keylogger started');
+  }
 
-//   stop() {
-//     if (!this.isActive) return;
+  stop() {
+    if (!this.isActive) return;
     
-//     this.isActive = false;
-//     document.removeEventListener('keydown', this.handleKeyDown);
-//     document.removeEventListener('keyup', this.handleKeyUp);
+    this.isActive = false;
+    document.removeEventListener('keydown', this.handleKeyDown);
+    document.removeEventListener('keyup', this.handleKeyUp);
     
-//     const button = document.getElementById('keylogger-download-btn');
-//     if (button) button.remove();
+    const button = document.getElementById('keylogger-download-btn');
+    if (button) button.remove();
     
-//     console.log('Keylogger stopped');
-//   }
+    console.log('Keylogger stopped');
+  }
 
-//   handleKeyDown(event) {
-//     this.addKeyEvent('P', event.key);
-//     this.saveKeystrokes(); 
-//   }
+  handleKeyDown(event) {
+    this.addKeyEvent('P', event.key);
+    this.saveKeystrokes(); 
+  }
 
-//   handleKeyUp(event) {
-//     this.addKeyEvent('R', event.key);
-//     this.saveKeystrokes(); 
-//   }
+  handleKeyUp(event) {
+    this.addKeyEvent('R', event.key);
+    this.saveKeystrokes(); 
+  }
 
-//   addKeyEvent(type, key) {
-//     // Prevent memory leaks by limiting array size
-//     if (this.keyEvents.length >= this.maxEvents) {
-//       this.keyEvents = this.keyEvents.slice(-this.maxEvents / 2); // Keep last half
-//       console.warn('Keylogger array truncated to prevent memory issues');
-//     }
+  addKeyEvent(type, key) {
+    // Prevent memory leaks by limiting array size
+    if (this.keyEvents.length >= this.maxEvents) {
+      this.keyEvents = this.keyEvents.slice(-this.maxEvents / 2); // Keep last half
+      console.warn('Keylogger array truncated to prevent memory issues');
+    }
     
-//     this.keyEvents.push([type, key, Date.now()]);
-//   }
+    this.keyEvents.push([type, key, Date.now()]);
+  }
 
-//   createDownloadButton() {
-//     const button = document.createElement('button');
-//     button.id = 'keylogger-download-btn';
-//     button.textContent = 'Download Keylog';
-//     button.style.cssText = `
-//       position: fixed;
-//       bottom: 10px;
-//       right: 10px;
-//       background: #333;
-//       color: white;
-//       border: none;
-//       padding: 10px 15px;
-//       border-radius: 5px;
-//       cursor: pointer;
-//       z-index: 10000;
-//       font-family: Arial, sans-serif;
-//       font-size: 12px;
-//     `;
+  createDownloadButton() {
+    const button = document.createElement('button');
+    button.id = 'keylogger-download-btn';
+    button.textContent = 'Download Keylog';
+    button.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #333;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 10000;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+    `;
     
-//     button.onclick = () => this.downloadKeylog();
-//     document.body.appendChild(button);
-//   }
+    button.onclick = () => this.downloadKeylog();
+    document.body.appendChild(button);
+  }
 
-//   downloadKeylog() {
-//     try {
-//       const platformLetters = { 0: 'f', 1: 'i', 2: 't' };
-//       const platformLetter = platformLetters[this.platformId] || 'unknown';
-//       const filename = `${platformLetter}_${this.userId}.csv`;
+  downloadKeylog() {
+    try {
+      const platformLetters = { 0: 'f', 1: 'i', 2: 't' };
+      const platformLetter = platformLetters[this.platformId] || 'unknown';
+      const filename = `${platformLetter}_${this.userId}.csv`;
       
-//       const header = [['Press or Release', 'Key', 'Time']];
-//       const csvData = header.concat(this.keyEvents);
-//       const csvString = csvData.map(row => row.join(',')).join('\n');
+      const header = [['Press or Release', 'Key', 'Time']];
+      const csvData = header.concat(this.keyEvents);
+      const csvString = csvData.map(row => row.join(',')).join('\n');
       
-//       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       
-//       // Modern download approach
-//       const link = document.createElement('a');
-//       const url = URL.createObjectURL(blob);
+      // Modern download approach
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
       
-//       link.setAttribute('href', url);
-//       link.setAttribute('download', filename);
-//       link.style.visibility = 'hidden';
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
       
-//       document.body.appendChild(link);
-//       link.click();
-//       document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
-//       // Clean up object URL
-//       URL.revokeObjectURL(url);
+      // Clean up object URL
+      URL.revokeObjectURL(url);
       
-//       console.log(`Keylog downloaded: ${filename}`);
+      console.log(`Keylog downloaded: ${filename}`);
       
-//     } catch (error) {
-//       console.error('Failed to download keylog:', error);
-//       FormValidator.showError('Failed to download keylog. Please try again.');
-//     }
-//   }
+    } catch (error) {
+      console.error('Failed to download keylog:', error);
+      FormValidator.showError('Failed to download keylog. Please try again.');
+    }
+  }
 
-//   getEventCount() {
-//     return this.keyEvents.length;
-//   }
+  getEventCount() {
+    return this.keyEvents.length;
+  }
 
-//   clearEvents() {
-//     this.keyEvents = [];
-//     console.log('Keylog events cleared');
-//   }
-// }
+  clearEvents() {
+    this.keyEvents = [];
+    console.log('Keylog events cleared');
+  }
+}
 
 /**
  * Navigation utilities with proper URL handling
@@ -812,15 +812,8 @@ const PlatformSubmissionHandler = {
    */
   startKeyLogger(urlParams) {
     const onKeyDown = (e) => {
-      // CHANGE 1: Capture timestamp IMMEDIATELY
-      const timestamp = Date.now();
-      
-      // CHANGE 2: Push to array with the pre-captured timestamp
-      this.keyEvents.push(['P', this.replaceJsKey(e), timestamp]);
-      
-      // CHANGE 3: Save keystrokes AFTER the critical timing capture
-      // Move this to after we've captured the timestamp
-      setTimeout(() => this.saveKeystrokes(), 0);
+
+      this.keyEvents.push(['P', this.replaceJsKey(e), Date.now()]);
       
       // Handle Enter key for multi-line support
       if (e.key === "Enter" && e.target.id === this.config.textInputId) {
@@ -839,19 +832,12 @@ const PlatformSubmissionHandler = {
     };
 
     const onKeyUp = (e) => {
-      // CHANGE 1: Capture timestamp IMMEDIATELY
-      const timestamp = Date.now();
-      
-      // CHANGE 2: Push to array with the pre-captured timestamp
-      this.keyEvents.push(['R', this.replaceJsKey(e), timestamp]);
-      
-      // CHANGE 3: Save keystrokes AFTER the critical timing capture
-      setTimeout(() => this.saveKeystrokes(), 0);
+      this.keyEvents.push(['R', this.replaceJsKey(e), Date.now()]);
     };
 
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
-  },
+  },  
 
   /**
    * Setup submit button handler
