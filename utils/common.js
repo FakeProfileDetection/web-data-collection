@@ -320,7 +320,6 @@ if (typeof module !== 'undefined' && module.exports) {
     SecureCookieManager,
     FormValidator,
     APIClient,
-    EnhancedKeyLogger,
     NavigationManager,
     CONFIG
   };
@@ -469,9 +468,6 @@ const PlatformSubmissionHandler = {
     // Start keylogger
     this.startKeyLogger(urlParams);
     
-    // Load any saved keystrokes
-    // this.loadKeystrokes();
-
     // If we have saved keystrokes but the textarea is empty, clear them
     // (user might have cleared the form before refresh)
     const inputEl = document.getElementById(this.config.textInputId);
@@ -511,41 +507,6 @@ const PlatformSubmissionHandler = {
     if (submitButton) {
       submitButton.disabled = true;
       submitButton.textContent = "Already Submitted";
-    }
-  },
-  /**
-   * Save draft text to sessionStorage
-   */
-  saveDraft() {
-    const inputEl = document.getElementById(this.config.textInputId);
-    if (inputEl && inputEl.value.trim()) {
-      const urlParams = this.getUrlParameters();
-      const storageKey = `draft_${this.config.platform}_${urlParams.task_id}`;
-      sessionStorage.setItem(storageKey, inputEl.value);
-      console.log(`Saved draft for ${storageKey}`);
-    }
-  },
-
-  /**
-   * Restore draft text from sessionStorage
-   */
-  restoreDraft() {
-    const urlParams = this.getUrlParameters();
-    const storageKey = `draft_${this.config.platform}_${urlParams.task_id}`;
-    const savedText = sessionStorage.getItem(storageKey);
-    
-    if (savedText) {
-      const inputEl = document.getElementById(this.config.textInputId);
-      if (inputEl) {
-        inputEl.value = savedText;
-        console.log(`Restored draft for ${storageKey}`);
-        
-        // Trigger input event for auto-resize
-        inputEl.dispatchEvent(new Event('input'));
-        
-        // Show a message that draft was restored
-        this.showDraftRestoredMessage();
-      }
     }
   },
 
@@ -793,9 +754,7 @@ const PlatformSubmissionHandler = {
       const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
       sessionStorage.setItem(submissionKey, 'true');
       this.hasSubmitted = true;
-      // Clear keystroke data
-      // this.clearKeystrokes();
-
+      
       // Call after submit callback if provided
       if (this.config.onAfterSubmit) {
         this.config.onAfterSubmit();
@@ -815,9 +774,6 @@ const PlatformSubmissionHandler = {
   /**
    * Validate post content
    */
-  /**
- * Validate post content
- */
   validatePost(text) {
     // Always get fresh value from DOM
     const inputEl = document.getElementById(this.config.textInputId);
@@ -835,7 +791,7 @@ const PlatformSubmissionHandler = {
       };
     }
 
-    // Check the buffer instead of keyEvents
+    // Check the buffer instead of the text input
     if (!this.keyBuffer || this.keyBuffer.index === 0) {
       return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
     }
