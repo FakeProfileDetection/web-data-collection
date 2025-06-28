@@ -217,134 +217,6 @@ class APIClient {
 }
 
 /**
- * Enhanced keylogger with memory management and performance optimization
- */
-// class EnhancedKeyLogger {
-//   constructor(userId, platformId) {
-//     this.userId = userId;
-//     this.platformId = platformId;
-//     this.keyEvents = [];
-//     this.maxEvents = 10000; // Prevent memory leaks
-//     this.isActive = false;
-    
-//     // Bind methods to preserve context
-//     this.handleKeyDown = this.handleKeyDown.bind(this);
-//     this.handleKeyUp = this.handleKeyUp.bind(this);
-//   }
-
-//   start() {
-//     if (this.isActive) return;
-    
-//     this.isActive = true;
-//     document.addEventListener('keydown', this.handleKeyDown);
-//     document.addEventListener('keyup', this.handleKeyUp);
-    
-//     this.createDownloadButton();
-//     console.log('Keylogger started');
-//   }
-
-//   stop() {
-//     if (!this.isActive) return;
-    
-//     this.isActive = false;
-//     document.removeEventListener('keydown', this.handleKeyDown);
-//     document.removeEventListener('keyup', this.handleKeyUp);
-    
-//     const button = document.getElementById('keylogger-download-btn');
-//     if (button) button.remove();
-    
-//     console.log('Keylogger stopped');
-//   }
-
-//   handleKeyDown(event) {
-//     this.addKeyEvent('P', event.key);
-//     this.saveKeystrokes(); 
-//   }
-
-//   handleKeyUp(event) {
-//     this.addKeyEvent('R', event.key);
-//     this.saveKeystrokes(); 
-//   }
-
-//   addKeyEvent(type, key) {
-//     // Prevent memory leaks by limiting array size
-//     if (this.keyEvents.length >= this.maxEvents) {
-//       this.keyEvents = this.keyEvents.slice(-this.maxEvents / 2); // Keep last half
-//       console.warn('Keylogger array truncated to prevent memory issues');
-//     }
-    
-//     this.keyEvents.push([type, key, Date.now()]);
-//   }
-
-//   createDownloadButton() {
-//     const button = document.createElement('button');
-//     button.id = 'keylogger-download-btn';
-//     button.textContent = 'Download Keylog';
-//     button.style.cssText = `
-//       position: fixed;
-//       bottom: 10px;
-//       right: 10px;
-//       background: #333;
-//       color: white;
-//       border: none;
-//       padding: 10px 15px;
-//       border-radius: 5px;
-//       cursor: pointer;
-//       z-index: 10000;
-//       font-family: Arial, sans-serif;
-//       font-size: 12px;
-//     `;
-    
-//     button.onclick = () => this.downloadKeylog();
-//     document.body.appendChild(button);
-//   }
-
-//   downloadKeylog() {
-//     try {
-//       const platformLetters = { 0: 'f', 1: 'i', 2: 't' };
-//       const platformLetter = platformLetters[this.platformId] || 'unknown';
-//       const filename = `${platformLetter}_${this.userId}.csv`;
-      
-//       const header = [['Press or Release', 'Key', 'Time']];
-//       const csvData = header.concat(this.keyEvents);
-//       const csvString = csvData.map(row => row.join(',')).join('\n');
-      
-//       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-      
-//       // Modern download approach
-//       const link = document.createElement('a');
-//       const url = URL.createObjectURL(blob);
-      
-//       link.setAttribute('href', url);
-//       link.setAttribute('download', filename);
-//       link.style.visibility = 'hidden';
-      
-//       document.body.appendChild(link);
-//       link.click();
-//       document.body.removeChild(link);
-      
-//       // Clean up object URL
-//       URL.revokeObjectURL(url);
-      
-//       console.log(`Keylog downloaded: ${filename}`);
-      
-//     } catch (error) {
-//       console.error('Failed to download keylog:', error);
-//       FormValidator.showError('Failed to download keylog. Please try again.');
-//     }
-//   }
-
-//   getEventCount() {
-//     return this.keyEvents.length;
-//   }
-
-//   clearEvents() {
-//     this.keyEvents = [];
-//     console.log('Keylog events cleared');
-//   }
-// }
-
-/**
  * Navigation utilities with proper URL handling
  */
 class NavigationManager {
@@ -518,64 +390,27 @@ const PlatformSubmissionHandler = {
   keyEvents: [],
   startTime: null,
   isInitialized: false,
-  hasSubmitted: false,  // Add this flag
-  
+  hasSubmitted: false, 
+  // High-performance keystroke capture
+  keyBuffer: null,
+  keyCodeMap: null,
+  keyCodeIndex: 0,
 
-  /**
-   * Save keystrokes to sessionStorage
-   */
-  saveKeystrokes() {
-    try {
-      const urlParams = this.getUrlParameters();
-      const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
-      
-      // Only limit if absolutely necessary
-      const maxKeystrokes = 50000; // Much higher limit
-      if (this.keyEvents.length > maxKeystrokes) {
-        console.error(`Critical: Keystroke limit reached (${this.keyEvents.length}). Data may be lost.`);
-        // For research, you might want to alert the user or auto-submit
-        alert('Maximum keystroke limit reached. Please submit your post.');
-        return;
-      }
-      
-      sessionStorage.setItem(storageKey, JSON.stringify(this.keyEvents));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError') {
-        console.error('Storage quota exceeded! Cannot save keystrokes.');
-        // For research integrity, this is critical - alert the user
-        alert('Storage limit reached. Please submit your post now to avoid data loss.');
-      }
-    }
-  },
-
-  /**
-   * Load keystrokes from sessionStorage
-   */
-  loadKeystrokes() {
-    const urlParams = this.getUrlParameters();
-    const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
+  initHighPerformanceCapture() {
+    // Pre-allocate typed arrays for maximum performance
+    this.keyBuffer = {
+      types: new Uint8Array(50000),      // 1 byte per type
+      keys: new Uint16Array(50000),      // 2 bytes per key code
+      timestamps: new Float64Array(50000), // 8 bytes per timestamp
+      index: 0
+    };
     
-    try {
-      const saved = sessionStorage.getItem(storageKey);
-      if (saved) {
-        this.keyEvents = JSON.parse(saved);
-        console.log(`Loaded ${this.keyEvents.length} saved keystrokes`);
-      }
-    } catch (e) {
-      console.error('Failed to load keystrokes:', e);
-      this.keyEvents = []; // Reset on error
-    }
+    // Create key code map
+    this.keyCodeMap = new Map();
+    this.keyCodeIndex = 0;
   },
 
-  /**
-   * Clear keystrokes from sessionStorage
-   */
-  clearKeystrokes() {
-    const urlParams = this.getUrlParameters();
-    const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
-    sessionStorage.removeItem(storageKey);
-    console.log('Cleared saved keystrokes');
-  },
+
 
   /**
    * Initialize the platform handler
@@ -635,7 +470,7 @@ const PlatformSubmissionHandler = {
     this.startKeyLogger(urlParams);
     
     // Load any saved keystrokes
-    this.loadKeystrokes();
+    // this.loadKeystrokes();
 
     // If we have saved keystrokes but the textarea is empty, clear them
     // (user might have cleared the form before refresh)
@@ -643,7 +478,7 @@ const PlatformSubmissionHandler = {
     if (inputEl && !inputEl.value.trim() && this.keyEvents.length > 0) {
       console.log('Text is empty but keystrokes exist - clearing keystrokes');
       this.keyEvents = [];
-      this.clearKeystrokes();
+      // this.clearKeystrokes();
     }
 
     // Set up submit button
@@ -811,46 +646,61 @@ const PlatformSubmissionHandler = {
    * Start keystroke logging
    */
   startKeyLogger(urlParams) {
-    const onKeyDown = (e) => {
-      // CHANGE 1: Capture timestamp IMMEDIATELY
-      const timestamp = Date.now();
+    // Initialize high-performance capture
+    this.initHighPerformanceCapture();
+    
+    const captureEvent = (e, eventType) => {
+      // Capture timestamp with maximum precision
+      const timestamp = performance.now();
+      const idx = this.keyBuffer.index;
       
-      // CHANGE 2: Push to array with the pre-captured timestamp
-      this.keyEvents.push(['P', this.replaceJsKey(e), timestamp]);
+      // Get or create key code
+      let keyCode = this.keyCodeMap.get(e.key);
+      if (keyCode === undefined) {
+        keyCode = this.keyCodeIndex++;
+        this.keyCodeMap.set(e.key, keyCode);
+      }
       
-      // CHANGE 3: Save keystrokes AFTER the critical timing capture
-      // Move this to after we've captured the timestamp
-      setTimeout(() => this.saveKeystrokes(), 0);
+      // Store in typed arrays (extremely fast)
+      this.keyBuffer.types[idx] = eventType; // 0 for press, 1 for release
+      this.keyBuffer.keys[idx] = keyCode;
+      this.keyBuffer.timestamps[idx] = timestamp;
+      this.keyBuffer.index++;
       
-      // Handle Enter key for multi-line support
-      if (e.key === "Enter" && e.target.id === this.config.textInputId) {
-        if (!e.shiftKey) {
-          e.preventDefault();
+      // Handle Enter key without blocking
+      if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
+        e.preventDefault();
+        requestAnimationFrame(() => {
           const textarea = e.target;
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
           textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
           textarea.selectionStart = textarea.selectionEnd = start + 1;
-          
-          // Trigger any auto-resize if needed
           textarea.dispatchEvent(new Event('input'));
-        }
+        });
       }
     };
+    
+    document.addEventListener('keydown', (e) => captureEvent(e, 0), { passive: false });
+    document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
+  },
 
-    const onKeyUp = (e) => {
-      // CHANGE 1: Capture timestamp IMMEDIATELY
-      const timestamp = Date.now();
-      
-      // CHANGE 2: Push to array with the pre-captured timestamp
-      this.keyEvents.push(['R', this.replaceJsKey(e), timestamp]);
-      
-      // CHANGE 3: Save keystrokes AFTER the critical timing capture
-      setTimeout(() => this.saveKeystrokes(), 0);
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
+  getKeystrokeData() {
+    const events = [];
+    const keyMap = Array.from(this.keyCodeMap.entries());
+    
+    for (let i = 0; i < this.keyBuffer.index; i++) {
+      const keyEntry = keyMap.find(([_, code]) => code === this.keyBuffer.keys[i]);
+      if (keyEntry) {
+        events.push([
+          this.keyBuffer.types[i] === 0 ? 'P' : 'R',
+          this.replaceJsKey({ key: keyEntry[0] }),
+          Math.round(this.keyBuffer.timestamps[i] + performance.timeOrigin)
+        ]);
+      }
+    }
+    
+    return events;
   },
 
   /**
@@ -936,7 +786,7 @@ const PlatformSubmissionHandler = {
       sessionStorage.setItem(submissionKey, 'true');
       this.hasSubmitted = true;
       // Clear keystroke data
-      this.clearKeystrokes();
+      // this.clearKeystrokes();
 
       // Call after submit callback if provided
       if (this.config.onAfterSubmit) {
@@ -957,6 +807,9 @@ const PlatformSubmissionHandler = {
   /**
    * Validate post content
    */
+  /**
+ * Validate post content
+ */
   validatePost(text) {
     // Always get fresh value from DOM
     const inputEl = document.getElementById(this.config.textInputId);
@@ -974,7 +827,8 @@ const PlatformSubmissionHandler = {
       };
     }
 
-    if (this.keyEvents.length === 0) {
+    // Check the buffer instead of keyEvents
+    if (!this.keyBuffer || this.keyBuffer.index === 0) {
       return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
     }
 
@@ -1064,6 +918,9 @@ const PlatformSubmissionHandler = {
    * Build CSV blob from keystroke events
    */
   buildCsvBlob() {
+    // Convert high-performance buffer to array format only when needed
+    this.keyEvents = this.getKeystrokeData();
+    
     const heading = [['Press or Release', 'Key', 'Time']];
     const csvString = heading
       .concat(this.keyEvents)
@@ -1082,15 +939,6 @@ const PlatformSubmissionHandler = {
     const deviceInfoStr = sessionStorage.getItem('device_info');
     const deviceInfo = deviceInfoStr ? JSON.parse(deviceInfoStr) : DeviceDetector.getDeviceInfo();
 
-    // const metadata = {
-    //   user_id: urlParams.user_id,
-    //   platform_id: urlParams.platform_id,
-    //   task_id: urlParams.task_id,
-    //   start_time: this.startTime,
-    //   end_time: endTime,
-    //   duration_ms: endTime - this.startTime,
-    //   platform: this.config.platform
-    // };
     const metadata = {
       user_id: urlParams.user_id,
       platform_id: urlParams.platform_id,
