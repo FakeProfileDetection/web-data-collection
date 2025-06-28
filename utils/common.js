@@ -625,70 +625,92 @@ const PlatformSubmissionHandler = {
    * Start keystroke logging
    */
   startKeyLogger(urlParams) {
-      if (this.useWASM && this.wasmCapture) {
-          // Use WASM for capture
-          console.log('Using WASM keystroke capture');
+  if (this.useWASM && this.wasmCapture) {
+      // Use WASM for capture
+      console.log('Using WASM keystroke capture');
+      
+      document.addEventListener('keydown', (e) => {
+        this.wasmCapture.captureKeyDown(e);
+        
+        // Handle Enter key
+        if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
+          e.preventDefault();
+          const textarea = e.target;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+          textarea.dispatchEvent(new Event('input'));
+        }
+      });
+      
+      document.addEventListener('keyup', (e) => {
+        this.wasmCapture.captureKeyUp(e);
+      });
+    } else {
+      // Fallback to JavaScript implementation with physical key tracking
+      console.log('Using JavaScript keystroke capture with physical key tracking');
+      
+      // Initialize high-performance capture
+      this.initHighPerformanceCapture();
+      
+      // Add physical key tracking map
+      this.physicalKeyMap = new Map();
+      
+      const captureEvent = (e, eventType) => {
+        const timestamp = performance.now();
+        const idx = this.keyBuffer.index;
+        const physicalCode = e.code;
+        
+        let keyToStore;
+        
+        if (eventType === 0) { // Press event
+          // Store the display key for this physical key
+          keyToStore = e.key;
+          this.physicalKeyMap.set(physicalCode, keyToStore);
+        } else { // Release event
+          // Get the stored key from press time
+          keyToStore = this.physicalKeyMap.get(physicalCode);
           
-          document.addEventListener('keydown', (e) => {
-              this.wasmCapture.captureKeyDown(e.key);
-              
-              // Handle Enter key
-              if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
-                  e.preventDefault();
-                  const textarea = e.target;
-                  const start = textarea.selectionStart;
-                  const end = textarea.selectionEnd;
-                  textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
-                  textarea.selectionStart = textarea.selectionEnd = start + 1;
-                  textarea.dispatchEvent(new Event('input'));
-              }
+          if (!keyToStore) {
+            console.warn(`No tracked press for code=${physicalCode}, using current key=${e.key}`);
+            keyToStore = e.key;
+          } else {
+            // Remove from tracking
+            this.physicalKeyMap.delete(physicalCode);
+          }
+        }
+        
+        // Get or create key code
+        let keyCode = this.keyCodeMap.get(keyToStore);
+        if (keyCode === undefined) {
+          keyCode = this.keyCodeIndex++;
+          this.keyCodeMap.set(keyToStore, keyCode);
+        }
+        
+        // Store in typed arrays
+        this.keyBuffer.types[idx] = eventType;
+        this.keyBuffer.keys[idx] = keyCode;
+        this.keyBuffer.timestamps[idx] = timestamp;
+        this.keyBuffer.index++;
+        
+        // Handle Enter key
+        if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
+          e.preventDefault();
+          requestAnimationFrame(() => {
+            const textarea = e.target;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + 1;
+            textarea.dispatchEvent(new Event('input'));
           });
-          
-          document.addEventListener('keyup', (e) => {
-              this.wasmCapture.captureKeyUp(e.key);
-          });
-      } else {
-          // Fallback to original JavaScript implementation
-          console.log('Using JavaScript keystroke capture');
-          
-          // Initialize high-performance capture
-          this.initHighPerformanceCapture();
-          
-          const captureEvent = (e, eventType) => {
-              // Capture timestamp with maximum precision
-              const timestamp = performance.now();
-              const idx = this.keyBuffer.index;
-              
-              // Get or create key code
-              let keyCode = this.keyCodeMap.get(e.key);
-              if (keyCode === undefined) {
-                  keyCode = this.keyCodeIndex++;
-                  this.keyCodeMap.set(e.key, keyCode);
-              }
-              
-              // Store in typed arrays (extremely fast)
-              this.keyBuffer.types[idx] = eventType; // 0 for press, 1 for release
-              this.keyBuffer.keys[idx] = keyCode;
-              this.keyBuffer.timestamps[idx] = timestamp;
-              this.keyBuffer.index++;
-              
-              // Handle Enter key without blocking
-              if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
-                  e.preventDefault();
-                  requestAnimationFrame(() => {
-                      const textarea = e.target;
-                      const start = textarea.selectionStart;
-                      const end = textarea.selectionEnd;
-                      textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
-                      textarea.selectionStart = textarea.selectionEnd = start + 1;
-                      textarea.dispatchEvent(new Event('input'));
-                  });
-              }
-          };
-          
-          document.addEventListener('keydown', (e) => captureEvent(e, 0), { passive: false });
-          document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
-      }
+        }
+      };
+      
+      document.addEventListener('keydown', (e) => captureEvent(e, 0), { passive: false });
+      document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
+    }
   },
 
   // startKeyLogger(urlParams) {
