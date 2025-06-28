@@ -30,7 +30,7 @@ impl KeystrokeCapture {
     }
     
     #[wasm_bindgen]
-    pub fn capture_keystroke(&mut self, key: &str, is_release: bool) -> Result<(), JsValue> {
+    pub fn capture_keystroke(&mut self, key: String, is_release: bool) -> Result<(), JsValue> {
         if self.timestamps.len() >= self.capacity {
             return Err(JsValue::from_str("Capacity exceeded"));
         }
@@ -39,7 +39,7 @@ impl KeystrokeCapture {
         let timestamp = self.performance.now();
         
         self.timestamps.push(timestamp);
-        self.keys.push(key.to_string());
+        self.keys.push(key); // Changed: accept String directly, not &str
         self.event_types.push(if is_release { 1 } else { 0 });
         
         Ok(())
@@ -58,35 +58,22 @@ impl KeystrokeCapture {
             let event_type = if self.event_types[i] == 0 { "P" } else { "R" };
             let timestamp = (self.timestamps[i] + 1735660000000.0) as u64;
             
+            // Handle comma in key - replace with Key.comma
+            let key = if self.keys[i] == "," {
+                "Key.comma"
+            } else {
+                &self.keys[i]
+            };
+            
             // Use proper CSV formatting - no extra spaces
             csv.push_str(&format!("{},{},{}\n", 
                 event_type, 
-                self.keys[i], 
+                key, 
                 timestamp
             ));
         }
         
         csv
-    }
-
-    #[wasm_bindgen]
-    pub fn get_last_10_events(&self) -> String {
-        let start = if self.timestamps.len() > 10 { 
-            self.timestamps.len() - 10 
-        } else { 
-            0 
-        };
-        
-        let mut result = String::new();
-        for i in start..self.timestamps.len() {
-            let event_type = if self.event_types[i] == 0 { "P" } else { "R" };
-            result.push_str(&format!("{} {} {:.0}\n", 
-                event_type, 
-                self.keys[i], 
-                self.timestamps[i]
-            ));
-        }
-        result
     }
     
     #[wasm_bindgen]
@@ -103,12 +90,39 @@ impl KeystrokeCapture {
         for i in 0..self.timestamps.len() {
             let entry = js_sys::Array::new();
             entry.push(&JsValue::from_str(if self.event_types[i] == 0 { "P" } else { "R" }));
-            entry.push(&JsValue::from_str(&self.keys[i]));
+            
+            // Handle comma here too
+            let key = if self.keys[i] == "," {
+                "Key.comma"
+            } else {
+                &self.keys[i]
+            };
+            entry.push(&JsValue::from_str(key));
+            
             entry.push(&JsValue::from_f64(self.timestamps[i] + 1735660000000.0));
             result.push(&entry);
         }
         
         Ok(result.into())
     }
+    
+    #[wasm_bindgen]
+    pub fn get_last_10_events(&self) -> String {
+        let start = if self.timestamps.len() > 10 { 
+            self.timestamps.len() - 10 
+        } else { 
+            0 
+        };
+        
+        let mut result = String::new();
+        for i in start..self.timestamps.len() {
+            let event_type = if self.event_types[i] == 0 { "P" } else { "R" };
+            result.push_str(&format!("{} {} {:.0}\n", 
+                event_type, 
+                &self.keys[i], 
+                self.timestamps[i]
+            ));
+        }
+        result
+    }
 }
-

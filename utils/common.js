@@ -974,7 +974,7 @@ const PlatformSubmissionHandler = {
     
     // Handle space key - check both e.code and e.key
     if (e.code === 'Space' || e.key === ' ') return 'Key.space';
-    if (e.code === ',') return 'Key.comma';
+    if (e.code === 'Comma' || e.key == ',' ) return 'Key.comma';
     
     // Check if it's a mapped key
     if (keyMap[e.key]) return keyMap[e.key];

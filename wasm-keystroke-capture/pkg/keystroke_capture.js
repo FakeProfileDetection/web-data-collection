@@ -162,6 +162,19 @@ export class KeystrokeCapture {
             wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
         }
     }
+    clear() {
+        wasm.keystrokecapture_clear(this.__wbg_ptr);
+    }
+    /**
+     * @returns {any}
+     */
+    get_raw_data() {
+        const ret = wasm.keystrokecapture_get_raw_data(this.__wbg_ptr);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return takeFromExternrefTable0(ret[0]);
+    }
     /**
      * @returns {string}
      */
@@ -176,19 +189,6 @@ export class KeystrokeCapture {
         } finally {
             wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
         }
-    }
-    clear() {
-        wasm.keystrokecapture_clear(this.__wbg_ptr);
-    }
-    /**
-     * @returns {any}
-     */
-    get_raw_data() {
-        const ret = wasm.keystrokecapture_get_raw_data(this.__wbg_ptr);
-        if (ret[2]) {
-            throw takeFromExternrefTable0(ret[1]);
-        }
-        return takeFromExternrefTable0(ret[0]);
     }
 }
 
