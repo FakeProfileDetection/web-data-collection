@@ -7,7 +7,6 @@ build/
 
 # Rust/WASM build artifacts
 wasm-keystroke-capture/target/
-wasm-keystroke-capture/pkg/
 wasm-keystroke-capture/Cargo.lock
 
 # OS files
