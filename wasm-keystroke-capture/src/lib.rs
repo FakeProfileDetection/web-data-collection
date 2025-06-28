@@ -56,7 +56,9 @@ impl KeystrokeCapture {
         
         for i in 0..self.timestamps.len() {
             let event_type = if self.event_types[i] == 0 { "P" } else { "R" };
-            let timestamp = (self.timestamps[i] + 1735660000000.0) as u64; // Adjust base time
+            let timestamp = (self.timestamps[i] + 1735660000000.0) as u64;
+            
+            // Use proper CSV formatting - no extra spaces
             csv.push_str(&format!("{},{},{}\n", 
                 event_type, 
                 self.keys[i], 
@@ -65,6 +67,26 @@ impl KeystrokeCapture {
         }
         
         csv
+    }
+
+    #[wasm_bindgen]
+    pub fn get_last_10_events(&self) -> String {
+        let start = if self.timestamps.len() > 10 { 
+            self.timestamps.len() - 10 
+        } else { 
+            0 
+        };
+        
+        let mut result = String::new();
+        for i in start..self.timestamps.len() {
+            let event_type = if self.event_types[i] == 0 { "P" } else { "R" };
+            result.push_str(&format!("{} {} {:.0}\n", 
+                event_type, 
+                self.keys[i], 
+                self.timestamps[i]
+            ));
+        }
+        result
     }
     
     #[wasm_bindgen]

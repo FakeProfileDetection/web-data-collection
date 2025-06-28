@@ -6,6 +6,7 @@ export const keystrokecapture_new: (a: number) => [number, number, number];
 export const keystrokecapture_capture_keystroke: (a: number, b: number, c: number, d: number) => [number, number];
 export const keystrokecapture_get_event_count: (a: number) => number;
 export const keystrokecapture_export_as_csv: (a: number) => [number, number];
+export const keystrokecapture_get_last_10_events: (a: number) => [number, number];
 export const keystrokecapture_clear: (a: number) => void;
 export const keystrokecapture_get_raw_data: (a: number) => [number, number, number];
 export const __wbindgen_exn_store: (a: number) => void;

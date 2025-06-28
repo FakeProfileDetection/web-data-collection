@@ -6,6 +6,7 @@ export class KeystrokeCapture {
   capture_keystroke(key: string, is_release: boolean): void;
   get_event_count(): number;
   export_as_csv(): string;
+  get_last_10_events(): string;
   clear(): void;
   get_raw_data(): any;
 }
@@ -19,6 +20,7 @@ export interface InitOutput {
   readonly keystrokecapture_capture_keystroke: (a: number, b: number, c: number, d: number) => [number, number];
   readonly keystrokecapture_get_event_count: (a: number) => number;
   readonly keystrokecapture_export_as_csv: (a: number) => [number, number];
+  readonly keystrokecapture_get_last_10_events: (a: number) => [number, number];
   readonly keystrokecapture_clear: (a: number) => void;
   readonly keystrokecapture_get_raw_data: (a: number) => [number, number, number];
   readonly __wbindgen_exn_store: (a: number) => void;

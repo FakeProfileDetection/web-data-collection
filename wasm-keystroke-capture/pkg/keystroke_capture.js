@@ -162,6 +162,21 @@ export class KeystrokeCapture {
             wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
         }
     }
+    /**
+     * @returns {string}
+     */
+    get_last_10_events() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const ret = wasm.keystrokecapture_get_last_10_events(this.__wbg_ptr);
+            deferred1_0 = ret[0];
+            deferred1_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+        }
+    }
     clear() {
         wasm.keystrokecapture_clear(this.__wbg_ptr);
     }

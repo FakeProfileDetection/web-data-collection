@@ -974,6 +974,7 @@ const PlatformSubmissionHandler = {
     
     // Handle space key - check both e.code and e.key
     if (e.code === 'Space' || e.key === ' ') return 'Key.space';
+    if (e.code === ',') return 'Key.comma';
     
     // Check if it's a mapped key
     if (keyMap[e.key]) return keyMap[e.key];
@@ -986,22 +987,29 @@ const PlatformSubmissionHandler = {
    * Build CSV blob from keystroke events
    */
   buildCsvBlob() {
-      if (this.useWASM && this.wasmCapture) {
-          // Get CSV directly from WASM
-          const csvString = this.wasmCapture.exportAsCSV();
-          return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
-      } else {
-          // Original implementation
-          // Convert high-performance buffer to array format only when needed
-          this.keyEvents = this.getKeystrokeData();
-          
-          const heading = [['Press or Release', 'Key', 'Time']];
-          const csvString = heading
-              .concat(this.keyEvents)
-              .map(row => row.join(','))
-              .join('\n');
-          return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
-      }
+    console.log('=== Building CSV ===');
+    console.log('useWASM:', this.useWASM);
+    console.log('wasmCapture:', this.wasmCapture);
+    
+    if (this.useWASM && this.wasmCapture) {
+      console.log('✅ Using WASM export');
+      // Get CSV directly from WASM
+      const csvString = this.wasmCapture.exportAsCSV();
+      console.log('First few lines of WASM CSV:', csvString.split('\n').slice(0, 5));
+      return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+    } else {
+      console.log('❌ Using JavaScript export');
+      // Original implementation
+      // Convert high-performance buffer to array format only when needed
+      this.keyEvents = this.getKeystrokeData();
+      
+      const heading = [['Press or Release', 'Key', 'Time']];
+      const csvString = heading
+          .concat(this.keyEvents)
+          .map(row => row.join(','))
+          .join('\n');
+      return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+    }
   },
 
   /**
