@@ -335,9 +335,18 @@
 
     <!-- Load WASM module -->
     <script type="module">
-    import { wasmKeystrokeManager } from '../../../utils/wasm-keystroke.js';
-    // Make it globally available for common.js
-    window.wasmKeystrokeManager = wasmKeystrokeManager;
+        import { wasmKeystrokeManager } from '../../../utils/wasm-keystroke.js';
+            // Make it globally available for common.js
+            window.wasmKeystrokeManager = wasmKeystrokeManager;
+            // Debug: Check if it loaded
+            console.log('WASM manager loaded?', window.wasmKeystrokeManager);
+
+            // Try to initialize
+            wasmKeystrokeManager.initialize().then(() => {
+                console.log('WASM initialized successfully!');
+            }).catch(err => {
+                console.error('WASM initialization failed:', err);
+            });
     </script>
 
     <script src="../../../utils/common.js"></script>
