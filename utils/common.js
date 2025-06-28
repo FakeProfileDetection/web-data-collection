@@ -692,9 +692,17 @@ const PlatformSubmissionHandler = {
     for (let i = 0; i < this.keyBuffer.index; i++) {
       const keyEntry = keyMap.find(([_, code]) => code === this.keyBuffer.keys[i]);
       if (keyEntry) {
+        const originalKey = keyEntry[0];
+        
+        // Create a more complete fake event object for replaceJsKey
+        const fakeEvent = {
+          key: originalKey,
+          code: originalKey === ' ' ? 'Space' : `Key${originalKey.toUpperCase()}`
+        };
+        
         events.push([
           this.keyBuffer.types[i] === 0 ? 'P' : 'R',
-          this.replaceJsKey({ key: keyEntry[0] }),
+          this.replaceJsKey(fakeEvent),
           Math.round(this.keyBuffer.timestamps[i] + performance.timeOrigin)
         ]);
       }
@@ -910,8 +918,14 @@ const PlatformSubmissionHandler = {
       'CapsLock': 'Key.caps_lock'
     };
     
-    if (e.code === 'Space') return 'Key.space';
-    return keyMap[e.key] || e.key;
+    // Handle space key - check both e.code and e.key
+    if (e.code === 'Space' || e.key === ' ') return 'Key.space';
+    
+    // Check if it's a mapped key
+    if (keyMap[e.key]) return keyMap[e.key];
+    
+    // Return the original key
+    return e.key;
   },
 
   /**
