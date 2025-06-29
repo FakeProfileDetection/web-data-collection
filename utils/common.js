@@ -390,6 +390,7 @@ const PlatformSubmissionHandler = {
   startTime: null,
   isInitialized: false,
   hasSubmitted: false, 
+  keyEventsAttached: false, // Track if event listeners are attached
   // High-performance keystroke capture
   keyBuffer: null,
   keyCodeMap: null,
@@ -423,40 +424,14 @@ const PlatformSubmissionHandler = {
    * @param {function} config.onBeforeSubmit - Optional callback before submission
    * @param {function} config.onAfterSubmit - Optional callback after successful submission
    */
-  async init(config) {
+    async init(config) {
+    // Store config first
+    this.config = config;
+    
     // Check if already submitted for this task
     const urlParams = this.getUrlParameters();
     const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
     this.hasSubmitted = sessionStorage.getItem(submissionKey) === 'true';
-
-    // Check if WASM is available (it will be loaded by the HTML page)
-    if (window.wasmKeystrokeManager) {
-        try {
-            await window.wasmKeystrokeManager.initialize();
-            this.wasmCapture = window.wasmKeystrokeManager;
-            this.useWASM = true;
-            console.log('✅ Using WASM for high-performance keystroke capture');
-        } catch (error) {
-            console.error('Failed to initialize WASM, falling back to JavaScript:', error);
-            this.useWASM = false;
-        }
-    } else {
-        console.log('WASM not available, using JavaScript keystroke capture');
-    }
-
-    // Prevent accidental refresh
-    window.addEventListener('beforeunload', (e) => {
-      // Only show warning if there's unsaved text
-      const inputEl = document.getElementById(this.config.textInputId);
-      if (inputEl && inputEl.value.trim() && !this.hasSubmitted) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved text. Are you sure you want to leave?';
-        return e.returnValue;
-      }
-    });
-    
-    // Store config first
-    this.config = config;
     
     if (this.hasSubmitted) {
       console.log("Task already submitted, disabling form");
@@ -464,13 +439,16 @@ const PlatformSubmissionHandler = {
       return;
     }
 
-    if (this.isInitialized) {
-      console.log("Platform handler already initialized, skipping...");
+    // Prevent multiple initializations for the same page
+    const initKey = `initialized_${config.platform}_${urlParams.task_id}`;
+    if (sessionStorage.getItem(initKey) === 'true' && this.isInitialized) {
+      console.log("Platform handler already initialized for this task, skipping...");
       return;
     }
 
     this.isInitialized = true;
     this.startTime = Date.now();
+    sessionStorage.setItem(initKey, 'true');
 
     console.log(`=== ${config.platform.toUpperCase()} PAGE LOADED ===`);
     console.log("Current URL:", window.location.href);
@@ -483,18 +461,27 @@ const PlatformSubmissionHandler = {
       return;
     }
 
-    // Start keylogger
-    this.startKeyLogger(urlParams);
-    
-    // If we have saved keystrokes but the textarea is empty, clear them
-    // (user might have cleared the form before refresh)
-    const inputEl = document.getElementById(this.config.textInputId);
-    if (inputEl && !inputEl.value.trim() && this.keyEvents.length > 0) {
-      console.log('Text is empty but keystrokes exist - clearing keystrokes');
-      this.keyEvents = [];
-      // this.clearKeystrokes();
+    // Check if WASM is available
+    if (window.wasmKeystrokeManager) {
+      try {
+        await window.wasmKeystrokeManager.initialize();
+        this.wasmCapture = window.wasmKeystrokeManager;
+        this.useWASM = true;
+        console.log('✅ Using WASM for high-performance keystroke capture');
+      } catch (error) {
+        console.error('Failed to initialize WASM, falling back to JavaScript:', error);
+        this.useWASM = false;
+      }
+    } else {
+      console.log('WASM not available, using JavaScript keystroke capture');
     }
 
+    // Only attach keylogger if not already attached
+    if (!this.keyEventsAttached) {
+      this.startKeyLogger(urlParams);
+      this.keyEventsAttached = true;
+    }
+    
     // Set up submit button
     this.setupSubmitButton(urlParams);
 
@@ -502,10 +489,19 @@ const PlatformSubmissionHandler = {
     this.setupVisibilityHandler();
 
     // Set up paste prevention
+    const inputEl = document.getElementById(this.config.textInputId);
     if (inputEl) {
       inputEl.addEventListener('paste', this.handlePaste.bind(this));
       console.log('Paste prevention enabled for', this.config.textInputId);
     }
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', () => {
+      sessionStorage.removeItem(initKey);
+      if (this.wasmCapture) {
+        this.wasmCapture.clear();
+      }
+    });
 
     console.log(`✅ ${config.platform} handler initialized successfully`);
   },
@@ -712,46 +708,6 @@ const PlatformSubmissionHandler = {
       document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
     }
   },
-
-  // startKeyLogger(urlParams) {
-  //   // Initialize high-performance capture
-  //   this.initHighPerformanceCapture();
-    
-  //   const captureEvent = (e, eventType) => {
-  //     // Capture timestamp with maximum precision
-  //     const timestamp = performance.now();
-  //     const idx = this.keyBuffer.index;
-      
-  //     // Get or create key code
-  //     let keyCode = this.keyCodeMap.get(e.key);
-  //     if (keyCode === undefined) {
-  //       keyCode = this.keyCodeIndex++;
-  //       this.keyCodeMap.set(e.key, keyCode);
-  //     }
-      
-  //     // Store in typed arrays (extremely fast)
-  //     this.keyBuffer.types[idx] = eventType; // 0 for press, 1 for release
-  //     this.keyBuffer.keys[idx] = keyCode;
-  //     this.keyBuffer.timestamps[idx] = timestamp;
-  //     this.keyBuffer.index++;
-      
-  //     // Handle Enter key without blocking
-  //     if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
-  //       e.preventDefault();
-  //       requestAnimationFrame(() => {
-  //         const textarea = e.target;
-  //         const start = textarea.selectionStart;
-  //         const end = textarea.selectionEnd;
-  //         textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
-  //         textarea.selectionStart = textarea.selectionEnd = start + 1;
-  //         textarea.dispatchEvent(new Event('input'));
-  //       });
-  //     }
-  //   };
-    
-  //   document.addEventListener('keydown', (e) => captureEvent(e, 0), { passive: false });
-  //   document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
-  // },
 
   getKeystrokeData() {
       if (this.useWASM && this.wasmCapture) {

@@ -7,17 +7,16 @@ pub struct KeystrokeCapture {
     keys: Vec<String>,
     event_types: Vec<u8>, // 0 for press, 1 for release
     capacity: usize,
-    performance: Performance,
 }
 
 #[wasm_bindgen]
 impl KeystrokeCapture {
     #[wasm_bindgen(constructor)]
     pub fn new(capacity: usize) -> Result<KeystrokeCapture, JsValue> {
-        // Get window and performance objects
+        // Just validate that we can access performance
         let window = web_sys::window()
             .ok_or_else(|| JsValue::from_str("No window object available"))?;
-        let performance = window.performance()
+        let _ = window.performance()
             .ok_or_else(|| JsValue::from_str("No performance object available"))?;
         
         Ok(KeystrokeCapture {
@@ -25,8 +24,16 @@ impl KeystrokeCapture {
             keys: Vec::with_capacity(capacity),
             event_types: Vec::with_capacity(capacity),
             capacity,
-            performance,
         })
+    }
+    
+    // Helper function to get performance.now()
+    fn get_timestamp() -> Result<f64, JsValue> {
+        let window = web_sys::window()
+            .ok_or_else(|| JsValue::from_str("No window object available"))?;
+        let performance = window.performance()
+            .ok_or_else(|| JsValue::from_str("No performance object available"))?;
+        Ok(performance.now())
     }
     
     #[wasm_bindgen]
@@ -35,11 +42,11 @@ impl KeystrokeCapture {
             return Err(JsValue::from_str("Capacity exceeded"));
         }
         
-        // Capture timestamp immediately in WASM context
-        let timestamp = self.performance.now();
+        // Get timestamp immediately when called
+        let timestamp = Self::get_timestamp()?;
         
         self.timestamps.push(timestamp);
-        self.keys.push(key); // Changed: accept String directly, not &str
+        self.keys.push(key);
         self.event_types.push(if is_release { 1 } else { 0 });
         
         Ok(())
@@ -58,14 +65,12 @@ impl KeystrokeCapture {
             let event_type = if self.event_types[i] == 0 { "P" } else { "R" };
             let timestamp = (self.timestamps[i] + 1735660000000.0) as u64;
             
-            // Handle comma in key - replace with Key.comma
-            let key = if self.keys[i] == "," {
-                "Key.comma"
-            } else {
-                &self.keys[i]
+            // Handle special characters
+            let key = match self.keys[i].as_str() {
+                "," => "Key.comma",
+                k => k,
             };
             
-            // Use proper CSV formatting - no extra spaces
             csv.push_str(&format!("{},{},{}\n", 
                 event_type, 
                 key, 
@@ -91,11 +96,10 @@ impl KeystrokeCapture {
             let entry = js_sys::Array::new();
             entry.push(&JsValue::from_str(if self.event_types[i] == 0 { "P" } else { "R" }));
             
-            // Handle comma here too
-            let key = if self.keys[i] == "," {
-                "Key.comma"
-            } else {
-                &self.keys[i]
+            // Handle comma
+            let key = match self.keys[i].as_str() {
+                "," => "Key.comma",
+                k => k,
             };
             entry.push(&JsValue::from_str(key));
             
@@ -124,5 +128,24 @@ impl KeystrokeCapture {
             ));
         }
         result
+    }
+    
+    // Debug method to check timing precision
+    #[wasm_bindgen]
+    pub fn test_timing_precision() -> Result<String, JsValue> {
+        let mut times = Vec::new();
+        for _ in 0..10 {
+            times.push(Self::get_timestamp()?);
+        }
+        
+        let mut deltas = Vec::new();
+        for i in 1..times.len() {
+            deltas.push(times[i] - times[i-1]);
+        }
+        
+        let min_delta = deltas.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_delta = deltas.iter().fold(0.0, |a, &b| a.max(b));
+        
+        Ok(format!("Timing test - Min delta: {:.3}ms, Max delta: {:.3}ms", min_delta, max_delta))
     }
 }
