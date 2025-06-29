@@ -4,11 +4,11 @@ import init, { KeystrokeCapture } from '../wasm-keystroke-capture/pkg/keystroke_
 class WASMKeystrokeManager {
   constructor() {
     this.initialized = false;
-    this.initializing = false;
+    this.initializing = false; // Prevent multiple init calls
     this.capture = null;
     this.keyPressMap = new Map();
-    this.pendingReleases = new Map(); // Track pending releases
-    this.lastEventTime = 0;
+    this.eventQueue = []; // Queue for ensuring order
+    this.processing = false;
     
     this.keyMapping = {
       'Shift': 'Key.shift',
@@ -27,19 +27,17 @@ class WASMKeystrokeManager {
       ' ': 'Key.space',
       ',': 'Key.comma'
     };
-    
-    // Keys that can be held down
-    this.modifierKeys = new Set(['Key.shift', 'Key.ctrl', 'Key.alt', 'Key.cmd', 'Key.caps_lock']);
   }
 
   async initialize() {
     if (this.initialized) {
-      console.log('WASM already initialized');
+      console.log('WASM already initialized, skipping');
       return;
     }
     
     if (this.initializing) {
-      console.log('WASM initialization in progress...');
+      console.log('WASM initialization already in progress, waiting...');
+      // Wait for initialization to complete
       while (this.initializing) {
         await new Promise(resolve => setTimeout(resolve, 10));
       }
@@ -52,17 +50,9 @@ class WASMKeystrokeManager {
       await init();
       this.capture = new KeystrokeCapture(50000);
       this.initialized = true;
-      
-      // Test timing precision
-      try {
-        const timingTest = this.capture.test_timing_precision();
-        console.log('✅ WASM keystroke capture initialized -', timingTest);
-      } catch (e) {
-        console.log('✅ WASM keystroke capture initialized');
-      }
+      console.log('✅ WASM keystroke capture initialized');
     } catch (error) {
       console.error('❌ Failed to initialize WASM:', error);
-      this.initialized = false;
       throw error;
     } finally {
       this.initializing = false;
@@ -73,119 +63,113 @@ class WASMKeystrokeManager {
     return this.keyMapping[key] || key;
   }
 
-  isModifierKey(key) {
-    return this.modifierKeys.has(key);
+  // Process events in order
+  async processEventQueue() {
+    if (this.processing || this.eventQueue.length === 0) return;
+    
+    this.processing = true;
+    
+    while (this.eventQueue.length > 0) {
+      const event = this.eventQueue.shift();
+      
+      try {
+        if (event.type === 'down') {
+          this.capture.capture_keystroke(event.key, false);
+        } else {
+          this.capture.capture_keystroke(event.key, true);
+        }
+      } catch (error) {
+        console.error(`Failed to capture ${event.type}:`, error);
+        // If WASM is corrupted, try to reinitialize
+        if (error.message && error.message.includes('unreachable')) {
+          console.error('WASM module corrupted, attempting recovery...');
+          this.initialized = false;
+          this.capture = null;
+          try {
+            await this.initialize();
+          } catch (e) {
+            console.error('Failed to recover WASM:', e);
+          }
+        }
+      }
+    }
+    
+    this.processing = false;
   }
 
-  // Optimized for minimal timestamp capture latency
   captureKeyDown(event) {
-      // Absolute minimum before WASM call
-      const physicalCode = event.code;
-      const displayKey = event.key;
-      
-      // Quick duplicate check
-      if (this.keyPressMap.has(physicalCode)) {
-          return;
-      }
-      
-      // Map key quickly
-      const mappedKey = this.keyMapping[displayKey] || displayKey;
-      
-      // CALL WASM IMMEDIATELY for timestamp capture
-      if (this.initialized && this.capture) {
-          try {
-              this.capture.capture_keystroke(mappedKey, false);
-              
-              // Store mapping AFTER WASM call
-              this.keyPressMap.set(physicalCode, {
-                  key: mappedKey,
-                  timestamp: performance.now() // This is just for our tracking
-              });
-              
-              // Logging and pattern detection AFTER WASM capture
-              console.log(`KeyDown: code=${physicalCode}, key=${displayKey}, mapped=${mappedKey}`);
-              
-              // Track event for pattern detection
-              this.recentEvents.push({ type: 'P', key: mappedKey });
-              if (this.recentEvents.length > 10) this.recentEvents.shift();
-              
-              // Process patterns AFTER capture
-              if (!this.isModifierKey(mappedKey)) {
-                  this.processPendingReleases();
-              }
-              
-              this.detectBadPatterns();
-              
-          } catch (error) {
-              console.error('Failed to capture keydown:', error);
-          }
-      }
+    timestamp = performance.now();
+    if (!this.initialized) {
+      console.warn('WASM not initialized');
+      return;
+    }
+    
+    const physicalCode = event.code;
+    const displayKey = event.key;
+    const mappedKey = this.mapKey(displayKey);
+    
+    // Check if this key is already pressed (prevent duplicate press events)
+    if (this.keyPressMap.has(physicalCode)) {
+      console.log(`Ignoring duplicate keydown for ${physicalCode}`);
+      return;
+    }
+    
+    // Store the display key for this physical key
+    this.keyPressMap.set(physicalCode, {
+      key: mappedKey,
+      timestamp: performance.now()
+    });
+    
+    // Debug logging
+    console.log(`KeyDown: code=${physicalCode}, key=${displayKey}, mapped=${mappedKey}`);
+    
+    // Queue the event
+    this.eventQueue.push({
+      type: 'down',
+      key: mappedKey,
+      code: physicalCode,
+      timestamp: timestamp
+    });
+    
+    // Process queue
+    this.processEventQueue();
   }
 
   captureKeyUp(event) {
-      const physicalCode = event.code;
-      const pressData = this.keyPressMap.get(physicalCode);
-      
-      if (!pressData) {
-          return;
-      }
-      
-      // CALL WASM IMMEDIATELY
-      if (this.initialized && this.capture) {
-          try {
-              this.capture.capture_keystroke(pressData.key, true);
-              
-              // Everything else AFTER WASM call
-              this.keyPressMap.delete(physicalCode);
-              
-              console.log(`KeyUp: code=${physicalCode}, key=${pressData.key}`);
-              
-              // Pattern detection after capture
-              this.recentEvents.push({ type: 'R', key: pressData.key });
-              if (this.recentEvents.length > 10) this.recentEvents.shift();
-              
-              if (!this.isModifierKey(pressData.key)) {
-                  // Add to pending releases
-                  this.pendingReleases.set(physicalCode, {
-                      key: pressData.key,
-                      timestamp: performance.now()
-                  });
-                  setTimeout(() => this.processPendingReleases(), 1);
-              }
-              
-              this.detectBadPatterns();
-              
-          } catch (error) {
-              console.error('Failed to capture keyup:', error);
-          }
-      }
-  }
-
-  processPendingReleases() {
-    if (this.pendingReleases.size === 0) return;
-    
-    // Sort pending releases by timestamp
-    const releases = Array.from(this.pendingReleases.entries())
-      .sort((a, b) => a[1].timestamp - b[1].timestamp);
-    
-    for (const [code, data] of releases) {
-      try {
-        this.capture.capture_keystroke(data.key, true);
-        this.lastEventTime = data.timestamp;
-      } catch (error) {
-        console.error('Failed to capture pending release:', error);
-        this.handleWASMError(error);
-      }
+    timestamp = performance.now();
+    if (!this.initialized) {
+      console.warn('WASM not initialized');
+      return;
     }
     
-    this.pendingReleases.clear();
-  }
-
-  handleWASMError(error) {
-    if (error.message && (error.message.includes('unreachable') || error.message.includes('null'))) {
-      console.error('WASM module corrupted, attempting recovery...');
-      this.reset().catch(e => console.error('Failed to recover:', e));
+    const physicalCode = event.code;
+    
+    // Get the stored key from when it was pressed
+    const pressData = this.keyPressMap.get(physicalCode);
+    
+    if (!pressData) {
+      console.warn(`No tracked press for code=${physicalCode}, ignoring release`);
+      return;
     }
+    
+    const mappedKey = pressData.key;
+    
+    // Debug logging
+    console.log(`KeyUp: code=${physicalCode}, stored=${mappedKey}, current=${event.key}`);
+    
+    // Remove from tracking
+    this.keyPressMap.delete(physicalCode);
+    
+    // Queue the event
+    this.eventQueue.push({
+      type: 'up',
+      key: mappedKey,
+      code: physicalCode,
+      timestamp: timestamp
+    });
+    
+    // Process queue
+    this.processEventQueue();
   }
 
   getEventCount() {
@@ -201,8 +185,6 @@ class WASMKeystrokeManager {
   exportAsCSV() {
     if (!this.capture || !this.initialized) return '';
     try {
-      // Process any remaining pending releases
-      this.processPendingReleases();
       return this.capture.export_as_csv();
     } catch (error) {
       console.error('Failed to export CSV:', error);
@@ -213,8 +195,6 @@ class WASMKeystrokeManager {
   getRawData() {
     if (!this.capture || !this.initialized) return [];
     try {
-      // Process any remaining pending releases
-      this.processPendingReleases();
       return this.capture.get_raw_data();
     } catch (error) {
       console.error('Failed to get raw data:', error);
@@ -232,74 +212,73 @@ class WASMKeystrokeManager {
     }
     // Always clear JavaScript state
     this.keyPressMap.clear();
-    this.pendingReleases.clear();
-    this.lastEventTime = 0;
+    this.eventQueue = [];
   }
   
+  // Debug method to check for unreleased keys
   getUnreleasedKeys() {
     return Array.from(this.keyPressMap.entries());
   }
   
+  // Reset the entire WASM module
   async reset() {
     console.log('Resetting WASM keystroke capture...');
     this.capture = null;
     this.initialized = false;
-    this.initializing = false;
     this.keyPressMap.clear();
-    this.pendingReleases.clear();
-    this.lastEventTime = 0;
+    this.eventQueue = [];
     await this.initialize();
   }
 }
 
-// Create a proper singleton
-let instance = null;
+// Export singleton instance
+let wasmKeystrokeManagerInstance = null;
 
 export const wasmKeystrokeManager = {
   async initialize() {
-    if (!instance) {
-      instance = new WASMKeystrokeManager();
+    if (!wasmKeystrokeManagerInstance) {
+      wasmKeystrokeManagerInstance = new WASMKeystrokeManager();
     }
-    return instance.initialize();
+    return wasmKeystrokeManagerInstance.initialize();
   },
   
   captureKeyDown(event) {
-    if (!instance) {
-      console.error('WASM manager not initialized');
-      return;
-    }
-    return instance.captureKeyDown(event);
+    if (!wasmKeystrokeManagerInstance) return;
+    return wasmKeystrokeManagerInstance.captureKeyDown(event);
   },
   
   captureKeyUp(event) {
-    if (!instance) {
-      console.error('WASM manager not initialized');
-      return;
-    }
-    return instance.captureKeyUp(event);
+    if (!wasmKeystrokeManagerInstance) return;
+    return wasmKeystrokeManagerInstance.captureKeyUp(event);
   },
   
   getEventCount() {
-    return instance ? instance.getEventCount() : 0;
+    if (!wasmKeystrokeManagerInstance) return 0;
+    return wasmKeystrokeManagerInstance.getEventCount();
   },
   
   exportAsCSV() {
-    return instance ? instance.exportAsCSV() : '';
+    if (!wasmKeystrokeManagerInstance) return '';
+    return wasmKeystrokeManagerInstance.exportAsCSV();
   },
   
   getRawData() {
-    return instance ? instance.getRawData() : [];
+    if (!wasmKeystrokeManagerInstance) return [];
+    return wasmKeystrokeManagerInstance.getRawData();
   },
   
   clear() {
-    if (instance) instance.clear();
+    if (!wasmKeystrokeManagerInstance) return;
+    return wasmKeystrokeManagerInstance.clear();
   },
   
   getUnreleasedKeys() {
-    return instance ? instance.getUnreleasedKeys() : [];
+    if (!wasmKeystrokeManagerInstance) return [];
+    return wasmKeystrokeManagerInstance.getUnreleasedKeys();
   },
   
   async reset() {
-    if (instance) return instance.reset();
+    if (!wasmKeystrokeManagerInstance) return;
+    return wasmKeystrokeManagerInstance.reset();
   }
 };
