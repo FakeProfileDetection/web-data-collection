@@ -77,88 +77,88 @@ class WASMKeystrokeManager {
     return this.modifierKeys.has(key);
   }
 
+  // Optimized for minimal timestamp capture latency
   captureKeyDown(event) {
-    if (!this.initialized || !this.capture) {
-      console.warn('WASM not initialized');
-      return;
-    }
-    
-    const physicalCode = event.code;
-    const displayKey = event.key;
-    const mappedKey = this.mapKey(displayKey);
-    
-    // Check for duplicate press
-    if (this.keyPressMap.has(physicalCode)) {
-      console.log(`Ignoring duplicate keydown for ${physicalCode}`);
-      return;
-    }
-    
-    // Store the key mapping
-    this.keyPressMap.set(physicalCode, {
-      key: mappedKey,
-      timestamp: performance.now()
-    });
-    
-    console.log(`KeyDown: code=${physicalCode}, key=${displayKey}, mapped=${mappedKey}`);
-    
-    // Process any pending releases for non-modifier keys before this press
-    if (!this.isModifierKey(mappedKey)) {
-      this.processPendingReleases();
-    }
-    
-    try {
-      // Capture in WASM immediately for accurate timestamp
-      this.capture.capture_keystroke(mappedKey, false);
-      this.lastEventTime = performance.now();
-    } catch (error) {
-      console.error('Failed to capture keydown:', error);
-      this.handleWASMError(error);
-    }
+      // Absolute minimum before WASM call
+      const physicalCode = event.code;
+      const displayKey = event.key;
+      
+      // Quick duplicate check
+      if (this.keyPressMap.has(physicalCode)) {
+          return;
+      }
+      
+      // Map key quickly
+      const mappedKey = this.keyMapping[displayKey] || displayKey;
+      
+      // CALL WASM IMMEDIATELY for timestamp capture
+      if (this.initialized && this.capture) {
+          try {
+              this.capture.capture_keystroke(mappedKey, false);
+              
+              // Store mapping AFTER WASM call
+              this.keyPressMap.set(physicalCode, {
+                  key: mappedKey,
+                  timestamp: performance.now() // This is just for our tracking
+              });
+              
+              // Logging and pattern detection AFTER WASM capture
+              console.log(`KeyDown: code=${physicalCode}, key=${displayKey}, mapped=${mappedKey}`);
+              
+              // Track event for pattern detection
+              this.recentEvents.push({ type: 'P', key: mappedKey });
+              if (this.recentEvents.length > 10) this.recentEvents.shift();
+              
+              // Process patterns AFTER capture
+              if (!this.isModifierKey(mappedKey)) {
+                  this.processPendingReleases();
+              }
+              
+              this.detectBadPatterns();
+              
+          } catch (error) {
+              console.error('Failed to capture keydown:', error);
+          }
+      }
   }
 
   captureKeyUp(event) {
-    if (!this.initialized || !this.capture) {
-      console.warn('WASM not initialized');
-      return;
-    }
-    
-    const physicalCode = event.code;
-    const currentTime = performance.now();
-    
-    // Get the stored key
-    const pressData = this.keyPressMap.get(physicalCode);
-    
-    if (!pressData) {
-      console.warn(`No tracked press for code=${physicalCode}, ignoring release`);
-      return;
-    }
-    
-    const mappedKey = pressData.key;
-    
-    console.log(`KeyUp: code=${physicalCode}, stored=${mappedKey}, current=${event.key}`);
-    
-    // Remove from tracking
-    this.keyPressMap.delete(physicalCode);
-    
-    // For non-modifier keys, defer the release slightly to ensure proper ordering
-    if (!this.isModifierKey(mappedKey)) {
-      this.pendingReleases.set(physicalCode, {
-        key: mappedKey,
-        timestamp: currentTime
-      });
+      const physicalCode = event.code;
+      const pressData = this.keyPressMap.get(physicalCode);
       
-      // Process pending releases after a tiny delay
-      setTimeout(() => this.processPendingReleases(), 1);
-    } else {
-      // Modifier keys are released immediately
-      try {
-        this.capture.capture_keystroke(mappedKey, true);
-        this.lastEventTime = currentTime;
-      } catch (error) {
-        console.error('Failed to capture keyup:', error);
-        this.handleWASMError(error);
+      if (!pressData) {
+          return;
       }
-    }
+      
+      // CALL WASM IMMEDIATELY
+      if (this.initialized && this.capture) {
+          try {
+              this.capture.capture_keystroke(pressData.key, true);
+              
+              // Everything else AFTER WASM call
+              this.keyPressMap.delete(physicalCode);
+              
+              console.log(`KeyUp: code=${physicalCode}, key=${pressData.key}`);
+              
+              // Pattern detection after capture
+              this.recentEvents.push({ type: 'R', key: pressData.key });
+              if (this.recentEvents.length > 10) this.recentEvents.shift();
+              
+              if (!this.isModifierKey(pressData.key)) {
+                  // Add to pending releases
+                  this.pendingReleases.set(physicalCode, {
+                      key: pressData.key,
+                      timestamp: performance.now()
+                  });
+                  setTimeout(() => this.processPendingReleases(), 1);
+              }
+              
+              this.detectBadPatterns();
+              
+          } catch (error) {
+              console.error('Failed to capture keyup:', error);
+          }
+      }
   }
 
   processPendingReleases() {
