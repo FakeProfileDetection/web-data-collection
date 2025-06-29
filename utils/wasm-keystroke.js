@@ -98,7 +98,7 @@ class WASMKeystrokeManager {
   }
 
   captureKeyDown(event) {
-    timestamp = performance.now();
+    const timestamp = performance.now();
     if (!this.initialized) {
       console.warn('WASM not initialized');
       return;
@@ -136,7 +136,7 @@ class WASMKeystrokeManager {
   }
 
   captureKeyUp(event) {
-    timestamp = performance.now();
+    const timestamp = performance.now();
     if (!this.initialized) {
       console.warn('WASM not initialized');
       return;
