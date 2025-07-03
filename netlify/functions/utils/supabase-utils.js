@@ -57,6 +57,11 @@ const getAllowedOrigin = (requestOrigin) => {
     'http://localhost:8888'
   ];
   
+  // Handle undefined/null origin and return appropriate value
+  if (!requestOrigin) {
+    return '*';
+  }
+  
   return allowedOrigins.includes(requestOrigin) ? requestOrigin : '*';
 };
 
@@ -320,9 +325,19 @@ export function createResponse(statusCode, body, headers = {}, event = null) {
   const requestOrigin = event?.headers?.origin || event?.headers?.Origin;
   const allowedOrigin = getAllowedOrigin(requestOrigin);
   
+  // Debug logging for CORS
+  console.log('CORS Debug:', {
+    requestOrigin,
+    allowedOrigin,
+    userAgent: event?.headers?.['user-agent']?.substring(0, 100)
+  });
+  
   const responseHeaders = {
     ...corsHeaders,
     "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+    "Access-Control-Max-Age": "86400",
     ...headers
   };
   

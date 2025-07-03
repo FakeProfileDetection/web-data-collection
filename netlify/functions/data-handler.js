@@ -28,7 +28,13 @@ export const handler = async (event) => {
 
   // Handle CORS preflight for all actions
   if (httpMethod === "OPTIONS") {
-    return createResponse(200, { message: "CORS preflight successful" }, {}, event);
+    // For OPTIONS requests, we need to be more explicit about CORS headers
+    return createResponse(200, { message: "CORS preflight successful" }, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+      "Access-Control-Max-Age": "86400"
+    }, event);
   }
 
   // Only allow POST requests

@@ -7,6 +7,15 @@ publish = "."
 [functions]
 node_bundler = "esbuild"
 
+# Add explicit CORS headers for all function responses
+[[headers]]
+for = "/.netlify/functions/*"
+  [headers.values]
+  Access-Control-Allow-Origin = "*"
+  Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+  Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+  Access-Control-Max-Age = "86400"
+
 # Configure Netlify Dev to serve everything on port 8888
 [dev]
 port = 8888

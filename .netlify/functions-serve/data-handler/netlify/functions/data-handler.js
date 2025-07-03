@@ -14763,6 +14763,9 @@ var getAllowedOrigin = (requestOrigin) => {
     "http://localhost:3999",
     "http://localhost:8888"
   ];
+  if (!requestOrigin) {
+    return "*";
+  }
   return allowedOrigins.includes(requestOrigin) ? requestOrigin : "*";
 };
 var corsHeaders = {
@@ -14939,9 +14942,17 @@ async function markCodeAsUsed(filePath, completionData, workerInfo = {}) {
 function createResponse(statusCode, body, headers = {}, event = null) {
   const requestOrigin = event?.headers?.origin || event?.headers?.Origin;
   const allowedOrigin = getAllowedOrigin(requestOrigin);
+  console.log("CORS Debug:", {
+    requestOrigin,
+    allowedOrigin,
+    userAgent: event?.headers?.["user-agent"]?.substring(0, 100)
+  });
   const responseHeaders = {
     ...corsHeaders,
     "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+    "Access-Control-Max-Age": "86400",
     ...headers
   };
   return {
@@ -14974,7 +14985,12 @@ var handler = async (event) => {
   const clientInfo = getClientInfo(event);
   console.log(`[${(/* @__PURE__ */ new Date()).toISOString()}] ${httpMethod} request from ${clientInfo.ip}`);
   if (httpMethod === "OPTIONS") {
-    return createResponse(200, { message: "CORS preflight successful" }, {}, event);
+    return createResponse(200, { message: "CORS preflight successful" }, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+      "Access-Control-Max-Age": "86400"
+    }, event);
   }
   if (httpMethod !== "POST") {
     return createResponse(405, {
