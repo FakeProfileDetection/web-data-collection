@@ -1,4 +1,26 @@
+# Node modules
 node_modules/
-package-lock.json
-.netlify
+
+# Build outputs
+dist/
+build/
+
+# Rust/WASM build artifacts
+wasm-keystroke-capture/target/
+wasm-keystroke-capture/Cargo.lock
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*

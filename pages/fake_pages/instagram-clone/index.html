@@ -955,6 +955,16 @@
         </div>
       </button>
     </nav>
+
+    <!-- Load WASM module -->
+    <!-- Load WASM module -->
+    <script type="module">
+        import { wasmKeystrokeManager } from '../../../utils/wasm-keystroke.js';
+            // Make it globally available for common.js
+            window.wasmKeystrokeManager = wasmKeystrokeManager;
+            // Debug: Check if it loaded
+            console.log('WASM manager loaded?', window.wasmKeystrokeManager);
+    </script>
     <script src="../../../utils/common.js"></script>
     <script src="script.js" defer></script>
   </body>
