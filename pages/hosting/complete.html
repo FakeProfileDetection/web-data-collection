@@ -243,11 +243,8 @@
 
       // Store completion data via Netlify function
       async function storeCompletionData(completionData) {
-        // Determine the correct API endpoint
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseUrl = isLocal 
-          ? 'http://localhost:8888/.netlify/functions' 
-          : 'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions';
+        // Use the APIEndpoints utility for consistent URL handling
+        const baseUrl = APIEndpoints.getBaseUrl();
         
         const endpoint = `${baseUrl}/data-handler?action=store-completion`;
         

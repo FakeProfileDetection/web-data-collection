@@ -2,10 +2,16 @@
 [build]
 command = "# no build command"
 functions = "netlify/functions"
-publish = "km_headless_testbed/"
+publish = "."
 
 [functions]
 node_bundler = "esbuild"
+
+# Configure Netlify Dev to serve everything on port 8888
+[dev]
+port = 8888
+targetPort = 8888
+autoLaunch = false
 
 ## Uncomment to use this redirect for Single Page Applications like create-react-app.
 ## Not needed for static site generators.

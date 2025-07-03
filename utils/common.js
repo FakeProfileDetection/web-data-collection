@@ -213,9 +213,15 @@ class APIClient {
 class APIEndpoints {
   static getBaseUrl() {
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    return isLocal 
-      ? 'http://localhost:8888/.netlify/functions' 
-      : 'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions';
+    
+    if (isLocal) {
+      // Handle Netlify dev dual-port setup: static files on current port, functions on 8888
+      const currentPort = window.location.port;
+      const functionsPort = currentPort === '3999' ? '8888' : currentPort || '8888';
+      return `http://localhost:${functionsPort}/.netlify/functions`;
+    }
+    
+    return 'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions';
   }
 
   static getDataHandlerUrl(action) {
