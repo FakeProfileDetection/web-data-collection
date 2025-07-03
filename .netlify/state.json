@@ -1,0 +1,20 @@
+{
+	"geolocation": {
+		"data": {
+			"city": "San Jose",
+			"country": {
+				"code": "US",
+				"name": "United States"
+			},
+			"subdivision": {
+				"code": "CA",
+				"name": "California"
+			},
+			"timezone": "America/Los_Angeles",
+			"latitude": 37.3028,
+			"longitude": -121.9982,
+			"postalCode": "95129"
+		},
+		"timestamp": 1751494508237
+	}
+}
