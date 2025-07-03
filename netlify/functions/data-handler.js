@@ -28,7 +28,7 @@ export const handler = async (event) => {
 
   // Handle CORS preflight for all actions
   if (httpMethod === "OPTIONS") {
-    return createResponse(200, "");
+    return createResponse(200, { message: "CORS preflight successful" }, {}, event);
   }
 
   // Only allow POST requests
@@ -36,7 +36,7 @@ export const handler = async (event) => {
     return createResponse(405, { 
       error: "Method not allowed", 
       allowed: ["POST", "OPTIONS"] 
-    });
+    }, {}, event);
   }
 
   // Get action from query parameters
@@ -45,7 +45,7 @@ export const handler = async (event) => {
     return createResponse(400, {
       error: "Missing required 'action' parameter",
       available_actions: ["upload-file", "store-completion", "validate-code"]
-    });
+    }, {}, event);
   }
 
   // Rate limiting check
@@ -55,7 +55,7 @@ export const handler = async (event) => {
       error: "Rate limit exceeded",
       message: "Too many requests. Please try again later.",
       retryAfter: CONFIG.RATE_LIMIT_WINDOW / 1000
-    });
+    }, {}, event);
   }
 
   // Route to appropriate handler
@@ -76,7 +76,7 @@ export const handler = async (event) => {
         return createResponse(400, {
           error: `Unknown action: ${action}`,
           available_actions: ["upload-file", "store-completion", "validate-code"]
-        });
+        }, {}, event);
     }
 
     const processingTime = Date.now() - startTime;
@@ -85,7 +85,7 @@ export const handler = async (event) => {
     return createResponse(200, {
       ...result,
       processingTime
-    });
+    }, {}, event);
 
   } catch (error) {
     const processingTime = Date.now() - startTime;
@@ -95,7 +95,7 @@ export const handler = async (event) => {
       clientIP: clientInfo.ip
     });
 
-    return createErrorResponse(error, 500, processingTime);
+    return createErrorResponse(error, 500, processingTime, event);
   }
 };
 

@@ -48,11 +48,24 @@ export function getSupabaseClient() {
 /* ------------------------------------------------------------------ */
 /* 3. CORS Configuration                                              */
 /* ------------------------------------------------------------------ */
+// Allow multiple origins for production deployment flexibility
+const getAllowedOrigin = (requestOrigin) => {
+  const allowedOrigins = [
+    'https://fakeprofiledetection.github.io',
+    'https://melodious-squirrel-b0930c.netlify.app',
+    'http://localhost:3999',
+    'http://localhost:8888'
+  ];
+  
+  return allowedOrigins.includes(requestOrigin) ? requestOrigin : '*';
+};
+
 export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Max-Age": "3600",
+  "Access-Control-Allow-Origin": "*", // Will be dynamically set in createResponse
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+  "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Credentials": "false",
   "Content-Type": "application/json"
 };
 
@@ -302,15 +315,25 @@ export async function markCodeAsUsed(filePath, completionData, workerInfo = {}) 
 /* ------------------------------------------------------------------ */
 /* 8. Response Utilities                                              */
 /* ------------------------------------------------------------------ */
-export function createResponse(statusCode, body, headers = {}) {
+export function createResponse(statusCode, body, headers = {}, event = null) {
+  // Dynamic CORS origin based on request
+  const requestOrigin = event?.headers?.origin || event?.headers?.Origin;
+  const allowedOrigin = getAllowedOrigin(requestOrigin);
+  
+  const responseHeaders = {
+    ...corsHeaders,
+    "Access-Control-Allow-Origin": allowedOrigin,
+    ...headers
+  };
+  
   return {
     statusCode,
-    headers: { ...corsHeaders, ...headers },
+    headers: responseHeaders,
     body: JSON.stringify(body)
   };
 }
 
-export function createErrorResponse(error, statusCode = 500, processingTime = 0) {
+export function createErrorResponse(error, statusCode = 500, processingTime = 0, event = null) {
   const isClientError = error.message.includes('Validation failed') ||
                        error.message.includes('Rate limit') ||
                        error.message.includes('Method not allowed') ||
@@ -323,7 +346,7 @@ export function createErrorResponse(error, statusCode = 500, processingTime = 0)
     success: false,
     error: userMessage,
     processingTime
-  });
+  }, {}, event);
 }
 
 export function getClientInfo(event) {

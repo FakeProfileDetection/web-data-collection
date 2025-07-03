@@ -14756,11 +14756,22 @@ function getSupabaseClient() {
   }
   return supabase;
 }
+var getAllowedOrigin = (requestOrigin) => {
+  const allowedOrigins = [
+    "https://fakeprofiledetection.github.io",
+    "https://melodious-squirrel-b0930c.netlify.app",
+    "http://localhost:3999",
+    "http://localhost:8888"
+  ];
+  return allowedOrigins.includes(requestOrigin) ? requestOrigin : "*";
+};
 var corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Max-Age": "3600",
+  // Will be dynamically set in createResponse
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+  "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Credentials": "false",
   "Content-Type": "application/json"
 };
 function checkRateLimit(clientIP, maxRequests = CONFIG.RATE_LIMIT_MAX_REQUESTS) {
@@ -14925,21 +14936,28 @@ async function markCodeAsUsed(filePath, completionData, workerInfo = {}) {
     throw error;
   }
 }
-function createResponse(statusCode, body, headers = {}) {
+function createResponse(statusCode, body, headers = {}, event = null) {
+  const requestOrigin = event?.headers?.origin || event?.headers?.Origin;
+  const allowedOrigin = getAllowedOrigin(requestOrigin);
+  const responseHeaders = {
+    ...corsHeaders,
+    "Access-Control-Allow-Origin": allowedOrigin,
+    ...headers
+  };
   return {
     statusCode,
-    headers: { ...corsHeaders, ...headers },
+    headers: responseHeaders,
     body: JSON.stringify(body)
   };
 }
-function createErrorResponse(error, statusCode = 500, processingTime = 0) {
+function createErrorResponse(error, statusCode = 500, processingTime = 0, event = null) {
   const isClientError = error.message.includes("Validation failed") || error.message.includes("Rate limit") || error.message.includes("Method not allowed") || error.message.includes("required") || error.message.includes("Invalid");
   const userMessage = isClientError ? error.message : "Service error. Please try again.";
   return createResponse(isClientError ? 400 : statusCode, {
     success: false,
     error: userMessage,
     processingTime
-  });
+  }, {}, event);
 }
 function getClientInfo(event) {
   const { headers } = event;
@@ -14956,20 +14974,20 @@ var handler = async (event) => {
   const clientInfo = getClientInfo(event);
   console.log(`[${(/* @__PURE__ */ new Date()).toISOString()}] ${httpMethod} request from ${clientInfo.ip}`);
   if (httpMethod === "OPTIONS") {
-    return createResponse(200, "");
+    return createResponse(200, { message: "CORS preflight successful" }, {}, event);
   }
   if (httpMethod !== "POST") {
     return createResponse(405, {
       error: "Method not allowed",
       allowed: ["POST", "OPTIONS"]
-    });
+    }, {}, event);
   }
   const action = queryStringParameters?.action;
   if (!action) {
     return createResponse(400, {
       error: "Missing required 'action' parameter",
       available_actions: ["upload-file", "store-completion", "validate-code"]
-    });
+    }, {}, event);
   }
   if (!checkRateLimit(clientInfo.ip)) {
     console.warn(`Rate limit exceeded for IP: ${clientInfo.ip}`);
@@ -14977,7 +14995,7 @@ var handler = async (event) => {
       error: "Rate limit exceeded",
       message: "Too many requests. Please try again later.",
       retryAfter: CONFIG.RATE_LIMIT_WINDOW / 1e3
-    });
+    }, {}, event);
   }
   try {
     let result;
@@ -14995,14 +15013,14 @@ var handler = async (event) => {
         return createResponse(400, {
           error: `Unknown action: ${action}`,
           available_actions: ["upload-file", "store-completion", "validate-code"]
-        });
+        }, {}, event);
     }
     const processingTime = Date.now() - startTime;
     console.log(`[${(/* @__PURE__ */ new Date()).toISOString()}] ${action} completed successfully (${processingTime}ms)`);
     return createResponse(200, {
       ...result,
       processingTime
-    });
+    }, {}, event);
   } catch (error) {
     const processingTime = Date.now() - startTime;
     console.error(`[${(/* @__PURE__ */ new Date()).toISOString()}] ${action} error (${processingTime}ms):`, {
@@ -15010,7 +15028,7 @@ var handler = async (event) => {
       stack: error.stack,
       clientIP: clientInfo.ip
     });
-    return createErrorResponse(error, 500, processingTime);
+    return createErrorResponse(error, 500, processingTime, event);
   }
 };
 async function handleFileUpload(event, clientInfo) {
