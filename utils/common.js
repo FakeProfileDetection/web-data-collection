@@ -134,16 +134,7 @@ class APIClient {
   }
 
   static async uploadFile(fileBlob, fileName, userId) {
-    // For local development, simulate successful upload
-    if (this.isLocalDevelopment()) {
-      console.log(`🧪 LOCAL DEV: Simulating upload of ${fileName}`);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-      return {
-        success: true,
-        url: `http://localhost/simulated/${fileName}`,
-        fileName: fileName
-      };
-    }
+    // Always perform actual uploads, both local and production
     try {
       // Validate inputs
       if (!fileBlob || !fileName || !userId) {
@@ -156,7 +147,7 @@ class APIClient {
 
       // Upload with timeout and retry logic
       const response = await this.fetchWithRetry(
-        'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver',
+        APIEndpoints.getDataHandlerUrl('upload-file'),
         {
           method: 'POST',
           body: formData,
@@ -213,6 +204,22 @@ class APIClient {
     }
     
     throw lastError;
+  }
+}
+
+/**
+ * API URL utilities - Environment aware endpoint generation
+ */
+class APIEndpoints {
+  static getBaseUrl() {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    return isLocal 
+      ? 'http://localhost:8888/.netlify/functions' 
+      : 'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions';
+  }
+
+  static getDataHandlerUrl(action) {
+    return `${this.getBaseUrl()}/data-handler?action=${action}`;
   }
 }
 
@@ -448,6 +455,7 @@ if (typeof module !== 'undefined' && module.exports) {
     SecureCookieManager,
     FormValidator,
     APIClient,
+    APIEndpoints,
     EnhancedKeyLogger,
     NavigationManager,
     CONFIG
@@ -909,7 +917,7 @@ const PlatformSubmissionHandler = {
         return;
       }
 
-      // Prepare file names
+      // Prepare file names - platform prefix comes first
       const filePrefix = this.getPlatformPrefix(urlParams.platform_id);
       const csvName = `${filePrefix}_${urlParams.user_id}_${urlParams.task_id}.csv`;
       const txtName = `${filePrefix}_${urlParams.user_id}_${urlParams.task_id}_raw.txt`;
@@ -1116,7 +1124,7 @@ const PlatformSubmissionHandler = {
     fd.append('file', fileBlob, filename);
 
     const res = await fetch(
-      'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions/saver',
+      APIEndpoints.getDataHandlerUrl('upload-file'),
       { method: 'POST', body: fd }
     );
 

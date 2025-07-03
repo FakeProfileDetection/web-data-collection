@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MTurk Keystroke Study HIT Template</title>
+  <meta content="width=device-width,initial-scale=1" name="viewport" />
+  <link crossorigin="anonymous" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    #collapseTrigger {
+      color:#fff;
+      display: block;
+      text-decoration: none;
+    }
+    .image {
+      margin-bottom: 15px; 
+    }
+    .dont-break-out {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      -ms-word-break: break-all;
+      word-break: break-all;
+      word-break: break-word;
+      -ms-hyphens: auto;
+      -moz-hyphens: auto;
+      -webkit-hyphens: auto;
+      hyphens: auto;
+    }
+    
+    /* Code validation styling */
+    .code-validation-container {
+      position: relative;
+    }
+    
+    .validation-status {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .validation-message {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .validation-loading {
+      color: #ffc107;
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+    }
+    
+    .validation-valid {
+      color: #155724;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .validation-invalid {
+      color: #721c24;
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .validation-error {
+      color: #856404;
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+    }
+    
+    #surveycode.valid {
+      border-color: #28a745;
+      background-color: #f8fff9;
+    }
+    
+    #surveycode.invalid {
+      border-color: #dc3545;
+      background-color: #fff8f8;
+    }
+    
+    #surveycode.loading {
+      border-color: #ffc107;
+      background-color: #fffdf5;
+    }
+    
+    .submit-button {
+      margin-top: 15px;
+    }
+    
+    .submit-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <section class="container" id="SurveyLink">
+    <!-- Instructions -->
+    <div class="row">
+      <div class="col-xs-12 col-md-12">
+        <div class="panel panel-primary">
+          <a class="panel-heading" href="javascript:void(0);" id="collapseTrigger">
+            <strong>Survey Link Instructions</strong> <span class="collapse-text">(Click to expand)</span>
+          </a>
+          <div class="panel-body" id="instructionBody" style="display:none;">
+            <p>We are conducting an academic survey about detecting fake profiles on social media platforms. We need to understand your collection of typing dynamics data of social networks. Select the link below to complete the survey. At the end of the survey, you will receive a code to paste into the box below to receive credit for taking our survey.</p>
+            <p><strong>Make sure to leave this window open as you complete the survey. </strong> When you are finished, you will return to this page to paste the code into the box.</p>
+            <p class="well well-sm"><strong>Note:</strong> You will receive a <strong>completion code</strong> at the end of the typing task. Please copy it and paste it in the box below.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Survey Link Layout -->
+    <div class="row" id="workContent">
+      <div class="col-xs-12 col-md-6 col-md-offset-3">
+        <table class="table table-condensed table-bordered">
+          <tbody>
+            <tr>
+              <td>
+                <label>Survey link:</label>
+                <a href="https://fakeprofiledetection.github.io/web-data-collection/" target="_blank">
+                  https://fakeprofiledetection.github.io/web-data-collection/
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Input from Worker -->
+        <div class="form-group">
+          <label for="surveycode">Provide the survey code here:</label>
+          <div class="code-validation-container">
+            <input class="form-control" id="surveycode" name="surveycode" placeholder="e.g. TASK-20241202-A1B2-X9K7M3" required type="text" />
+            <span class="validation-status" id="validation-status"></span>
+          </div>
+          <div class="validation-message" id="validation-message" style="display: none;"></div>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary submit-button" id="submit-button" disabled>
+            Submit HIT
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Existing collapse functionality
+      var content = $('#instructionBody');
+      var trigger = $('#collapseTrigger');
+      content.hide();
+      $('.collapse-text').text('(Click to expand)');
+      trigger.click(function() {
+        content.toggle();
+        var isVisible = content.is(':visible');
+        $('.collapse-text').text(isVisible ? '(Click to collapse)' : '(Click to expand)');
+      });
+
+      // Code validation functionality
+      initializeCodeValidation();
+    });
+
+    // Survey code validation system
+    function initializeCodeValidation() {
+      const codeInput = document.getElementById('surveycode');
+      const validationStatus = document.getElementById('validation-status');
+      const validationMessage = document.getElementById('validation-message');
+      const submitButton = document.getElementById('submit-button');
+      
+      let validationTimeout;
+      let lastValidatedCode = '';
+      let isValidCode = false;
+
+      // Validation API endpoint - Environment aware
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const baseUrl = isLocal 
+        ? 'http://localhost:8888/.netlify/functions' 
+        : 'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions';
+      const VALIDATION_API = `${baseUrl}/data-handler?action=validate-code`;
+
+      // Listen for input changes
+      codeInput.addEventListener('input', function() {
+        const code = this.value.trim().toUpperCase();
+        
+        // Clear previous timeout
+        if (validationTimeout) {
+          clearTimeout(validationTimeout);
+        }
+
+        // Reset validation state
+        resetValidationState();
+
+        // Only validate if we have a reasonable code length
+        if (code.length < 3) {
+          updateSubmitButton(false);
+          return;
+        }
+
+        // Don't re-validate the same code
+        if (code === lastValidatedCode) {
+          return;
+        }
+
+        // Show loading state
+        showLoadingState();
+
+        // Debounce validation by 500ms
+        validationTimeout = setTimeout(() => {
+          validateCode(code);
+        }, 500);
+      });
+
+      // Handle form submission
+      const form = codeInput.closest('form');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          if (!isValidCode) {
+            e.preventDefault();
+            showMessage('Please enter a valid survey code before submitting.', 'invalid');
+          }
+        });
+      }
+
+      function resetValidationState() {
+        codeInput.className = 'form-control';
+        validationStatus.innerHTML = '';
+        hideMessage();
+      }
+
+      function showLoadingState() {
+        codeInput.className = 'form-control loading';
+        validationStatus.innerHTML = '⏳';
+        showMessage('Validating code...', 'loading');
+        updateSubmitButton(false);
+      }
+
+      async function validateCode(code) {
+        try {
+          const response = await fetch(VALIDATION_API, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              code: code,
+              workerInfo: {
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+              }
+            })
+          });
+
+          const result = await response.json();
+          lastValidatedCode = code;
+
+          if (result.valid && !result.used && !result.expired) {
+            // Code is valid and available
+            showValidState(result.message || 'Code is valid!');
+            isValidCode = true;
+            updateSubmitButton(true);
+          } else if (result.used) {
+            // Code has already been used
+            showInvalidState(result.message || 'This code has already been used.');
+            isValidCode = false;
+            updateSubmitButton(false);
+          } else if (result.expired) {
+            // Code has expired
+            showInvalidState(result.message || 'This code has expired.');
+            isValidCode = false;
+            updateSubmitButton(false);
+          } else {
+            // Code is invalid
+            showInvalidState(result.message || 'Invalid code. Please check your code and try again.');
+            isValidCode = false;
+            updateSubmitButton(false);
+          }
+
+        } catch (error) {
+          console.error('Validation error:', error);
+          showErrorState('Unable to validate code. Please check your internet connection and try again.');
+          isValidCode = false;
+          updateSubmitButton(false);
+        }
+      }
+
+      function showValidState(message) {
+        codeInput.className = 'form-control valid';
+        validationStatus.innerHTML = '✅';
+        showMessage(message, 'valid');
+      }
+
+      function showInvalidState(message) {
+        codeInput.className = 'form-control invalid';
+        validationStatus.innerHTML = '❌';
+        showMessage(message, 'invalid');
+      }
+
+      function showErrorState(message) {
+        codeInput.className = 'form-control';
+        validationStatus.innerHTML = '⚠️';
+        showMessage(message, 'error');
+      }
+
+      function showMessage(text, type) {
+        validationMessage.textContent = text;
+        validationMessage.className = `validation-message validation-${type}`;
+        validationMessage.style.display = 'block';
+      }
+
+      function hideMessage() {
+        validationMessage.style.display = 'none';
+      }
+
+      function updateSubmitButton(enabled) {
+        submitButton.disabled = !enabled;
+        if (enabled) {
+          submitButton.textContent = 'Submit HIT';
+          submitButton.className = 'btn btn-success submit-button';
+        } else {
+          submitButton.textContent = 'Enter Valid Code to Submit';
+          submitButton.className = 'btn btn-primary submit-button';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

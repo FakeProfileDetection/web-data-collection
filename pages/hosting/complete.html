@@ -55,6 +55,52 @@
         color: #007bff;
         margin: 20px 0;
       }
+      .survey-code-container {
+        background: #e8f5e8;
+        border: 2px solid #28a745;
+        border-radius: 10px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: center;
+      }
+      .survey-code {
+        font-size: 2em;
+        font-weight: bold;
+        color: #155724;
+        font-family: 'Courier New', monospace;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        border: 2px dashed #28a745;
+        display: inline-block;
+        margin: 15px 0;
+        letter-spacing: 2px;
+      }
+      .copy-button {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        font-size: 1.1em;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px 0;
+        transition: background 0.3s;
+      }
+      .copy-button:hover {
+        background: #218838;
+      }
+      .copy-button:active {
+        background: #1e7e34;
+      }
+      .mturk-instructions {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+        color: #856404;
+      }
       /* Error message styling */
       .error-message {
         background: #f8d7da;
@@ -81,6 +127,26 @@
           <li>✅ 18 social media posting tasks</li>
           <li>✅ Typing dynamics data collection</li>
         </ul>
+      </div>
+
+      <div class="survey-code-container">
+        <h3>🎯 Your Survey Completion Code</h3>
+        <p><strong>Please copy this code and paste it into the MTurk interface:</strong></p>
+        <div class="survey-code" id="surveyCode">Loading...</div>
+        <button class="copy-button" onclick="copyCode()">📋 Copy Code</button>
+        <p style="font-size: 0.9em; margin-top: 15px;">
+          <em>This code is unique to your session and required for payment.</em>
+        </p>
+      </div>
+
+      <div class="mturk-instructions">
+        <h4>📝 Important Instructions:</h4>
+        <ol style="text-align: left; margin-left: 20px;">
+          <li><strong>Keep this window open</strong> - Don't close this tab yet!</li>
+          <li><strong>Switch back to your MTurk tab</strong> (it should still be open)</li>
+          <li><strong>Paste the code above</strong> into the "Provide the survey code here" field</li>
+          <li><strong>Click Submit</strong> to complete your HIT and receive payment</li>
+        </ol>
       </div>
 
       <p class="thank-you">
@@ -110,13 +176,117 @@
     <script src="../../utils/common.js"></script>
     
     <script>
+      // Generate unique survey completion code
+      function generateSurveyCode() {
+        // Create a unique code using timestamp and random elements
+        const timestamp = Date.now().toString(36);
+        const randomPart = Math.random().toString(36).substring(2, 8);
+        const userId = NavigationManager.getQueryParam('user_id') || 
+                       SecureCookieManager.getCookie('user_id') || 'anon';
+        
+        // Create a code format: TASK-[timestamp]-[random]-[userHash]
+        const userHash = userId.substring(0, 4).toUpperCase();
+        const code = `TASK-${timestamp}-${randomPart}-${userHash}`.toUpperCase();
+        
+        return code;
+      }
+
+      // Copy code to clipboard
+      function copyCode() {
+        const codeElement = document.getElementById('surveyCode');
+        const code = codeElement.textContent;
+        
+        // Use modern clipboard API if available
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(code).then(() => {
+            showCopySuccess();
+          }).catch(() => {
+            fallbackCopyCode(code);
+          });
+        } else {
+          fallbackCopyCode(code);
+        }
+      }
+
+      // Fallback copy method for older browsers
+      function fallbackCopyCode(code) {
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        textArea.style.position = 'absolute';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          showCopySuccess();
+        } catch (err) {
+          console.error('Failed to copy code:', err);
+          alert('Please manually copy the code: ' + code);
+        }
+        
+        document.body.removeChild(textArea);
+      }
+
+      // Show copy success feedback
+      function showCopySuccess() {
+        const button = document.querySelector('.copy-button');
+        const originalText = button.textContent;
+        button.textContent = '✅ Copied!';
+        button.style.background = '#28a745';
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.style.background = '#28a745';
+        }, 2000);
+      }
+
+      // Store completion data via Netlify function
+      async function storeCompletionData(completionData) {
+        // Determine the correct API endpoint
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseUrl = isLocal 
+          ? 'http://localhost:8888/.netlify/functions' 
+          : 'https://melodious-squirrel-b0930c.netlify.app/.netlify/functions';
+        
+        const endpoint = `${baseUrl}/data-handler?action=store-completion`;
+        
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(completionData)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+          console.log('Completion data stored:', result);
+          return result;
+
+        } catch (error) {
+          console.error('Failed to store completion data:', error);
+          throw error;
+        }
+      }
+
       // Initialize when page loads
       window.addEventListener('load', function() {
         console.log('Completion page loaded');
-        logStudyCompletion();
+        
+        // Generate and display the survey code
+        const surveyCode = generateSurveyCode();
+        document.getElementById('surveyCode').textContent = surveyCode;
+        
+        logStudyCompletion(surveyCode);
       });
 
-      async function logStudyCompletion() {
+      async function logStudyCompletion(surveyCode) {
         try {
           // Get user ID to log completion
           const userId = NavigationManager.getQueryParam('user_id') || 
@@ -130,27 +300,24 @@
               completion_timestamp: new Date().toISOString(),
               user_id: userId,
               study_version: '1.0',
-              completion_status: 'success'
+              completion_status: 'success',
+              survey_code: surveyCode,
+              code_used: false,
+              code_used_timestamp: null,
+              mturk_worker_id: null,
+              code_expires_at: new Date(Date.now() + (48 * 60 * 60 * 1000)).toISOString() // 48 hours from now
             };
 
             console.log('Study completion data:', completionData);
 
-            // In local development, just log the completion
-            if (APIClient.isLocalDevelopment()) {
-              console.log('🧪 LOCAL DEV: Would upload completion data:', completionData);
-            } else {
-              // In production, upload completion data
-              try {
-                const jsonBlob = new Blob([JSON.stringify(completionData, null, 2)], {
-                  type: "application/json",
-                });
-                
-                await APIClient.uploadFile(jsonBlob, `${userId}_completion.json`, userId);
-                console.log('✅ Completion data uploaded');
-              } catch (error) {
-                console.error('❌ Failed to upload completion data:', error);
-                // Don't show error to user on completion page - study is done
-              }
+            // Store completion data using Netlify function
+            try {
+              await storeCompletionData(completionData);
+              console.log('✅ Completion data stored successfully');
+            } catch (error) {
+              console.error('❌ Failed to store completion data:', error);
+              // Don't show error to user on completion page - study is done
+              // Log for debugging but continue with cleanup
             }
 
             // Optional: Clear sensitive data from browser
