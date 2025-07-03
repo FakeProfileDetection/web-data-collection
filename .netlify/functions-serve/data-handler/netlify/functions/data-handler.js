@@ -15069,7 +15069,8 @@ async function handleFileUpload(event, clientInfo) {
   const supabase2 = getSupabaseClient();
   const { error } = await supabase2.storage.from("data-collection-files").upload(`uploads/${secureFileName}`, fileBuffer, {
     contentType: detectedContentType,
-    upsert: false,
+    upsert: true,
+    // Allow overwriting for legitimate retries
     cacheControl: "3600"
   });
   if (error) {
@@ -15118,7 +15119,8 @@ async function handleStoreCompletion(event, clientInfo) {
   const supabase2 = getSupabaseClient();
   const { error: uploadError } = await supabase2.storage.from("data-collection-files").upload(`uploads/${fileName}`, jsonBlob, {
     contentType: "application/json",
-    upsert: false,
+    upsert: true,
+    // Allow overwriting for legitimate retries/refreshes
     cacheControl: "3600"
   });
   if (uploadError) {

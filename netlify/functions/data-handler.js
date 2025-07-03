@@ -192,7 +192,7 @@ async function handleFileUpload(event, clientInfo) {
     .from("data-collection-files")
     .upload(`uploads/${secureFileName}`, fileBuffer, {
       contentType: detectedContentType,
-      upsert: false,
+      upsert: true, // Allow overwriting for legitimate retries
       cacheControl: '3600'
     });
   
@@ -262,7 +262,7 @@ async function handleStoreCompletion(event, clientInfo) {
     .from('data-collection-files')
     .upload(`uploads/${fileName}`, jsonBlob, {
       contentType: 'application/json',
-      upsert: false,
+      upsert: true, // Allow overwriting for legitimate retries/refreshes
       cacheControl: '3600'
     });
 
