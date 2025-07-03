@@ -12,9 +12,10 @@ node_bundler = "esbuild"
 for = "/.netlify/functions/*"
   [headers.values]
   Access-Control-Allow-Origin = "*"
-  Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-  Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+  Access-Control-Allow-Methods = "GET, POST, OPTIONS, PUT, DELETE"
+  Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
   Access-Control-Max-Age = "86400"
+  Access-Control-Allow-Credentials = "false"
 
 # Configure Netlify Dev to serve everything on port 8888
 [dev]

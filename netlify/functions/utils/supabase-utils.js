@@ -62,6 +62,11 @@ const getAllowedOrigin = (requestOrigin) => {
     return '*';
   }
   
+  // For production debugging, be more permissive temporarily
+  if (requestOrigin.includes('github.io') || requestOrigin.includes('netlify.app')) {
+    return requestOrigin;
+  }
+  
   return allowedOrigins.includes(requestOrigin) ? requestOrigin : '*';
 };
 

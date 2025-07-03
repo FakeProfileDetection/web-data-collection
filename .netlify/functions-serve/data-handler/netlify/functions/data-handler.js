@@ -14766,6 +14766,9 @@ var getAllowedOrigin = (requestOrigin) => {
   if (!requestOrigin) {
     return "*";
   }
+  if (requestOrigin.includes("github.io") || requestOrigin.includes("netlify.app")) {
+    return requestOrigin;
+  }
   return allowedOrigins.includes(requestOrigin) ? requestOrigin : "*";
 };
 var corsHeaders = {
