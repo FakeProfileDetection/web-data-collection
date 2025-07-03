@@ -8,73 +8,126 @@
       body {
         font-family: Arial, sans-serif;
         background-color: #f4f4f4;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
         margin: 0;
+        padding: 20px 0;
+        min-height: 100vh;
       }
       .completion-container {
         background: white;
-        padding: 40px;
+        padding: 30px;
         border-radius: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        max-width: 600px;
+        max-width: 700px;
         width: 90%;
+        margin: 0 auto;
         text-align: center;
       }
       h1 {
-        font-size: 2.5em;
+        font-size: 2.2em;
         color: #28a745;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
       }
-      p {
+      .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .hero-section h2 {
+        color: white;
+        margin: 0 0 15px 0;
+        font-size: 1.4em;
+      }
+      .hero-section p {
+        color: white;
+        margin: 8px 0;
+        font-size: 1.1em;
+        line-height: 1.5;
+      }
+      .quick-stats {
+        display: flex;
+        justify-content: space-around;
+        background: rgba(255,255,255,0.2);
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .stat-item {
+        text-align: center;
+        color: white;
+        font-size: 0.9em;
+      }
+      .stat-number {
         font-size: 1.2em;
-        color: #555;
-        margin-bottom: 30px;
-        line-height: 1.6;
+        font-weight: bold;
+        display: block;
       }
-      .study-info {
+      .footer-content {
         background: #f8f9fa;
         padding: 20px;
         border-radius: 8px;
         margin: 20px 0;
-        border-left: 4px solid #007bff;
+        text-align: center;
       }
-      .contact-info {
-        font-size: 1em;
-        color: #666;
-        margin-top: 30px;
-        padding: 20px;
-        background: #e9ecef;
-        border-radius: 8px;
-      }
-      .thank-you {
-        font-size: 1.4em;
-        font-weight: bold;
+      .appreciation-note {
+        font-size: 1.1em;
         color: #007bff;
-        margin: 20px 0;
+        margin-bottom: 15px;
+      }
+      .footer-details {
+        font-size: 0.9em;
+        color: #666;
+        margin: 10px 0;
+        line-height: 1.4;
+      }
+      .final-message {
+        color: #28a745;
+        font-size: 1em;
+        margin: 15px 0;
+        font-style: italic;
+      }
+      @media (max-width: 768px) {
+        .quick-stats {
+          flex-direction: column;
+          gap: 8px;
+        }
+        .completion-container {
+          padding: 20px;
+          margin: 10px;
+        }
+        h1 {
+          font-size: 1.8em;
+        }
       }
       .survey-code-container {
         background: #e8f5e8;
         border: 2px solid #28a745;
         border-radius: 10px;
-        padding: 25px;
-        margin: 30px 0;
+        padding: 20px;
+        margin: 20px 0;
         text-align: center;
       }
+      .survey-code-container h3 {
+        color: #155724;
+        margin-bottom: 10px;
+      }
       .survey-code {
-        font-size: 2em;
+        font-size: 1.5em;
         font-weight: bold;
         color: #155724;
         font-family: 'Courier New', monospace;
         background: white;
-        padding: 15px 20px;
+        padding: 12px 15px;
         border-radius: 8px;
         border: 2px dashed #28a745;
         display: inline-block;
-        margin: 15px 0;
-        letter-spacing: 2px;
+        margin: 10px 0;
+        letter-spacing: 1px;
+        word-break: break-all;
       }
       .copy-button {
         background: #28a745;
@@ -97,9 +150,19 @@
         background: #fff3cd;
         border: 1px solid #ffeaa7;
         border-radius: 8px;
-        padding: 20px;
-        margin: 25px 0;
+        padding: 18px;
+        margin: 20px 0;
         color: #856404;
+      }
+      .mturk-instructions h4 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #856404;
+      }
+      .mturk-instructions ol {
+        margin: 10px 0;
+        padding-left: 20px;
+        line-height: 1.4;
       }
       /* Error message styling */
       .error-message {
@@ -116,17 +179,29 @@
     <div class="completion-container">
       <h1>Congratulations! 🎉</h1>
       
-      <p>Thank you for completing all the tasks in our research study.</p>
-      
-      <div class="study-info">
-        <h3>Study Summary</h3>
-        <p>You have successfully completed:</p>
-        <ul style="text-align: left; display: inline-block;">
-          <li>✅ Consent form</li>
-          <li>✅ Demographics questionnaire</li>
-          <li>✅ 18 social media posting tasks</li>
-          <li>✅ Typing dynamics data collection</li>
-        </ul>
+      <div class="hero-section">
+        <h2>🎉 Thank You for Your Participation!</h2>
+        <p><strong>You've successfully completed typing dynamics !</strong></p>
+        <p>Your 45-60 minutes of thoughtful participation helps researchers improve online security and protect users from fake profiles.</p>
+        
+        <div class="quick-stats">
+          <div class="stat-item">
+            <span class="stat-number">✅</span>
+            Consent
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">✅</span>
+            Demographics
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">18</span>
+            Tasks Completed
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">🔒</span>
+            Data Secured
+          </div>
+        </div>
       </div>
 
       <div class="survey-code-container">
@@ -149,27 +224,20 @@
         </ol>
       </div>
 
-      <p class="thank-you">
-        Your participation is invaluable to our research on fake profile detection.
-      </p>
-
-      <p>
-        Your data has been securely collected and will be used solely for academic 
-        research purposes. All information will remain confidential and anonymous.
-      </p>
-
-      <div class="contact-info">
-        <h4>Questions or Concerns?</h4>
-        <p>
-          If you have any questions about this study or would like to receive 
-          information about the results, please contact the research team using 
-          the contact information provided in your consent form.
+      <div class="footer-content">
+        <p class="appreciation-note">
+          🙏 <strong>Thank you for making the internet safer!</strong>
         </p>
+        
+        <div class="footer-details">
+          <p>Your data has been securely collected for academic research. All information remains confidential and anonymous.</p>
+          <p>Questions? Contact the research team using the information in the consent form.</p>
+        </div>
+        
+        <p class="final-message">You're helping create a safer digital world! 🌍</p>
+        
+        <p><strong>You may now safely close this browser window.</strong></p>
       </div>
-
-      <p>
-        <strong>You may now safely close this browser window.</strong>
-      </p>
     </div>
 
     <!-- Import our shared utilities -->
