@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Data Collection - Sequence Diagrams Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #e74c3c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .controls-bar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .sequence-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .sequence-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            position: relative;
+        }
+        
+        .card-header h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .card-header p {
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        
+        .card-meta {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .card-content {
+            padding: 30px;
+        }
+        
+        .diagram-container {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            margin-bottom: 20px;
+            position: relative;
+            overflow-x: auto;
+        }
+        
+        .diagram-container .mermaid {
+            text-align: center;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            font-size: 18px;
+        }
+        
+        .loading::before {
+            content: "⏳";
+            font-size: 2em;
+            display: block;
+            margin-bottom: 15px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .export-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .key-insights {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            margin-top: 20px;
+        }
+        
+        .key-insights h4 {
+            color: #0056b3;
+            margin-bottom: 10px;
+        }
+        
+        .key-insights ul {
+            margin-left: 20px;
+        }
+        
+        .key-insights li {
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            z-index: 100;
+        }
+        
+        .zoom-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .zoom-btn:hover {
+            background: #0056b3;
+        }
+        
+        @media (max-width: 768px) {
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                justify-content: center;
+            }
+            
+            .export-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .dashboard-grid {
+                padding: 15px;
+                gap: 20px;
+            }
+            
+            .card-content {
+                padding: 20px;
+            }
+        }
+        
+        .nav-menu {
+            background: #343a40;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+        }
+        
+        .nav-item {
+            color: #adb5bd;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            white-space: nowrap;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover,
+        .nav-item.active {
+            background: #495057;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>⏱️ Sequence Diagrams Dashboard</h1>
+            <p>Web Data Collection System - Temporal Flow Analysis</p>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-value">5</span>
+                    Sequence Views
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">50-70</span>
+                    Minutes Total
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">18</span>
+                    Tasks Tracked
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">6</span>
+                    System Components
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-menu">
+            <a href="#complete-journey" class="nav-item active" onclick="scrollToSection(this, 'complete-journey')">🚀 Complete Journey</a>
+            <a href="#error-handling" class="nav-item" onclick="scrollToSection(this, 'error-handling')">⚠️ Error Handling</a>
+            <a href="#environment-routing" class="nav-item" onclick="scrollToSection(this, 'environment-routing')">🔧 Environment Routing</a>
+            <a href="#keystroke-collection" class="nav-item" onclick="scrollToSection(this, 'keystroke-collection')">⌨️ Keystroke Collection</a>
+            <a href="#survey-code" class="nav-item" onclick="scrollToSection(this, 'survey-code')">🎯 Survey Code</a>
+        </div>
+        
+        <div class="controls-bar">
+            <div class="control-group">
+                <label for="theme-select">Theme:</label>
+                <select id="theme-select" onchange="changeTheme()">
+                    <option value="default">Default</option>
+                    <option value="dark">Dark</option>
+                    <option value="forest">Forest</option>
+                    <option value="neutral">Neutral</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button class="btn" onclick="exportAllDiagrams()">📦 Export All</button>
+                <button class="btn btn-secondary" onclick="printDashboard()">🖨️ Print Dashboard</button>
+                <button class="btn btn-success" onclick="openInMermaidLive()">🔗 Open in Mermaid Live</button>
+            </div>
+            
+            <div class="control-group">
+                <button class="btn btn-secondary" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+                <button class="btn btn-secondary" onclick="resetAllZoom()">🔍 Reset All Views</button>
+            </div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <!-- Complete Journey Sequence -->
+            <div class="sequence-card" id="complete-journey">
+                <div class="card-header">
+                    <h2>🚀 Complete User Journey Sequence</h2>
+                    <p>End-to-end flow from initial user entry through MTurk validation, including all major phases: environment detection, consent collection, demographics, 18-task execution with keystroke logging, completion, and external validation.</p>
+                    
+                    <div class="card-meta">
+                        <strong>Expected Duration:</strong> 50-70 minutes total | 
+                        <strong>Participants:</strong> User, Browser, Environment Detection, API Router, Netlify Functions, Supabase Storage, MTurk System
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="export-controls">
+                        <button class="btn" onclick="exportDiagram('complete-journey-diagram', 'png')">📸 PNG</button>
+                        <button class="btn btn-secondary" onclick="exportDiagram('complete-journey-diagram', 'svg')">🎨 SVG</button>
+                        <button class="btn btn-secondary" onclick="copyDiagramCode('complete-journey')">📋 Copy Code</button>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="zoomDiagram('complete-journey', 'in')">+</button>
+                            <button class="zoom-btn" onclick="zoomDiagram('complete-journey', 'out')">−</button>
+                            <button class="zoom-btn" onclick="resetZoom('complete-journey')">⌂</button>
+                        </div>
+                        
+                        <div id="loading-complete-journey" class="loading">Loading complete journey sequence...</div>
+                        <div id="error-complete-journey" class="error-message"></div>
+                        
+                        <div class="mermaid" id="complete-journey-diagram">
+sequenceDiagram
+    participant U as 👤 User
+    participant B as 🌐 Browser
+    participant ENV as 🔧 Environment Detection
+    participant API as 🔗 API Router
+    participant CF as ☁️ Netlify Functions
+    participant SB as 🗄️ Supabase Storage
+    participant MT as 💰 MTurk System
+
+    %% Initial Entry
+    U->>B: Opens study URL
+    B->>ENV: Detect environment (local/production)
+    ENV->>API: Configure API endpoints
+    API-->>B: Return endpoint configuration
+    
+    %% User ID Management
+    B->>B: Check for existing user_id cookie
+    alt No existing cookie
+        B->>B: Generate secure user ID (crypto)
+        B->>B: Set secure cookie (24h expiry)
+    end
+    
+    %% Consent Phase
+    B->>U: Display consent form
+    U->>B: Fill consent form
+    B->>B: Validate consent data
+    B->>API: POST /data-handler?action=upload-file
+    API->>CF: Route to upload handler
+    CF->>CF: Validate file upload
+    CF->>CF: Security checks & MIME validation
+    CF->>SB: Upload consent.json
+    SB-->>CF: Upload confirmation
+    CF-->>API: Success response
+    API-->>B: Consent uploaded successfully
+    
+    %% Demographics Phase
+    B->>U: Display demographics form
+    U->>B: Fill demographics data
+    B->>B: Validate demographics data
+    B->>API: POST /data-handler?action=upload-file
+    API->>CF: Route to upload handler
+    CF->>SB: Upload demographics.json
+    SB-->>CF: Upload confirmation
+    CF-->>API: Success response
+    API-->>B: Demographics uploaded successfully
+    
+    %% Task Execution Phase
+    B->>U: Display task instructions
+    U->>B: Start task execution
+    
+    loop For each of 18 tasks
+        B->>B: Initialize keystroke logger
+        B->>U: Load platform interface (FB/IG/TW)
+        U->>B: Perform typing task
+        
+        par Parallel Keystroke Collection
+            B->>B: Capture keydown events
+            B->>B: Capture keyup events
+            B->>B: Calculate timing metrics
+            B->>B: Buffer keystroke data
+        end
+        
+        U->>B: Complete task
+        B->>B: Stop keystroke logging
+        B->>B: Prepare CSV data
+        B->>API: POST /data-handler?action=upload-file
+        API->>CF: Route to upload handler
+        CF->>SB: Upload task_data.csv
+        SB-->>CF: Upload confirmation
+        CF-->>API: Task data uploaded
+        API-->>B: Ready for next task
+    end
+    
+    %% Completion Phase
+    B->>B: Generate unique survey code
+    Note over B: Format: TASK-[timestamp36]-[random6]-[userHash4]
+    B->>API: POST /data-handler?action=store-completion
+    API->>CF: Route to completion handler
+    CF->>CF: Validate completion data
+    CF->>SB: Upload completion.json
+    SB-->>CF: Upload confirmation
+    CF-->>API: Completion stored
+    API-->>B: Survey code generated
+    B->>U: Display survey code & instructions
+    
+    %% MTurk Validation Phase
+    U->>MT: Enter survey code in MTurk
+    MT->>API: POST /data-handler?action=validate-code
+    API->>CF: Route to validation handler
+    CF->>SB: Search completion files
+    SB-->>CF: Return matching completion data
+    CF->>CF: Validate code (unused, not expired)
+    CF->>SB: Mark code as used
+    SB-->>CF: Update confirmation
+    CF-->>API: Code validation result
+    API-->>MT: Valid code response
+    MT-->>U: Payment authorized
+                        </div>
+                    </div>
+                    
+                    <div class="key-insights">
+                        <h4>🔍 Key Insights</h4>
+                        <ul>
+                            <li><strong>Parallel Processing:</strong> Keystroke collection runs simultaneously with user interaction</li>
+                            <li><strong>Environment Awareness:</strong> System automatically detects local vs production deployment</li>
+                            <li><strong>Security First:</strong> Multiple validation layers protect research data integrity</li>
+                            <li><strong>Error Recovery:</strong> Built-in retry mechanisms ensure data collection completion</li>
+                            <li><strong>MTurk Integration:</strong> Seamless payment workflow with unique code validation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Handling Sequence -->
+            <div class="sequence-card" id="error-handling">
+                <div class="card-header">
+                    <h2>⚠️ Error Handling & Recovery Sequence</h2>
+                    <p>Comprehensive error handling including upload failures, CORS policy violations, and network issues. Shows automatic retry mechanisms with exponential backoff and fallback endpoint routing.</p>
+                    
+                    <div class="card-meta">
+                        <strong>Recovery Types:</strong> Network errors, CORS failures, Upload timeouts | 
+                        <strong>Retry Strategy:</strong> Exponential backoff with 3 max attempts
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="export-controls">
+                        <button class="btn" onclick="exportDiagram('error-handling-diagram', 'png')">📸 PNG</button>
+                        <button class="btn btn-secondary" onclick="exportDiagram('error-handling-diagram', 'svg')">🎨 SVG</button>
+                        <button class="btn btn-secondary" onclick="copyDiagramCode('error-handling')">📋 Copy Code</button>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="zoomDiagram('error-handling', 'in')">+</button>
+                            <button class="zoom-btn" onclick="zoomDiagram('error-handling', 'out')">−</button>
+                            <button class="zoom-btn" onclick="resetZoom('error-handling')">⌂</button>
+                        </div>
+                        
+                        <div id="loading-error-handling" class="loading">Loading error handling sequence...</div>
+                        <div id="error-error-handling" class="error-message"></div>
+                        
+                        <div class="mermaid" id="error-handling-diagram">
+sequenceDiagram
+    participant U as 👤 User
+    participant B as 🌐 Browser
+    participant API as 🔗 API Router
+    participant CF as ☁️ Netlify Functions
+    participant SB as 🗄️ Supabase Storage
+
+    %% Upload Error Scenario
+    U->>B: Submit form data
+    B->>API: POST /data-handler?action=upload-file
+    API->>CF: Route to upload handler
+    CF->>SB: Attempt file upload
+    SB-->>CF: ❌ Upload failed (network/storage error)
+    CF-->>API: ❌ Error response (500)
+    API-->>B: ❌ Upload failed
+    
+    %% Error Recovery
+    B->>B: Display error message to user
+    B->>B: Wait 2 seconds (exponential backoff)
+    B->>API: 🔄 Retry upload request
+    API->>CF: Route to upload handler (retry)
+    CF->>SB: Attempt file upload (retry)
+    SB-->>CF: ✅ Upload successful
+    CF-->>API: ✅ Success response
+    API-->>B: ✅ Upload completed
+    B->>U: Continue to next step
+    
+    %% CORS Error Scenario
+    Note over B,CF: Production CORS Error
+    U->>B: Submit data from GitHub Pages
+    B->>API: POST to melodious-squirrel.netlify.app
+    API->>CF: Route request
+    CF-->>API: ❌ CORS policy violation
+    API-->>B: ❌ CORS error (blocked)
+    
+    %% CORS Recovery
+    B->>B: Detect CORS error
+    B->>API: Switch to fallback endpoint
+    API->>CF: Route with proper CORS headers
+    CF->>CF: Apply dynamic CORS origin
+    CF-->>API: ✅ Request successful (with CORS)
+    API-->>B: ✅ Data uploaded
+    B->>U: Continue normally
+                        </div>
+                    </div>
+                    
+                    <div class="key-insights">
+                        <h4>🛡️ Error Recovery Features</h4>
+                        <ul>
+                            <li><strong>Automatic Retry:</strong> Exponential backoff prevents server overload</li>
+                            <li><strong>CORS Fallback:</strong> Dynamic endpoint switching for cross-origin issues</li>
+                            <li><strong>User Feedback:</strong> Clear error messages with recovery status</li>
+                            <li><strong>Data Integrity:</strong> No data loss during error scenarios</li>
+                            <li><strong>Graceful Degradation:</strong> System continues operation despite failures</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Environment Routing Sequence -->
+            <div class="sequence-card" id="environment-routing">
+                <div class="card-header">
+                    <h2>🔧 Environment-Specific Routing Sequence</h2>
+                    <p>Smart environment detection and API routing between local development and production environments. Includes function availability detection and automatic fallback to legacy endpoints.</p>
+                    
+                    <div class="card-meta">
+                        <strong>Environments:</strong> Local (localhost:8888), Production (netlify.app) | 
+                        <strong>Functions:</strong> data-handler (new), saver (legacy)
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="export-controls">
+                        <button class="btn" onclick="exportDiagram('environment-routing-diagram', 'png')">📸 PNG</button>
+                        <button class="btn btn-secondary" onclick="exportDiagram('environment-routing-diagram', 'svg')">🎨 SVG</button>
+                        <button class="btn btn-secondary" onclick="copyDiagramCode('environment-routing')">📋 Copy Code</button>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="zoomDiagram('environment-routing', 'in')">+</button>
+                            <button class="zoom-btn" onclick="zoomDiagram('environment-routing', 'out')">−</button>
+                            <button class="zoom-btn" onclick="resetZoom('environment-routing')">⌂</button>
+                        </div>
+                        
+                        <div id="loading-environment-routing" class="loading">Loading environment routing sequence...</div>
+                        <div id="error-environment-routing" class="error-message"></div>
+                        
+                        <div class="mermaid" id="environment-routing-diagram">
+sequenceDiagram
+    participant U as 👤 User
+    participant B as 🌐 Browser
+    participant ENV as 🔧 Environment Detection
+    participant API as 🔗 API Router
+    participant LOCAL as 🏠 Local Functions
+    participant PROD as 🌍 Production Functions
+    participant SB as 🗄️ Supabase Storage
+
+    U->>B: Access application
+    B->>ENV: window.location.hostname
+    
+    alt Local Development
+        ENV-->>API: localhost detected
+        API->>API: Configure local endpoints
+        Note over API: http://localhost:8888/.netlify/functions/data-handler
+        B->>API: API request
+        API->>LOCAL: Route to local data-handler
+        LOCAL->>SB: Process request
+        SB-->>LOCAL: Response
+        LOCAL-->>API: Success
+        API-->>B: Local response
+        
+    else Production Environment  
+        ENV-->>API: github.io detected
+        API->>API: Configure production endpoints
+        Note over API: https://melodious-squirrel.netlify.app/.netlify/functions/
+        
+        alt New data-handler available
+            Note over API: Check for data-handler function
+            B->>API: API request
+            API->>PROD: Route to data-handler
+            PROD->>SB: Process request
+            SB-->>PROD: Response
+            PROD-->>API: Success
+            API-->>B: Production response
+            
+        else Fallback to legacy saver
+            Note over API: Fallback to existing saver function
+            B->>API: API request  
+            API->>PROD: Route to legacy saver
+            PROD->>SB: Process request
+            SB-->>PROD: Response
+            PROD-->>API: Success
+            API-->>B: Fallback response
+        end
+    end
+                        </div>
+                    </div>
+                    
+                    <div class="key-insights">
+                        <h4>🚀 Deployment Features</h4>
+                        <ul>
+                            <li><strong>Smart Detection:</strong> Automatic environment recognition via hostname</li>
+                            <li><strong>Function Routing:</strong> Dynamic endpoint selection based on availability</li>
+                            <li><strong>Legacy Support:</strong> Backward compatibility with existing production functions</li>
+                            <li><strong>Development Friendly:</strong> Seamless local testing with production parity</li>
+                            <li><strong>Zero Downtime:</strong> Graceful transitions between function versions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keystroke Collection Sequence -->
+            <div class="sequence-card" id="keystroke-collection">
+                <div class="card-header">
+                    <h2>⌨️ Real-time Keystroke Collection Sequence</h2>
+                    <p>Detailed view of parallel keystroke capture during task execution. Shows real-time event processing, data buffering, memory management, and CSV generation during typing dynamics collection.</p>
+                    
+                    <div class="card-meta">
+                        <strong>Data Points:</strong> Keydown/up events, timing metrics, pressure curves | 
+                        <strong>Buffer Size:</strong> 1000 events max (memory protection)
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="export-controls">
+                        <button class="btn" onclick="exportDiagram('keystroke-collection-diagram', 'png')">📸 PNG</button>
+                        <button class="btn btn-secondary" onclick="exportDiagram('keystroke-collection-diagram', 'svg')">🎨 SVG</button>
+                        <button class="btn btn-secondary" onclick="copyDiagramCode('keystroke-collection')">📋 Copy Code</button>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="zoomDiagram('keystroke-collection', 'in')">+</button>
+                            <button class="zoom-btn" onclick="zoomDiagram('keystroke-collection', 'out')">−</button>
+                            <button class="zoom-btn" onclick="resetZoom('keystroke-collection')">⌂</button>
+                        </div>
+                        
+                        <div id="loading-keystroke-collection" class="loading">Loading keystroke collection sequence...</div>
+                        <div id="error-keystroke-collection" class="error-message"></div>
+                        
+                        <div class="mermaid" id="keystroke-collection-diagram">
+sequenceDiagram
+    participant U as 👤 User
+    participant KL as ⌨️ Keystroke Logger
+    participant BUF as 📦 Data Buffer
+    participant TASK as 📋 Task Controller
+    participant API as 🔗 API Router
+    participant CF as ☁️ Netlify Functions
+
+    TASK->>KL: Initialize keystroke logging
+    KL->>KL: Add event listeners (keydown, keyup)
+    KL->>U: Ready for typing
+    
+    loop Real-time Keystroke Capture
+        U->>KL: ⌨️ Keydown event
+        KL->>KL: Record timestamp & key data
+        KL->>BUF: Buffer keystroke data
+        Note over KL: Capture: timestamp, key, pressure, timing
+        
+        U->>KL: ⌨️ Keyup event  
+        KL->>KL: Calculate dwell time
+        KL->>BUF: Buffer timing metrics
+        Note over BUF: Store: dwell time, flight time, pressure curves
+        
+        alt Buffer size > 1000 events
+            BUF->>BUF: Optimize buffer (remove old events)
+            Note over BUF: Prevent memory leaks
+        end
+    end
+    
+    U->>TASK: Complete typing task
+    TASK->>KL: Stop keystroke logging
+    KL->>KL: Remove event listeners
+    KL->>BUF: Finalize data collection
+    BUF->>BUF: Generate CSV format
+    BUF->>API: Upload keystroke data
+    API->>CF: Process task data upload
+    CF-->>API: Upload confirmation
+    API-->>TASK: Task data saved
+    TASK->>U: Ready for next task
+                        </div>
+                    </div>
+                    
+                    <div class="key-insights">
+                        <h4>📊 Data Collection Features</h4>
+                        <ul>
+                            <li><strong>Real-time Capture:</strong> Microsecond precision timing measurement</li>
+                            <li><strong>Memory Protection:</strong> Automatic buffer optimization prevents leaks</li>
+                            <li><strong>Parallel Processing:</strong> Non-blocking data collection during user interaction</li>
+                            <li><strong>Rich Metrics:</strong> Dwell time, flight time, and pressure curve analysis</li>
+                            <li><strong>CSV Export:</strong> Research-ready data format generation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survey Code Lifecycle Sequence -->
+            <div class="sequence-card" id="survey-code">
+                <div class="card-header">
+                    <h2>🎯 Survey Code Lifecycle Sequence</h2>
+                    <p>Complete lifecycle of survey completion codes from generation through MTurk validation. Includes unique code format specification, 48-hour expiry logic, and one-time usage enforcement for payment processing.</p>
+                    
+                    <div class="card-meta">
+                        <strong>Code Format:</strong> TASK-[timestamp36]-[random6]-[userHash4] | 
+                        <strong>Validity:</strong> 48 hours, one-time use only
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="export-controls">
+                        <button class="btn" onclick="exportDiagram('survey-code-diagram', 'png')">📸 PNG</button>
+                        <button class="btn btn-secondary" onclick="exportDiagram('survey-code-diagram', 'svg')">🎨 SVG</button>
+                        <button class="btn btn-secondary" onclick="copyDiagramCode('survey-code')">📋 Copy Code</button>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" onclick="zoomDiagram('survey-code', 'in')">+</button>
+                            <button class="zoom-btn" onclick="zoomDiagram('survey-code', 'out')">−</button>
+                            <button class="zoom-btn" onclick="resetZoom('survey-code')">⌂</button>
+                        </div>
+                        
+                        <div id="loading-survey-code" class="loading">Loading survey code sequence...</div>
+                        <div id="error-survey-code" class="error-message"></div>
+                        
+                        <div class="mermaid" id="survey-code-diagram">
+sequenceDiagram
+    participant U as 👤 User
+    participant B as 🌐 Browser
+    participant CF as ☁️ Netlify Functions
+    participant SB as 🗄️ Supabase Storage
+    participant MT as 💰 MTurk Worker
+    participant MTS as 🏢 MTurk System
+
+    %% Code Generation
+    U->>B: Complete all 18 tasks
+    B->>B: Generate survey code
+    Note over B: TASK-[timestamp36]-[random6]-[userHash4]
+    B->>CF: Store completion data
+    CF->>SB: Save completion.json with code
+    Note over SB: code_used: false, expires_at: +48h
+    SB-->>CF: Completion stored
+    CF-->>B: Code ready
+    B->>U: Display survey code
+    
+    %% Code Usage
+    U->>MT: Provide survey code in MTurk
+    MT->>MTS: Submit HIT with code
+    MTS->>CF: Validate survey code
+    CF->>SB: Search completion files by code
+    SB-->>CF: Return completion data
+    
+    alt Code validation checks
+        CF->>CF: Check if code exists
+        CF->>CF: Check if code not used
+        CF->>CF: Check if code not expired (48h)
+        CF->>CF: ✅ All checks pass
+        CF->>SB: Mark code as used
+        Note over SB: code_used: true, used_timestamp: now
+        SB-->>CF: Code marked as used
+        CF-->>MTS: ✅ Valid code - approve payment
+        
+    else Code already used
+        CF->>CF: ❌ Code marked as used
+        CF-->>MTS: ❌ Invalid - code already used
+        
+    else Code expired
+        CF->>CF: ❌ Code older than 48 hours
+        CF-->>MTS: ❌ Invalid - code expired
+        
+    else Code not found
+        CF->>CF: ❌ Code not in system
+        CF-->>MTS: ❌ Invalid - code not found
+    end
+    
+    MTS-->>MT: Payment decision
+    MT-->>U: Payment result
+                        </div>
+                    </div>
+                    
+                    <div class="key-insights">
+                        <h4>💰 Payment Integration Features</h4>
+                        <ul>
+                            <li><strong>Unique Codes:</strong> Cryptographically secure code generation</li>
+                            <li><strong>Time-Limited:</strong> 48-hour expiry prevents code sharing abuse</li>
+                            <li><strong>One-Time Use:</strong> Prevents duplicate payments and fraud</li>
+                            <li><strong>MTurk Integration:</strong> Seamless validation API for payment processing</li>
+                            <li><strong>Audit Trail:</strong> Complete tracking of code usage and validation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            sequence: {
+                useMaxWidth: true,
+                wrap: true,
+                rightAngles: false,
+                messageFontSize: 14,
+                messageFontFamily: 'Arial',
+                actorFontSize: 14,
+                actorFontFamily: 'Arial'
+            }
+        });
+
+        // Zoom functionality for individual diagrams
+        let zoomLevels = {
+            'complete-journey': 1,
+            'error-handling': 1,
+            'environment-routing': 1,
+            'keystroke-collection': 1,
+            'survey-code': 1
+        };
+
+        function zoomDiagram(diagramId, direction) {
+            const container = document.querySelector(`#${diagramId}-diagram`);
+            if (!container) return;
+
+            if (direction === 'in') {
+                zoomLevels[diagramId] += 0.1;
+            } else if (direction === 'out') {
+                zoomLevels[diagramId] = Math.max(0.3, zoomLevels[diagramId] - 0.1);
+            }
+
+            container.style.transform = `scale(${zoomLevels[diagramId]})`;
+            container.style.transformOrigin = 'center top';
+        }
+
+        function resetZoom(diagramId) {
+            zoomLevels[diagramId] = 1;
+            const container = document.querySelector(`#${diagramId}-diagram`);
+            if (container) {
+                container.style.transform = 'scale(1)';
+            }
+        }
+
+        function resetAllZoom() {
+            Object.keys(zoomLevels).forEach(diagramId => {
+                resetZoom(diagramId);
+            });
+        }
+
+        // Navigation functionality
+        function scrollToSection(element, sectionId) {
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            element.classList.add('active');
+            
+            // Scroll to section
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+
+        // Theme changing
+        function changeTheme() {
+            const theme = document.getElementById('theme-select').value;
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: theme,
+                securityLevel: 'loose',
+                sequence: {
+                    useMaxWidth: true,
+                    wrap: true,
+                    rightAngles: false,
+                    messageFontSize: 14,
+                    messageFontFamily: 'Arial',
+                    actorFontSize: 14,
+                    actorFontFamily: 'Arial'
+                }
+            });
+            
+            // Re-render all diagrams
+            const diagrams = document.querySelectorAll('.mermaid');
+            diagrams.forEach((diagram, index) => {
+                const diagramContent = diagram.textContent;
+                diagram.innerHTML = diagramContent;
+                mermaid.init(undefined, diagram);
+            });
+        }
+
+        // Export functionality
+        function exportDiagram(diagramId, format) {
+            const svg = document.querySelector(`#${diagramId} svg`);
+            if (!svg) {
+                alert('Diagram not loaded. Please wait for rendering to complete.');
+                return;
+            }
+
+            if (format === 'png') {
+                exportAsPNG(svg, diagramId);
+            } else if (format === 'svg') {
+                exportAsSVG(svg, diagramId);
+            }
+        }
+
+        function exportAsPNG(svg, filename) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            const svgRect = svg.getBoundingClientRect();
+            canvas.width = svgRect.width * 2; // Higher resolution
+            canvas.height = svgRect.height * 2;
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                ctx.scale(2, 2);
+                ctx.drawImage(img, 0, 0);
+                
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${filename}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+                
+                URL.revokeObjectURL(svgUrl);
+            };
+            
+            img.src = svgUrl;
+        }
+
+        function exportAsSVG(svg, filename) {
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            const a = document.createElement('a');
+            a.href = svgUrl;
+            a.download = `${filename}.svg`;
+            a.click();
+            
+            URL.revokeObjectURL(svgUrl);
+        }
+
+        function exportAllDiagrams() {
+            const diagramIds = [
+                'complete-journey-diagram',
+                'error-handling-diagram', 
+                'environment-routing-diagram',
+                'keystroke-collection-diagram',
+                'survey-code-diagram'
+            ];
+            
+            diagramIds.forEach((diagramId, index) => {
+                setTimeout(() => {
+                    exportDiagram(diagramId, 'png');
+                }, index * 1000); // Stagger exports by 1 second
+            });
+            
+            alert('Exporting all diagrams as PNG files. Downloads will start shortly.');
+        }
+
+        // Diagram code storage for copying
+        const diagramCodes = {
+            'complete-journey': `sequenceDiagram
+    participant U as 👤 User
+    participant B as 🌐 Browser
+    participant ENV as 🔧 Environment Detection
+    participant API as 🔗 API Router
+    participant CF as ☁️ Netlify Functions
+    participant SB as 🗄️ Supabase Storage
+    participant MT as 💰 MTurk System
+
+    U->>B: Opens study URL
+    B->>ENV: Detect environment (local/production)
+    ENV->>API: Configure API endpoints
+    API-->>B: Return endpoint configuration
+    
+    B->>B: Check for existing user_id cookie
+    alt No existing cookie
+        B->>B: Generate secure user ID (crypto)
+        B->>B: Set secure cookie (24h expiry)
+    end
+    
+    B->>U: Display consent form
+    U->>B: Fill consent form
+    B->>B: Validate consent data
+    B->>API: POST /data-handler?action=upload-file
+    API->>CF: Route to upload handler
+    CF->>CF: Validate file upload
+    CF->>CF: Security checks & MIME validation
+    CF->>SB: Upload consent.json
+    SB-->>CF: Upload confirmation
+    CF-->>API: Success response
+    API-->>B: Consent uploaded successfully
+    
+    B->>U: Display demographics form
+    U->>B: Fill demographics data
+    B->>B: Validate demographics data
+    B->>API: POST /data-handler?action=upload-file
+    API->>CF: Route to upload handler
+    CF->>SB: Upload demographics.json
+    SB-->>CF: Upload confirmation
+    CF-->>API: Success response
+    API-->>B: Demographics uploaded successfully
+    
+    B->>U: Display task instructions
+    U->>B: Start task execution
+    
+    loop For each of 18 tasks
+        B->>B: Initialize keystroke logger
+        B->>U: Load platform interface (FB/IG/TW)
+        U->>B: Perform typing task
+        
+        par Parallel Keystroke Collection
+            B->>B: Capture keydown events
+            B->>B: Capture keyup events
+            B->>B: Calculate timing metrics
+            B->>B: Buffer keystroke data
+        end
+        
+        U->>B: Complete task
+        B->>B: Stop keystroke logging
+        B->>B: Prepare CSV data
+        B->>API: POST /data-handler?action=upload-file
+        API->>CF: Route to upload handler
+        CF->>SB: Upload task_data.csv
+        SB-->>CF: Upload confirmation
+        CF-->>API: Task data uploaded
+        API-->>B: Ready for next task
+    end
+    
+    B->>B: Generate unique survey code
+    Note over B: Format: TASK-[timestamp36]-[random6]-[userHash4]
+    B->>API: POST /data-handler?action=store-completion
+    API->>CF: Route to completion handler
+    CF->>CF: Validate completion data
+    CF->>SB: Upload completion.json
+    SB-->>CF: Upload confirmation
+    CF-->>API: Completion stored
+    API-->>B: Survey code generated
+    B->>U: Display survey code & instructions
+    
+    U->>MT: Enter survey code in MTurk
+    MT->>API: POST /data-handler?action=validate-code
+    API->>CF: Route to validation handler
+    CF->>SB: Search completion files
+    SB-->>CF: Return matching completion data
+    CF->>CF: Validate code (unused, not expired)
+    CF->>SB: Mark code as used
+    SB-->>CF: Update confirmation
+    CF-->>API: Code validation result
+    API-->>MT: Valid code response
+    MT-->>U: Payment authorized`,
+            
+            'error-handling': `sequenceDiagram
+    participant U as 👤 User
+    participant B as 🌐 Browser
+    participant API as 🔗 API Router
+    participant CF as ☁️ Netlify Functions
+    participant SB as 🗄️ Supabase Storage
+
+    U->>B: Submit form data
+    B->>API: POST /data-handler?action=upload-file
+    API->>CF: Route to upload handler
+    CF->>SB: Attempt file upload
+    SB-->>CF: ❌ Upload failed (network/storage error)
+    CF-->>API: ❌ Error response (500)
+    API-->>B: ❌ Upload failed
+    
+    B->>B: Display error message to user
+    B->>B: Wait 2 seconds (exponential backoff)
+    B->>API: 🔄 Retry upload request
+    API->>CF: Route to upload handler (retry)
+    CF->>SB: Attempt file upload (retry)
+    SB-->>CF: ✅ Upload successful
+    CF-->>API: ✅ Success response
+    API-->>B: ✅ Upload completed
+    B->>U: Continue to next step
+    
+    Note over B,CF: Production CORS Error
+    U->>B: Submit data from GitHub Pages
+    B->>API: POST to melodious-squirrel.netlify.app
+    API->>CF: Route request
+    CF-->>API: ❌ CORS policy violation
+    API-->>B: ❌ CORS error (blocked)
+    
+    B->>B: Detect CORS error
+    B->>API: Switch to fallback endpoint
+    API->>CF: Route with proper CORS headers
+    CF->>CF: Apply dynamic CORS origin
+    CF-->>API: ✅ Request successful (with CORS)
+    API-->>B: ✅ Data uploaded
+    B->>U: Continue normally`,
+            
+            'environment-routing': `sequenceDiagram
+    participant U as 👤 User
+    participant B as 🌐 Browser
+    participant ENV as 🔧 Environment Detection
+    participant API as 🔗 API Router
+    participant LOCAL as 🏠 Local Functions
+    participant PROD as 🌍 Production Functions
+    participant SB as 🗄️ Supabase Storage
+
+    U->>B: Access application
+    B->>ENV: window.location.hostname
+    
+    alt Local Development
+        ENV-->>API: localhost detected
+        API->>API: Configure local endpoints
+        Note over API: http://localhost:8888/.netlify/functions/data-handler
+        B->>API: API request
+        API->>LOCAL: Route to local data-handler
+        LOCAL->>SB: Process request
+        SB-->>LOCAL: Response
+        LOCAL-->>API: Success
+        API-->>B: Local response
+        
+    else Production Environment  
+        ENV-->>API: github.io detected
+        API->>API: Configure production endpoints
+        Note over API: https://melodious-squirrel.netlify.app/.netlify/functions/
+        
+        alt New data-handler available
+            Note over API: Check for data-handler function
+            B->>API: API request
+            API->>PROD: Route to data-handler
+            PROD->>SB: Process request
+            SB-->>PROD: Response
+            PROD-->>API: Success
+            API-->>B: Production response
+            
+        else Fallback to legacy saver
+            Note over API: Fallback to existing saver function
+            B->>API: API request  
+            API->>PROD: Route to legacy saver
+            PROD->>SB: Process request
+            SB-->>PROD: Response
+            PROD-->>API: Success
+            API-->>B: Fallback response
+        end
+    end`,
+            
+            'keystroke-collection': `sequenceDiagram
+    participant U as 👤 User
+    participant KL as ⌨️ Keystroke Logger
+    participant BUF as 📦 Data Buffer
+    participant TASK as 📋 Task Controller
+    participant API as 🔗 API Router
+    participant CF as ☁️ Netlify Functions
+
+    TASK->>KL: Initialize keystroke logging
+    KL->>KL: Add event listeners (keydown, keyup)
+    KL->>U: Ready for typing
+    
+    loop Real-time Keystroke Capture
+        U->>KL: ⌨️ Keydown event
+        KL->>KL: Record timestamp & key data
+        KL->>BUF: Buffer keystroke data
+        Note over KL: Capture: timestamp, key, pressure, timing
+        
+        U->>KL: ⌨️ Keyup event  
+        KL->>KL: Calculate dwell time
+        KL->>BUF: Buffer timing metrics
+        Note over BUF: Store: dwell time, flight time, pressure curves
+        
+        alt Buffer size > 1000 events
+            BUF->>BUF: Optimize buffer (remove old events)
+            Note over BUF: Prevent memory leaks
+        end
+    end
+    
+    U->>TASK: Complete typing task
+    TASK->>KL: Stop keystroke logging
+    KL->>KL: Remove event listeners
+    KL->>BUF: Finalize data collection
+    BUF->>BUF: Generate CSV format
+    BUF->>API: Upload keystroke data
+    API->>CF: Process task data upload
+    CF-->>API: Upload confirmation
+    API-->>TASK: Task data saved
+    TASK->>U: Ready for next task`,
+            
+            'survey-code': `sequenceDiagram
+    participant U as 👤 User
+    participant B as 🌐 Browser
+    participant CF as ☁️ Netlify Functions
+    participant SB as 🗄️ Supabase Storage
+    participant MT as 💰 MTurk Worker
+    participant MTS as 🏢 MTurk System
+
+    U->>B: Complete all 18 tasks
+    B->>B: Generate survey code
+    Note over B: TASK-[timestamp36]-[random6]-[userHash4]
+    B->>CF: Store completion data
+    CF->>SB: Save completion.json with code
+    Note over SB: code_used: false, expires_at: +48h
+    SB-->>CF: Completion stored
+    CF-->>B: Code ready
+    B->>U: Display survey code
+    
+    U->>MT: Provide survey code in MTurk
+    MT->>MTS: Submit HIT with code
+    MTS->>CF: Validate survey code
+    CF->>SB: Search completion files by code
+    SB-->>CF: Return completion data
+    
+    alt Code validation checks
+        CF->>CF: Check if code exists
+        CF->>CF: Check if code not used
+        CF->>CF: Check if code not expired (48h)
+        CF->>CF: ✅ All checks pass
+        CF->>SB: Mark code as used
+        Note over SB: code_used: true, used_timestamp: now
+        SB-->>CF: Code marked as used
+        CF-->>MTS: ✅ Valid code - approve payment
+        
+    else Code already used
+        CF->>CF: ❌ Code marked as used
+        CF-->>MTS: ❌ Invalid - code already used
+        
+    else Code expired
+        CF->>CF: ❌ Code older than 48 hours
+        CF-->>MTS: ❌ Invalid - code expired
+        
+    else Code not found
+        CF->>CF: ❌ Code not in system
+        CF-->>MTS: ❌ Invalid - code not found
+    end
+    
+    MTS-->>MT: Payment decision
+    MT-->>U: Payment result`
+        };
+
+        function copyDiagramCode(diagramType) {
+            const code = diagramCodes[diagramType];
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert('Diagram code copied to clipboard!');
+                });
+            } else {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Diagram code copied to clipboard!');
+            }
+        }
+
+        function openInMermaidLive() {
+            window.open('https://mermaid.live/', '_blank');
+        }
+
+        function printDashboard() {
+            window.print();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Check if diagrams loaded properly
+        setTimeout(() => {
+            const loadingElements = document.querySelectorAll('[id^="loading-"]');
+            loadingElements.forEach(loading => {
+                const diagramId = loading.id.replace('loading-', '');
+                const diagramElement = document.getElementById(`${diagramId}-diagram`);
+                
+                if (diagramElement && diagramElement.querySelector('svg')) {
+                    loading.style.display = 'none';
+                } else {
+                    loading.innerHTML = '❌ Diagram failed to load. Try refreshing the page or use Mermaid Live Editor.';
+                    loading.style.color = '#dc3545';
+                }
+            });
+        }, 5000);
+
+        // Smooth scrolling for anchor links
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update navigation based on scroll position
+            window.addEventListener('scroll', function() {
+                const sections = document.querySelectorAll('.sequence-card');
+                const navItems = document.querySelectorAll('.nav-item');
+                
+                let currentSection = '';
+                sections.forEach(section => {
+                    const sectionTop = section.getBoundingClientRect().top;
+                    if (sectionTop <= 200) {
+                        currentSection = section.id;
+                    }
+                });
+                
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('href') === `#${currentSection}`) {
+                        item.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
