@@ -10,4 +10,4 @@ A web application for collecting typing dynamics data from participants
 ## Participate
 >  ⚠️ **_NOTE:_**  To avoid any potential issues with browser caching and cookie retention, it is recommended to use a fresh private browser instance
 
-Click [here](https://fakeprofiledetection.github.io/web-data-collection/pages/hosting/consent.html) to participate in data collection
+Click [here](https://fakeprofiledetection.github.io/web-data-collection/pages/hosting/start_study.html) to participate in data collection
