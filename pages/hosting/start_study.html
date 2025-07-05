@@ -57,7 +57,7 @@
             try {
                 // First, try to open in a new tab (more likely to succeed)
                 const studyWindow = window.open(
-                    './consent.html',  // Explicit relative path to consent.html in same directory -->
+                    './consent.html?launched=true',  // Add parameter to indicate proper launch
                     '_blank'
                 );
                 
@@ -90,7 +90,7 @@
                         <h4>Alternative Method:</h4>
                         <p>1. Allow popups for this site in your browser settings</p>
                         <p>2. Or right-click this link and select "Open in new tab":</p>
-                        <p><a href="./consent.html" target="_blank" class="btn-secondary">Open Study in New Tab</a></p>
+                        <p><a href="./consent.html?launched=true" target="_blank" class="btn-secondary">Open Study in New Tab</a></p>
                     `;
                     
                     const messageContainer = document.getElementById('message-container');
@@ -108,7 +108,7 @@
                 linkContainer.innerHTML = `
                     <h4>Unable to open automatically</h4>
                     <p>Please click the link below to start the study:</p>
-                    <p><a href="./consent.html" target="_blank" class="btn-secondary">Open Study in New Tab</a></p>
+                    <p><a href="./consent.html?launched=true" target="_blank" class="btn-secondary">Open Study in New Tab</a></p>
                 `;
                 
                 const messageContainer = document.getElementById('message-container');
