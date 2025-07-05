@@ -217,134 +217,6 @@ class APIClient {
 }
 
 /**
- * Enhanced keylogger with memory management and performance optimization
- */
-// class EnhancedKeyLogger {
-//   constructor(userId, platformId) {
-//     this.userId = userId;
-//     this.platformId = platformId;
-//     this.keyEvents = [];
-//     this.maxEvents = 10000; // Prevent memory leaks
-//     this.isActive = false;
-    
-//     // Bind methods to preserve context
-//     this.handleKeyDown = this.handleKeyDown.bind(this);
-//     this.handleKeyUp = this.handleKeyUp.bind(this);
-//   }
-
-//   start() {
-//     if (this.isActive) return;
-    
-//     this.isActive = true;
-//     document.addEventListener('keydown', this.handleKeyDown);
-//     document.addEventListener('keyup', this.handleKeyUp);
-    
-//     this.createDownloadButton();
-//     console.log('Keylogger started');
-//   }
-
-//   stop() {
-//     if (!this.isActive) return;
-    
-//     this.isActive = false;
-//     document.removeEventListener('keydown', this.handleKeyDown);
-//     document.removeEventListener('keyup', this.handleKeyUp);
-    
-//     const button = document.getElementById('keylogger-download-btn');
-//     if (button) button.remove();
-    
-//     console.log('Keylogger stopped');
-//   }
-
-//   handleKeyDown(event) {
-//     this.addKeyEvent('P', event.key);
-//     this.saveKeystrokes(); 
-//   }
-
-//   handleKeyUp(event) {
-//     this.addKeyEvent('R', event.key);
-//     this.saveKeystrokes(); 
-//   }
-
-//   addKeyEvent(type, key) {
-//     // Prevent memory leaks by limiting array size
-//     if (this.keyEvents.length >= this.maxEvents) {
-//       this.keyEvents = this.keyEvents.slice(-this.maxEvents / 2); // Keep last half
-//       console.warn('Keylogger array truncated to prevent memory issues');
-//     }
-    
-//     this.keyEvents.push([type, key, Date.now()]);
-//   }
-
-//   createDownloadButton() {
-//     const button = document.createElement('button');
-//     button.id = 'keylogger-download-btn';
-//     button.textContent = 'Download Keylog';
-//     button.style.cssText = `
-//       position: fixed;
-//       bottom: 10px;
-//       right: 10px;
-//       background: #333;
-//       color: white;
-//       border: none;
-//       padding: 10px 15px;
-//       border-radius: 5px;
-//       cursor: pointer;
-//       z-index: 10000;
-//       font-family: Arial, sans-serif;
-//       font-size: 12px;
-//     `;
-    
-//     button.onclick = () => this.downloadKeylog();
-//     document.body.appendChild(button);
-//   }
-
-//   downloadKeylog() {
-//     try {
-//       const platformLetters = { 0: 'f', 1: 'i', 2: 't' };
-//       const platformLetter = platformLetters[this.platformId] || 'unknown';
-//       const filename = `${platformLetter}_${this.userId}.csv`;
-      
-//       const header = [['Press or Release', 'Key', 'Time']];
-//       const csvData = header.concat(this.keyEvents);
-//       const csvString = csvData.map(row => row.join(',')).join('\n');
-      
-//       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-      
-//       // Modern download approach
-//       const link = document.createElement('a');
-//       const url = URL.createObjectURL(blob);
-      
-//       link.setAttribute('href', url);
-//       link.setAttribute('download', filename);
-//       link.style.visibility = 'hidden';
-      
-//       document.body.appendChild(link);
-//       link.click();
-//       document.body.removeChild(link);
-      
-//       // Clean up object URL
-//       URL.revokeObjectURL(url);
-      
-//       console.log(`Keylog downloaded: ${filename}`);
-      
-//     } catch (error) {
-//       console.error('Failed to download keylog:', error);
-//       FormValidator.showError('Failed to download keylog. Please try again.');
-//     }
-//   }
-
-//   getEventCount() {
-//     return this.keyEvents.length;
-//   }
-
-//   clearEvents() {
-//     this.keyEvents = [];
-//     console.log('Keylog events cleared');
-//   }
-// }
-
-/**
  * Navigation utilities with proper URL handling
  */
 class NavigationManager {
@@ -448,7 +320,6 @@ if (typeof module !== 'undefined' && module.exports) {
     SecureCookieManager,
     FormValidator,
     APIClient,
-    EnhancedKeyLogger,
     NavigationManager,
     CONFIG
   };
@@ -518,64 +389,31 @@ const PlatformSubmissionHandler = {
   keyEvents: [],
   startTime: null,
   isInitialized: false,
-  hasSubmitted: false,  // Add this flag
-  
+  hasSubmitted: false, 
+  keyEventsAttached: false, // Track if event listeners are attached
+  // High-performance keystroke capture
+  keyBuffer: null,
+  keyCodeMap: null,
+  keyCodeIndex: 0,
 
-  /**
-   * Save keystrokes to sessionStorage
-   */
-  saveKeystrokes() {
-    try {
-      const urlParams = this.getUrlParameters();
-      const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
-      
-      // Only limit if absolutely necessary
-      const maxKeystrokes = 50000; // Much higher limit
-      if (this.keyEvents.length > maxKeystrokes) {
-        console.error(`Critical: Keystroke limit reached (${this.keyEvents.length}). Data may be lost.`);
-        // For research, you might want to alert the user or auto-submit
-        alert('Maximum keystroke limit reached. Please submit your post.');
-        return;
-      }
-      
-      sessionStorage.setItem(storageKey, JSON.stringify(this.keyEvents));
-    } catch (e) {
-      if (e.name === 'QuotaExceededError') {
-        console.error('Storage quota exceeded! Cannot save keystrokes.');
-        // For research integrity, this is critical - alert the user
-        alert('Storage limit reached. Please submit your post now to avoid data loss.');
-      }
-    }
-  },
+  useWASM: false, // Will be set to true when WASM loads
+  wasmCapture: null, // Will hold the WASM capture instance
 
-  /**
-   * Load keystrokes from sessionStorage
-   */
-  loadKeystrokes() {
-    const urlParams = this.getUrlParameters();
-    const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
+  initHighPerformanceCapture() {
+    // Pre-allocate typed arrays for maximum performance
+    this.keyBuffer = {
+      types: new Uint8Array(50000),      // 1 byte per type
+      keys: new Uint16Array(50000),      // 2 bytes per key code
+      timestamps: new Float64Array(50000), // 8 bytes per timestamp
+      index: 0
+    };
     
-    try {
-      const saved = sessionStorage.getItem(storageKey);
-      if (saved) {
-        this.keyEvents = JSON.parse(saved);
-        console.log(`Loaded ${this.keyEvents.length} saved keystrokes`);
-      }
-    } catch (e) {
-      console.error('Failed to load keystrokes:', e);
-      this.keyEvents = []; // Reset on error
-    }
+    // Create key code map
+    this.keyCodeMap = new Map();
+    this.keyCodeIndex = 0;
   },
 
-  /**
-   * Clear keystrokes from sessionStorage
-   */
-  clearKeystrokes() {
-    const urlParams = this.getUrlParameters();
-    const storageKey = `keystrokes_${urlParams.task_id}_${urlParams.platform_id}`;
-    sessionStorage.removeItem(storageKey);
-    console.log('Cleared saved keystrokes');
-  },
+
 
   /**
    * Initialize the platform handler
@@ -586,25 +424,14 @@ const PlatformSubmissionHandler = {
    * @param {function} config.onBeforeSubmit - Optional callback before submission
    * @param {function} config.onAfterSubmit - Optional callback after successful submission
    */
-  init(config) {
+    async init(config) {
+    // Store config first
+    this.config = config;
+    
     // Check if already submitted for this task
     const urlParams = this.getUrlParameters();
     const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
     this.hasSubmitted = sessionStorage.getItem(submissionKey) === 'true';
-
-    // Prevent accidental refresh
-    window.addEventListener('beforeunload', (e) => {
-      // Only show warning if there's unsaved text
-      const inputEl = document.getElementById(this.config.textInputId);
-      if (inputEl && inputEl.value.trim() && !this.hasSubmitted) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved text. Are you sure you want to leave?';
-        return e.returnValue;
-      }
-    });
-    
-    // Store config first
-    this.config = config;
     
     if (this.hasSubmitted) {
       console.log("Task already submitted, disabling form");
@@ -612,13 +439,16 @@ const PlatformSubmissionHandler = {
       return;
     }
 
-    if (this.isInitialized) {
-      console.log("Platform handler already initialized, skipping...");
+    // Prevent multiple initializations for the same page
+    const initKey = `initialized_${config.platform}_${urlParams.task_id}`;
+    if (sessionStorage.getItem(initKey) === 'true' && this.isInitialized) {
+      console.log("Platform handler already initialized for this task, skipping...");
       return;
     }
 
     this.isInitialized = true;
     this.startTime = Date.now();
+    sessionStorage.setItem(initKey, 'true');
 
     console.log(`=== ${config.platform.toUpperCase()} PAGE LOADED ===`);
     console.log("Current URL:", window.location.href);
@@ -631,21 +461,27 @@ const PlatformSubmissionHandler = {
       return;
     }
 
-    // Start keylogger
-    this.startKeyLogger(urlParams);
-    
-    // Load any saved keystrokes
-    this.loadKeystrokes();
-
-    // If we have saved keystrokes but the textarea is empty, clear them
-    // (user might have cleared the form before refresh)
-    const inputEl = document.getElementById(this.config.textInputId);
-    if (inputEl && !inputEl.value.trim() && this.keyEvents.length > 0) {
-      console.log('Text is empty but keystrokes exist - clearing keystrokes');
-      this.keyEvents = [];
-      this.clearKeystrokes();
+    // Check if WASM is available
+    if (window.wasmKeystrokeManager) {
+      try {
+        await window.wasmKeystrokeManager.initialize();
+        this.wasmCapture = window.wasmKeystrokeManager;
+        this.useWASM = true;
+        console.log('✅ Using WASM for high-performance keystroke capture');
+      } catch (error) {
+        console.error('Failed to initialize WASM, falling back to JavaScript:', error);
+        this.useWASM = false;
+      }
+    } else {
+      console.log('WASM not available, using JavaScript keystroke capture');
     }
 
+    // Only attach keylogger if not already attached
+    if (!this.keyEventsAttached) {
+      this.startKeyLogger(urlParams);
+      this.keyEventsAttached = true;
+    }
+    
     // Set up submit button
     this.setupSubmitButton(urlParams);
 
@@ -653,10 +489,19 @@ const PlatformSubmissionHandler = {
     this.setupVisibilityHandler();
 
     // Set up paste prevention
+    const inputEl = document.getElementById(this.config.textInputId);
     if (inputEl) {
       inputEl.addEventListener('paste', this.handlePaste.bind(this));
       console.log('Paste prevention enabled for', this.config.textInputId);
     }
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', () => {
+      sessionStorage.removeItem(initKey);
+      if (this.wasmCapture) {
+        this.wasmCapture.clear();
+      }
+    });
 
     console.log(`✅ ${config.platform} handler initialized successfully`);
   },
@@ -676,41 +521,6 @@ const PlatformSubmissionHandler = {
     if (submitButton) {
       submitButton.disabled = true;
       submitButton.textContent = "Already Submitted";
-    }
-  },
-  /**
-   * Save draft text to sessionStorage
-   */
-  saveDraft() {
-    const inputEl = document.getElementById(this.config.textInputId);
-    if (inputEl && inputEl.value.trim()) {
-      const urlParams = this.getUrlParameters();
-      const storageKey = `draft_${this.config.platform}_${urlParams.task_id}`;
-      sessionStorage.setItem(storageKey, inputEl.value);
-      console.log(`Saved draft for ${storageKey}`);
-    }
-  },
-
-  /**
-   * Restore draft text from sessionStorage
-   */
-  restoreDraft() {
-    const urlParams = this.getUrlParameters();
-    const storageKey = `draft_${this.config.platform}_${urlParams.task_id}`;
-    const savedText = sessionStorage.getItem(storageKey);
-    
-    if (savedText) {
-      const inputEl = document.getElementById(this.config.textInputId);
-      if (inputEl) {
-        inputEl.value = savedText;
-        console.log(`Restored draft for ${storageKey}`);
-        
-        // Trigger input event for auto-resize
-        inputEl.dispatchEvent(new Event('input'));
-        
-        // Show a message that draft was restored
-        this.showDraftRestoredMessage();
-      }
     }
   },
 
@@ -811,46 +621,124 @@ const PlatformSubmissionHandler = {
    * Start keystroke logging
    */
   startKeyLogger(urlParams) {
-    const onKeyDown = (e) => {
-      // CHANGE 1: Capture timestamp IMMEDIATELY
-      const timestamp = Date.now();
+  if (this.useWASM && this.wasmCapture) {
+      // Use WASM for capture
+      console.log('Using WASM keystroke capture');
       
-      // CHANGE 2: Push to array with the pre-captured timestamp
-      this.keyEvents.push(['P', this.replaceJsKey(e), timestamp]);
-      
-      // CHANGE 3: Save keystrokes AFTER the critical timing capture
-      // Move this to after we've captured the timestamp
-      setTimeout(() => this.saveKeystrokes(), 0);
-      
-      // Handle Enter key for multi-line support
-      if (e.key === "Enter" && e.target.id === this.config.textInputId) {
-        if (!e.shiftKey) {
+      document.addEventListener('keydown', (e) => {
+        this.wasmCapture.captureKeyDown(e);
+        
+        // Handle Enter key
+        if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
           e.preventDefault();
           const textarea = e.target;
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
           textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
           textarea.selectionStart = textarea.selectionEnd = start + 1;
-          
-          // Trigger any auto-resize if needed
           textarea.dispatchEvent(new Event('input'));
         }
+      });
+      
+      document.addEventListener('keyup', (e) => {
+        this.wasmCapture.captureKeyUp(e);
+      });
+    } else {
+      // Fallback to JavaScript implementation with physical key tracking
+      console.log('Using JavaScript keystroke capture with physical key tracking');
+      
+      // Initialize high-performance capture
+      this.initHighPerformanceCapture();
+      
+      // Add physical key tracking map
+      this.physicalKeyMap = new Map();
+      
+      const captureEvent = (e, eventType) => {
+        const timestamp = performance.now();
+        const idx = this.keyBuffer.index;
+        const physicalCode = e.code;
+        
+        let keyToStore;
+        
+        if (eventType === 0) { // Press event
+          // Store the display key for this physical key
+          keyToStore = e.key;
+          this.physicalKeyMap.set(physicalCode, keyToStore);
+        } else { // Release event
+          // Get the stored key from press time
+          keyToStore = this.physicalKeyMap.get(physicalCode);
+          
+          if (!keyToStore) {
+            console.warn(`No tracked press for code=${physicalCode}, using current key=${e.key}`);
+            keyToStore = e.key;
+          } else {
+            // Remove from tracking
+            this.physicalKeyMap.delete(physicalCode);
+          }
+        }
+        
+        // Get or create key code
+        let keyCode = this.keyCodeMap.get(keyToStore);
+        if (keyCode === undefined) {
+          keyCode = this.keyCodeIndex++;
+          this.keyCodeMap.set(keyToStore, keyCode);
+        }
+        
+        // Store in typed arrays
+        this.keyBuffer.types[idx] = eventType;
+        this.keyBuffer.keys[idx] = keyCode;
+        this.keyBuffer.timestamps[idx] = timestamp;
+        this.keyBuffer.index++;
+        
+        // Handle Enter key
+        if (e.key === "Enter" && e.target.id === this.config.textInputId && !e.shiftKey) {
+          e.preventDefault();
+          requestAnimationFrame(() => {
+            const textarea = e.target;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + '\n' + textarea.value.substring(end);
+            textarea.selectionStart = textarea.selectionEnd = start + 1;
+            textarea.dispatchEvent(new Event('input'));
+          });
+        }
+      };
+      
+      document.addEventListener('keydown', (e) => captureEvent(e, 0), { passive: false });
+      document.addEventListener('keyup', (e) => captureEvent(e, 1), { passive: true });
+    }
+  },
+
+  getKeystrokeData() {
+      if (this.useWASM && this.wasmCapture) {
+          // Get data from WASM
+          return this.wasmCapture.getRawData();
+      } else {
+          // Original implementation
+          const events = [];
+          const keyMap = Array.from(this.keyCodeMap.entries());
+          
+          for (let i = 0; i < this.keyBuffer.index; i++) {
+              const keyEntry = keyMap.find(([_, code]) => code === this.keyBuffer.keys[i]);
+              if (keyEntry) {
+                  const originalKey = keyEntry[0];
+                  
+                  // Create a more complete fake event object for replaceJsKey
+                  const fakeEvent = {
+                      key: originalKey,
+                      code: originalKey === ' ' ? 'Space' : `Key${originalKey.toUpperCase()}`
+                  };
+                  
+                  events.push([
+                      this.keyBuffer.types[i] === 0 ? 'P' : 'R',
+                      this.replaceJsKey(fakeEvent),
+                      Math.round(this.keyBuffer.timestamps[i] + performance.timeOrigin)
+                  ]);
+              }
+          }
+          
+          return events;
       }
-    };
-
-    const onKeyUp = (e) => {
-      // CHANGE 1: Capture timestamp IMMEDIATELY
-      const timestamp = Date.now();
-      
-      // CHANGE 2: Push to array with the pre-captured timestamp
-      this.keyEvents.push(['R', this.replaceJsKey(e), timestamp]);
-      
-      // CHANGE 3: Save keystrokes AFTER the critical timing capture
-      setTimeout(() => this.saveKeystrokes(), 0);
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
   },
 
   /**
@@ -935,9 +823,7 @@ const PlatformSubmissionHandler = {
       const submissionKey = `submitted_${urlParams.user_id}_${urlParams.task_id}_${urlParams.platform_id}`;
       sessionStorage.setItem(submissionKey, 'true');
       this.hasSubmitted = true;
-      // Clear keystroke data
-      this.clearKeystrokes();
-
+      
       // Call after submit callback if provided
       if (this.config.onAfterSubmit) {
         this.config.onAfterSubmit();
@@ -974,8 +860,16 @@ const PlatformSubmissionHandler = {
       };
     }
 
-    if (this.keyEvents.length === 0) {
-      return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
+    // Check keystroke data
+    if (this.useWASM && this.wasmCapture) {
+        if (this.wasmCapture.getEventCount() === 0) {
+            return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
+        }
+    } else {
+        // Check the buffer instead of the text input
+        if (!this.keyBuffer || this.keyBuffer.index === 0) {
+            return { isValid: false, message: 'No keystrokes recorded! Please type something before submitting.' };
+        }
     }
 
     return { isValid: true };
@@ -1056,20 +950,44 @@ const PlatformSubmissionHandler = {
       'CapsLock': 'Key.caps_lock'
     };
     
-    if (e.code === 'Space') return 'Key.space';
-    return keyMap[e.key] || e.key;
+    // Handle space key - check both e.code and e.key
+    if (e.code === 'Space' || e.key === ' ') return 'Key.space';
+    if (e.code === 'Comma' || e.key == ',' ) return 'Key.comma';
+    
+    // Check if it's a mapped key
+    if (keyMap[e.key]) return keyMap[e.key];
+    
+    // Return the original key
+    return e.key;
   },
 
   /**
    * Build CSV blob from keystroke events
    */
   buildCsvBlob() {
-    const heading = [['Press or Release', 'Key', 'Time']];
-    const csvString = heading
-      .concat(this.keyEvents)
-      .map(row => row.join(','))
-      .join('\n');
-    return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+    console.log('=== Building CSV ===');
+    console.log('useWASM:', this.useWASM);
+    console.log('wasmCapture:', this.wasmCapture);
+    
+    if (this.useWASM && this.wasmCapture) {
+      console.log('✅ Using WASM export');
+      // Get CSV directly from WASM
+      const csvString = this.wasmCapture.exportAsCSV();
+      console.log('First few lines of WASM CSV:', csvString.split('\n').slice(0, 5));
+      return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+    } else {
+      console.log('❌ Using JavaScript export');
+      // Original implementation
+      // Convert high-performance buffer to array format only when needed
+      this.keyEvents = this.getKeystrokeData();
+      
+      const heading = [['Press or Release', 'Key', 'Time']];
+      const csvString = heading
+          .concat(this.keyEvents)
+          .map(row => row.join(','))
+          .join('\n');
+      return new Blob([csvString], { type: 'text/csv;charset=utf-8' });
+    }
   },
 
   /**
@@ -1082,15 +1000,6 @@ const PlatformSubmissionHandler = {
     const deviceInfoStr = sessionStorage.getItem('device_info');
     const deviceInfo = deviceInfoStr ? JSON.parse(deviceInfoStr) : DeviceDetector.getDeviceInfo();
 
-    // const metadata = {
-    //   user_id: urlParams.user_id,
-    //   platform_id: urlParams.platform_id,
-    //   task_id: urlParams.task_id,
-    //   start_time: this.startTime,
-    //   end_time: endTime,
-    //   duration_ms: endTime - this.startTime,
-    //   platform: this.config.platform
-    // };
     const metadata = {
       user_id: urlParams.user_id,
       platform_id: urlParams.platform_id,

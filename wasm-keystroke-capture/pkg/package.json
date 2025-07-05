@@ -1,0 +1,18 @@
+{
+  "name": "keystroke-capture",
+  "type": "module",
+  "collaborators": [
+    "Your Name"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "keystroke_capture_bg.wasm",
+    "keystroke_capture.js",
+    "keystroke_capture.d.ts"
+  ],
+  "main": "keystroke_capture.js",
+  "types": "keystroke_capture.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
