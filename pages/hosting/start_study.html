@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Research Study</title>
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="../../styles/global.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="form-container">
+            <h1>Fake Profile Detection Study</h1>
+            
+            <div class="info-box">
+                <h3>Before You Begin</h3>
+                <p>
+                    <strong>This study will open in a new browser window.</strong>
+                </p>
+                <p>
+                    The browser's back button will be disabled during the study to ensure tasks are completed in the correct order. You will need to use the study's navigation buttons to move between tasks.
+                </p>
+                <p>
+                    Please complete all tasks in one session. Do not close the new window until you see the completion confirmation.
+                </p>
+            </div>
+            
+            <button id="start-button" class="btn-primary btn-block" onclick="startStudy()">
+                Start Study
+            </button>
+            
+            <!-- Message Container -->
+            <div id="message-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // Check if popup blocker might interfere
+        function checkPopupBlocker() {
+            const testWindow = window.open('', '', 'width=1,height=1');
+            if (testWindow) {
+                testWindow.close();
+                return false;
+            }
+            return true;
+        }
+
+        // Start the study
+        function startStudy() {
+            const button = document.getElementById('start-button');
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner"></span>Opening study...';
+            
+            try {
+                // First, try to open in a new tab (more likely to succeed)
+                const studyWindow = window.open(
+                    './consent.html?launched=true',  // Add parameter to indicate proper launch
+                    '_blank'
+                );
+                
+                if (studyWindow) {
+                    // Success - update button to show study is in progress
+                    showMessage(
+                        'Study opened successfully! Please complete all tasks in the new tab.', 
+                        'success'
+                    );
+                    
+                    button.innerHTML = 'Study In Progress';
+                    
+                    // For new tab, we can't monitor if it's closed, so just reset after a delay
+                    setTimeout(() => {
+                        resetButton();
+                    }, 3000);
+                    
+                } else {
+                    // Popup was blocked - show instructions
+                    console.log('Popup blocked - showing fallback instructions');
+                    showMessage(
+                        'Popup blocked! Please allow popups for this site or use the link below.', 
+                        'error'
+                    );
+                    
+                    // Create a direct link as fallback
+                    const linkContainer = document.createElement('div');
+                    linkContainer.className = 'info-box warning mt-2';
+                    linkContainer.innerHTML = `
+                        <h4>Alternative Method:</h4>
+                        <p>1. Allow popups for this site in your browser settings</p>
+                        <p>2. Or right-click this link and select "Open in new tab":</p>
+                        <p><a href="./consent.html?launched=true" target="_blank" class="btn-secondary">Open Study in New Tab</a></p>
+                    `;
+                    
+                    const messageContainer = document.getElementById('message-container');
+                    messageContainer.appendChild(linkContainer);
+                    
+                    resetButton();
+                }
+                
+            } catch (error) {
+                console.error('Failed to start study:', error);
+                
+                // Show fallback link
+                const linkContainer = document.createElement('div');
+                linkContainer.className = 'info-box warning mt-2';
+                linkContainer.innerHTML = `
+                    <h4>Unable to open automatically</h4>
+                    <p>Please click the link below to start the study:</p>
+                    <p><a href="./consent.html?launched=true" target="_blank" class="btn-secondary">Open Study in New Tab</a></p>
+                `;
+                
+                const messageContainer = document.getElementById('message-container');
+                messageContainer.appendChild(linkContainer);
+                
+                showMessage(
+                    'Unable to open study automatically. Please use the link below.', 
+                    'warning'
+                );
+                resetButton();
+            }
+        }
+        
+        // Reset button to initial state
+        function resetButton() {
+            const button = document.getElementById('start-button');
+            button.disabled = false;
+            button.innerHTML = 'Start Study';
+        }
+        
+        // Show message to user
+        function showMessage(message, type) {
+            const container = document.getElementById('message-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `${type}-message mt-2`;
+            messageDiv.textContent = message;
+            
+            // Clear previous messages
+            container.innerHTML = '';
+            container.appendChild(messageDiv);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => messageDiv.remove(), 10000);
+        }
+        
+        // Initialize page
+        window.addEventListener('load', function() {
+            console.log('Start study page loaded successfully');
+        });
+    </script>
+</body>
+</html>

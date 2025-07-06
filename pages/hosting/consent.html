@@ -205,6 +205,17 @@
       } */
       function initializePage() {
         try {
+          
+          // Check if this was launched properly from start_study.html
+          const urlParams = new URLSearchParams(window.location.search);
+          const wasLaunched = urlParams.get('launched') === 'true';
+          
+          if (!wasLaunched) {
+              // Redirect to start page if not launched properly
+              window.location.replace('./start_study.html');
+              return;
+          }
+          
           // Check for mobile device FIRST
           const deviceInfo = DeviceDetector.getDeviceInfo();
           
